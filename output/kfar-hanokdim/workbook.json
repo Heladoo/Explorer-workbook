@@ -1,0 +1,749 @@
+{
+  "title": "Noa and Amit's Kfar Hanokdim Adventure Book",
+  "destination": "Kfar Hanokdim",
+  "language": "en",
+  "generated_at": "2026-07-25T20:05:55+00:00",
+  "page_count": 12,
+  "pages": [
+    {
+      "number": 1,
+      "type": "cover",
+      "title": "Noa and Amit's Big Trip to Kfar Hanokdim",
+      "instructions": "This adventure book belongs to Noa and Amit. Write your name on the line, color the cover, and get ready to explore Kfar Hanokdim!",
+      "image_prompt": "Create a black-and-white coloring page for a children's travel activity book.\n\nScene:\nA cheerful establishing view of Kfar Hanokdim, with the Masada cliff fortress as the centrepiece and children setting off to explore.\n\nInclude:\n• 2 happy children with small backpacks\n• the Masada cliff fortress\n• the date palm grove\n• camels\n• desert wildflowers after rain\n\nLayout:\nLeave a clear empty banner area across the top third for the title and an empty ruled line near the bottom for the child's name.\n\nStyle:\n• Bold, clean, uniform black outlines on white with large open areas to color — no shading, no hatching, no grey fills, no solid black areas\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Leave generous white space in the title banner and name line.\n",
+      "educational_goal": "Builds anticipation for the trip and gives the child ownership of the book.",
+      "estimated_age": "4-6",
+      "prompt_file": "prompts/01_cover.md",
+      "metadata": {
+        "difficulty": "easy",
+        "focus": "wildlife",
+        "personalized": true,
+        "child_names": [
+          "Noa",
+          "Amit"
+        ],
+        "title_placeholder": true,
+        "name_line": true,
+        "image_brief": {
+          "subject": "a welcoming cover scene of the Masada cliff fortress",
+          "scene": "A cheerful establishing view of Kfar Hanokdim, with the Masada cliff fortress as the centrepiece and children setting off to explore.",
+          "elements": [
+            "2 happy children with small backpacks",
+            "the Masada cliff fortress",
+            "the date palm grove",
+            "camels",
+            "desert wildflowers after rain"
+          ],
+          "render_mode": "coloring",
+          "composition": "Leave a clear empty banner area across the top third for the title and an empty ruled line near the bottom for the child's name.",
+          "extra_constraints": [
+            "Leave generous white space in the title banner and name line."
+          ]
+        }
+      }
+    },
+    {
+      "number": 2,
+      "type": "hidden_objects",
+      "title": "Find the Hidden Things",
+      "instructions": "5 things are hiding in this picture of the Masada cliff fortress: rock hyraxes, hoopoe birds, desert lizards, labneh cheese with olive oil and donkeys. Circle each one as you find it.",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nA lively wide view of the Masada cliff fortress at Kfar Hanokdim, full of nooks, foliage and small structures where objects can hide.\n\nInclude:\n• rock hyraxes\n• hoopoe birds\n• desert lizards\n• labneh cheese with olive oil\n• donkeys\n\nLayout:\nOne detailed full-page scene. Each hidden object is drawn completely and left partly visible — tucked behind or among scenery, never fully covered and never shrunk beyond easy recognition.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Hide exactly these 5 objects, one of each: rock hyraxes, hoopoe birds, desert lizards, labneh cheese with olive oil, donkeys\n• Draw a small empty checkbox row along the bottom margin, one box per hidden object, with no text or numbers in them.\n",
+      "educational_goal": "Builds sustained visual search and vocabulary for local plants, animals and objects.",
+      "estimated_age": "4-6",
+      "prompt_file": "prompts/02_hidden_objects.md",
+      "metadata": {
+        "difficulty": "easy",
+        "focus": "landmarks",
+        "itinerary_day": "Arrival and camel yard",
+        "scene": "the Masada cliff fortress",
+        "objects": [
+          "rock hyraxes",
+          "hoopoe birds",
+          "desert lizards",
+          "labneh cheese with olive oil",
+          "donkeys"
+        ],
+        "object_count": 5,
+        "image_brief": {
+          "subject": "a busy search-and-find scene at the Masada cliff fortress",
+          "scene": "A lively wide view of the Masada cliff fortress at Kfar Hanokdim, full of nooks, foliage and small structures where objects can hide.",
+          "elements": [
+            "rock hyraxes",
+            "hoopoe birds",
+            "desert lizards",
+            "labneh cheese with olive oil",
+            "donkeys"
+          ],
+          "render_mode": "puzzle",
+          "composition": "One detailed full-page scene. Each hidden object is drawn completely and left partly visible — tucked behind or among scenery, never fully covered and never shrunk beyond easy recognition.",
+          "extra_constraints": [
+            "Hide exactly these 5 objects, one of each: rock hyraxes, hoopoe birds, desert lizards, labneh cheese with olive oil, donkeys",
+            "Draw a small empty checkbox row along the bottom margin, one box per hidden object, with no text or numbers in them."
+          ]
+        }
+      }
+    },
+    {
+      "number": 3,
+      "type": "wildlife_facts",
+      "title": "Amazing Animals of Kfar Hanokdim",
+      "instructions": "Meet 3 animals that live around Kfar Hanokdim. Color each one, then put a star next to the animal you would most like to see.",
+      "image_prompt": "Create a black-and-white illustrated information page for a children's travel activity book.\n\nScene:\nA page of equally sized cards, each holding one animal drawn accurately and clearly in its natural surroundings.\n\nInclude:\n• rock hyraxes\n• goats and sheep\n• hoopoe birds\n\nLayout:\n3 rectangular cards stacked down the page. In each card the animal fills the left two-thirds and the right third is left empty for a caption and a star the child can color.\n\nStyle:\n• Accurate black line art with light grey shading used sparingly for depth, keeping every subject clearly identifiable\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Draw the animals in this order, one per card: rock hyraxes, goats and sheep, hoopoe birds\n• Anatomically believable animals — this page teaches, so no cartoon proportions that misrepresent the species.\n• Leave the caption strip in each card completely blank.\n",
+      "educational_goal": "Builds knowledge of local fauna and habitats, and encourages the child to look for real animals during the trip.",
+      "estimated_age": "4-6",
+      "prompt_file": "prompts/03_wildlife_facts.md",
+      "metadata": {
+        "difficulty": "easy",
+        "focus": "activities",
+        "itinerary_day": "Arrival and camel yard",
+        "animals": [
+          "rock hyraxes",
+          "goats and sheep",
+          "hoopoe birds"
+        ],
+        "cards": [
+          {
+            "animal": "rock hyraxes",
+            "caption": "rock hyraxes — look for one near the Nokdim valley lookout."
+          },
+          {
+            "animal": "goats and sheep",
+            "caption": "goats and sheep — look for one near the Dead Sea shore."
+          },
+          {
+            "animal": "hoopoe birds",
+            "caption": "hoopoe birds — look for one near the Masada cliff fortress."
+          }
+        ],
+        "star_rating": true,
+        "image_brief": {
+          "subject": "a fact card sheet of 3 animals from Kfar Hanokdim",
+          "scene": "A page of equally sized cards, each holding one animal drawn accurately and clearly in its natural surroundings.",
+          "elements": [
+            "rock hyraxes",
+            "goats and sheep",
+            "hoopoe birds"
+          ],
+          "render_mode": "illustration",
+          "composition": "3 rectangular cards stacked down the page. In each card the animal fills the left two-thirds and the right third is left empty for a caption and a star the child can color.",
+          "extra_constraints": [
+            "Draw the animals in this order, one per card: rock hyraxes, goats and sheep, hoopoe birds",
+            "Anatomically believable animals — this page teaches, so no cartoon proportions that misrepresent the species.",
+            "Leave the caption strip in each card completely blank."
+          ]
+        }
+      }
+    },
+    {
+      "number": 4,
+      "type": "matching",
+      "title": "Match the Shadows",
+      "instructions": "Each animal on the left has a shadow on the right. Draw a line from every animal to its own shadow.",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nTwo vertical columns. The left column shows 4 outlined drawings from Kfar Hanokdim; the right column shows the same shapes as solid black silhouettes in a different order.\n\nInclude:\n• donkeys\n• Nubian ibex\n• goats and sheep\n• desert lizards\n\nLayout:\nLeft column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.\n• No connecting lines, arrows, numbers or letters anywhere on the page.\n",
+      "educational_goal": "Trains shape recognition and one-to-one correspondence by matching each subject to its silhouette.",
+      "estimated_age": "4-6",
+      "prompt_file": "prompts/04_matching.md",
+      "metadata": {
+        "difficulty": "easy",
+        "focus": "plants",
+        "itinerary_day": "Arrival and camel yard",
+        "pair_count": 4,
+        "left_column": [
+          "donkeys",
+          "Nubian ibex",
+          "goats and sheep",
+          "desert lizards"
+        ],
+        "right_column": [
+          "donkeys",
+          "Nubian ibex",
+          "goats and sheep",
+          "desert lizards"
+        ],
+        "answer_key": {
+          "donkeys": 1,
+          "Nubian ibex": 2,
+          "goats and sheep": 3,
+          "desert lizards": 4
+        },
+        "subject_kind": "animal",
+        "image_brief": {
+          "subject": "a matching puzzle of 4 subjects and their shadows",
+          "scene": "Two vertical columns. The left column shows 4 outlined drawings from Kfar Hanokdim; the right column shows the same shapes as solid black silhouettes in a different order.",
+          "elements": [
+            "donkeys",
+            "Nubian ibex",
+            "goats and sheep",
+            "desert lizards"
+          ],
+          "render_mode": "puzzle",
+          "composition": "Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.",
+          "extra_constraints": [
+            "Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.",
+            "No connecting lines, arrows, numbers or letters anywhere on the page."
+          ]
+        }
+      }
+    },
+    {
+      "number": 5,
+      "type": "coloring",
+      "title": "Color the big Bedouin hospitality tent",
+      "instructions": "Color this picture of the big Bedouin hospitality tent. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!",
+      "image_prompt": "Create a black-and-white coloring page for a children's travel activity book.\n\nScene:\nthe big Bedouin hospitality tent at Kfar Hanokdim, seen from a child's eye level, with plenty of large open areas to color.\n\nInclude:\n• tamarisk bushes\n• date palms\n• rock hyraxes\n• desert lizards\n\nLayout:\nSingle full-page scene, medium-sized shapes with some background detail.\n\nStyle:\n• Bold, clean, uniform black outlines on white with large open areas to color — no shading, no hatching, no grey fills, no solid black areas\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n",
+      "educational_goal": "Develops fine motor control and color choice while introducing a real place the child will visit.",
+      "estimated_age": "5-7",
+      "prompt_file": "prompts/05_coloring.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "local_food",
+        "itinerary_day": "Arrival and camel yard",
+        "subject": "the big Bedouin hospitality tent",
+        "look_for": [
+          "tamarisk bushes",
+          "date palms",
+          "rock hyraxes"
+        ],
+        "knowledge_focus": "landmarks",
+        "image_brief": {
+          "subject": "the big Bedouin hospitality tent",
+          "scene": "the big Bedouin hospitality tent at Kfar Hanokdim, seen from a child's eye level, with plenty of large open areas to color.",
+          "elements": [
+            "tamarisk bushes",
+            "date palms",
+            "rock hyraxes",
+            "desert lizards"
+          ],
+          "render_mode": "coloring",
+          "composition": "Single full-page scene, medium-sized shapes with some background detail."
+        }
+      }
+    },
+    {
+      "number": 6,
+      "type": "maze",
+      "title": "The Path to the camel yard",
+      "instructions": "Help Noa get from the big Bedouin hospitality tent all the way to the camel yard. Draw one line through the maze without crossing any walls. Pick up fresh pita from the saj and acacia trees along the way.",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nA top-down maze puzzle. A small drawing of the big Bedouin hospitality tent marks the entrance in the upper-left corner and a drawing of the camel yard marks the exit in the lower-right corner. The maze walls are decorated as Kfar Hanokdim scenery.\n\nInclude:\n• fresh pita from the saj\n• acacia trees\n\nLayout:\nA 9x9 maze filling the page, corridors wide enough for a chunky crayon, exactly one solvable path from entrance to exit.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Maze walls must be solid, unbroken and clearly separated from the scenery.\n• Exactly one correct route; no dead-end that touches the exit.\n",
+      "educational_goal": "Practises visual planning, sequencing and pencil control, and links two real locations from the trip.",
+      "estimated_age": "5-7",
+      "prompt_file": "prompts/06_maze.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "history",
+        "itinerary_day": "Desert hike and Masada",
+        "start": "the big Bedouin hospitality tent",
+        "goal": "the camel yard",
+        "grid": {
+          "rows": 9,
+          "cols": 9
+        },
+        "collectibles": [
+          "fresh pita from the saj",
+          "acacia trees"
+        ],
+        "hero": "Noa",
+        "image_brief": {
+          "subject": "a maze leading from the big Bedouin hospitality tent to the camel yard",
+          "scene": "A top-down maze puzzle. A small drawing of the big Bedouin hospitality tent marks the entrance in the upper-left corner and a drawing of the camel yard marks the exit in the lower-right corner. The maze walls are decorated as Kfar Hanokdim scenery.",
+          "elements": [
+            "fresh pita from the saj",
+            "acacia trees"
+          ],
+          "render_mode": "puzzle",
+          "composition": "A 9x9 maze filling the page, corridors wide enough for a chunky crayon, exactly one solvable path from entrance to exit.",
+          "extra_constraints": [
+            "Maze walls must be solid, unbroken and clearly separated from the scenery.",
+            "Exactly one correct route; no dead-end that touches the exit."
+          ]
+        }
+      }
+    },
+    {
+      "number": 7,
+      "type": "packing",
+      "title": "Pack Your Explorer Bag",
+      "instructions": "You are going to Kfar Hanokdim! Tick the box next to everything you have packed, then draw one more thing you want to bring in the empty box.",
+      "image_prompt": "Create a black-and-white coloring page for a children's travel activity book.\n\nScene:\nA friendly open backpack in the centre of the page with the items to pack for Kfar Hanokdim arranged around it in a neat grid.\n\nInclude:\n• water bottle\n• comfortable shoes\n• small backpack\n• this activity book\n• pencils and crayons\n• snack\n• sun hat\n• sunscreen\n• sunglasses\n• warm coat\n\nLayout:\nA grid of 11 equally sized cells. Each cell holds one clearly recognisable object drawing with an empty square checkbox beside it. The final cell is left completely empty for the child to draw in.\n\nStyle:\n• Bold, clean, uniform black outlines on white with large open areas to color — no shading, no hatching, no grey fills, no solid black areas\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Draw exactly these items, one per cell, in this order: water bottle, comfortable shoes, small backpack, this activity book, pencils and crayons, snack, sun hat, sunscreen, sunglasses, warm coat\n• Checkboxes must be empty outlines — no ticks, no labels, no numbering.\n",
+      "educational_goal": "Introduces planning and cause-and-effect: what the weather and the activities mean for what you carry.",
+      "estimated_age": "5-7",
+      "prompt_file": "prompts/07_packing.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "interesting_facts",
+        "itinerary_day": "Desert hike and Masada",
+        "items": [
+          "water bottle",
+          "comfortable shoes",
+          "small backpack",
+          "this activity book",
+          "pencils and crayons",
+          "snack",
+          "sun hat",
+          "sunscreen",
+          "sunglasses",
+          "warm coat"
+        ],
+        "blank_slots": 1,
+        "matched_conditions": [
+          "hot_items",
+          "cold_items",
+          "rain_items",
+          "hike_items",
+          "water_items",
+          "night_items",
+          "wildlife_items"
+        ],
+        "image_brief": {
+          "subject": "an open explorer backpack surrounded by things to pack",
+          "scene": "A friendly open backpack in the centre of the page with the items to pack for Kfar Hanokdim arranged around it in a neat grid.",
+          "elements": [
+            "water bottle",
+            "comfortable shoes",
+            "small backpack",
+            "this activity book",
+            "pencils and crayons",
+            "snack",
+            "sun hat",
+            "sunscreen",
+            "sunglasses",
+            "warm coat"
+          ],
+          "render_mode": "coloring",
+          "composition": "A grid of 11 equally sized cells. Each cell holds one clearly recognisable object drawing with an empty square checkbox beside it. The final cell is left completely empty for the child to draw in.",
+          "extra_constraints": [
+            "Draw exactly these items, one per cell, in this order: water bottle, comfortable shoes, small backpack, this activity book, pencils and crayons, snack, sun hat, sunscreen, sunglasses, warm coat",
+            "Checkboxes must be empty outlines — no ticks, no labels, no numbering."
+          ]
+        }
+      }
+    },
+    {
+      "number": 8,
+      "type": "spot_difference",
+      "title": "Spot the Differences",
+      "instructions": "These two pictures of goats and sheep look the same — but 6 things are different. Circle every difference you find.",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nThe same view of goats and sheep at Kfar Hanokdim drawn twice: the top half is the original, the bottom half repeats it with small changes.\n\nInclude:\n• labneh cheese with olive oil\n• goats and sheep\n• desert lizards\n• a desert hike at sunrise\n• rock hyraxes\n• sweet tea with na'ana mint\n\nLayout:\nPortrait page split into two equal panels stacked vertically, each with a thin frame, containing exactly 6 deliberate differences.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Introduce exactly 6 differences between the two panels: missing — labneh cheese with olive oil; extra — goats and sheep; moved — desert lizards; resized — a desert hike at sunrise; missing — rock hyraxes; extra — sweet tea with na'ana mint\n• Everything not listed as a difference must be pixel-for-pixel identical.\n",
+      "educational_goal": "Sharpens visual discrimination and attention to detail through careful comparison of two scenes.",
+      "estimated_age": "5-7",
+      "prompt_file": "prompts/08_spot_difference.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "wildlife",
+        "itinerary_day": "Desert hike and Masada",
+        "subject": "goats and sheep",
+        "difference_count": 6,
+        "differences": [
+          {
+            "item": "labneh cheese with olive oil",
+            "kind": "missing",
+            "description": "labneh cheese with olive oil is missing from the second picture"
+          },
+          {
+            "item": "goats and sheep",
+            "kind": "extra",
+            "description": "an extra goats and sheep appears in the second picture"
+          },
+          {
+            "item": "desert lizards",
+            "kind": "moved",
+            "description": "desert lizards has moved to the other side"
+          },
+          {
+            "item": "a desert hike at sunrise",
+            "kind": "resized",
+            "description": "a desert hike at sunrise is a different size"
+          },
+          {
+            "item": "rock hyraxes",
+            "kind": "missing",
+            "description": "rock hyraxes is missing from the second picture"
+          },
+          {
+            "item": "sweet tea with na'ana mint",
+            "kind": "extra",
+            "description": "an extra sweet tea with na'ana mint appears in the second picture"
+          }
+        ],
+        "image_brief": {
+          "subject": "two nearly identical scenes of goats and sheep",
+          "scene": "The same view of goats and sheep at Kfar Hanokdim drawn twice: the top half is the original, the bottom half repeats it with small changes.",
+          "elements": [
+            "labneh cheese with olive oil",
+            "goats and sheep",
+            "desert lizards",
+            "a desert hike at sunrise",
+            "rock hyraxes",
+            "sweet tea with na'ana mint"
+          ],
+          "render_mode": "puzzle",
+          "composition": "Portrait page split into two equal panels stacked vertically, each with a thin frame, containing exactly 6 deliberate differences.",
+          "extra_constraints": [
+            "Introduce exactly 6 differences between the two panels: missing — labneh cheese with olive oil; extra — goats and sheep; moved — desert lizards; resized — a desert hike at sunrise; missing — rock hyraxes; extra — sweet tea with na'ana mint",
+            "Everything not listed as a difference must be pixel-for-pixel identical."
+          ]
+        }
+      }
+    },
+    {
+      "number": 9,
+      "type": "quiz",
+      "title": "The Kfar Hanokdim Quiz",
+      "instructions": "Circle the answer you think is right. There are 4 questions — ask a grown-up if you get stuck.",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nA quiz page about Kfar Hanokdim. Each row offers three small drawings to choose between, with an empty circle under each one.\n\nInclude:\n• toucan\n• donkeys\n• polar bear\n• an ice castle\n• a pirate ship\n• the big Bedouin hospitality tent\n• sweet tea with na'ana mint\n• rainbow soup\n• moon cheese\n• riding a dinosaur\n• sleeping in a Bedouin tent\n• swimming to the moon\n\nLayout:\n4 rows stacked down the page. Each row has a blank strip at the top for the question, then three equally sized option drawings side by side, each with an empty circle beneath it.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Question 1 options: toucan, donkeys, polar bear\n• Question 2 options: an ice castle, a pirate ship, the big Bedouin hospitality tent\n• Question 3 options: sweet tea with na'ana mint, rainbow soup, moon cheese\n• Question 4 options: riding a dinosaur, sleeping in a Bedouin tent, swimming to the moon\n• Leave the question strips completely blank — the text is added later.\n• Do not mark, tick or highlight the correct answer in any way.\n",
+      "educational_goal": "Consolidates what the child has learned about the destination and practises choosing between plausible options.",
+      "estimated_age": "6-8",
+      "prompt_file": "prompts/09_quiz.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "landmarks",
+        "itinerary_day": "Dead Sea day",
+        "questions": [
+          {
+            "question": "Which animal can you meet at Kfar Hanokdim?",
+            "options": [
+              "toucan",
+              "donkeys",
+              "polar bear"
+            ],
+            "answer": "donkeys",
+            "answer_index": 2,
+            "category": "wildlife"
+          },
+          {
+            "question": "Which of these can you visit at Kfar Hanokdim?",
+            "options": [
+              "an ice castle",
+              "a pirate ship",
+              "the big Bedouin hospitality tent"
+            ],
+            "answer": "the big Bedouin hospitality tent",
+            "answer_index": 3,
+            "category": "landmarks"
+          },
+          {
+            "question": "Which of these is a local food at Kfar Hanokdim?",
+            "options": [
+              "sweet tea with na'ana mint",
+              "rainbow soup",
+              "moon cheese"
+            ],
+            "answer": "sweet tea with na'ana mint",
+            "answer_index": 1,
+            "category": "local_food"
+          },
+          {
+            "question": "Which of these can you do at Kfar Hanokdim?",
+            "options": [
+              "riding a dinosaur",
+              "sleeping in a Bedouin tent",
+              "swimming to the moon"
+            ],
+            "answer": "sleeping in a Bedouin tent",
+            "answer_index": 2,
+            "category": "activities"
+          }
+        ],
+        "question_count": 4,
+        "image_brief": {
+          "subject": "a picture quiz sheet with 4 questions",
+          "scene": "A quiz page about Kfar Hanokdim. Each row offers three small drawings to choose between, with an empty circle under each one.",
+          "elements": [
+            "toucan",
+            "donkeys",
+            "polar bear",
+            "an ice castle",
+            "a pirate ship",
+            "the big Bedouin hospitality tent",
+            "sweet tea with na'ana mint",
+            "rainbow soup",
+            "moon cheese",
+            "riding a dinosaur",
+            "sleeping in a Bedouin tent",
+            "swimming to the moon"
+          ],
+          "render_mode": "puzzle",
+          "composition": "4 rows stacked down the page. Each row has a blank strip at the top for the question, then three equally sized option drawings side by side, each with an empty circle beneath it.",
+          "extra_constraints": [
+            "Question 1 options: toucan, donkeys, polar bear",
+            "Question 2 options: an ice castle, a pirate ship, the big Bedouin hospitality tent",
+            "Question 3 options: sweet tea with na'ana mint, rainbow soup, moon cheese",
+            "Question 4 options: riding a dinosaur, sleeping in a Bedouin tent, swimming to the moon",
+            "Leave the question strips completely blank — the text is added later.",
+            "Do not mark, tick or highlight the correct answer in any way."
+          ]
+        }
+      }
+    },
+    {
+      "number": 10,
+      "type": "drawing",
+      "title": "Draw What You Saw",
+      "instructions": "Draw what you remember about baking pita on a saj griddle inside the frame — the way *you* saw it. Add as many small details as you can.",
+      "image_prompt": "Create a black-and-white activity page with a large empty drawing area for a children's travel activity book.\n\nScene:\nA large empty rectangular frame with a decorative border of Kfar Hanokdim motifs woven around its edges.\n\nInclude:\n• date palms\n• tamarisk bushes\n• camels\n• hoopoe birds\n\nLayout:\nThe frame occupies about 80% of the page and its interior is completely blank white. Only the border carries decoration.\n\nStyle:\n• Delicate black line art confined to the border, with the working area left completely blank white\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• The inside of the frame must be pure white — no scenery, no guide lines, no faint shapes of any kind.\n• Keep the border decoration thin so it never intrudes on the drawing area.\n",
+      "educational_goal": "Encourages observation and recall, and gives the child a page that is entirely their own work.",
+      "estimated_age": "6-8",
+      "prompt_file": "prompts/10_drawing.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "activities",
+        "itinerary_day": "Dead Sea day",
+        "prompt_subject": "baking pita on a saj griddle",
+        "border_motifs": [
+          "date palms",
+          "tamarisk bushes",
+          "camels",
+          "hoopoe birds"
+        ],
+        "blank_page": true,
+        "image_brief": {
+          "subject": "an empty drawing frame decorated with local motifs",
+          "scene": "A large empty rectangular frame with a decorative border of Kfar Hanokdim motifs woven around its edges.",
+          "elements": [
+            "date palms",
+            "tamarisk bushes",
+            "camels",
+            "hoopoe birds"
+          ],
+          "render_mode": "frame",
+          "composition": "The frame occupies about 80% of the page and its interior is completely blank white. Only the border carries decoration.",
+          "extra_constraints": [
+            "The inside of the frame must be pure white — no scenery, no guide lines, no faint shapes of any kind.",
+            "Keep the border decoration thin so it never intrudes on the drawing area."
+          ]
+        }
+      }
+    },
+    {
+      "number": 11,
+      "type": "coloring",
+      "title": "Color tamarisk bushes",
+      "instructions": "Color this picture of tamarisk bushes. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!",
+      "image_prompt": "Create a black-and-white coloring page for a children's travel activity book.\n\nScene:\ntamarisk bushes at Kfar Hanokdim, seen from a child's eye level, with plenty of large open areas to color.\n\nInclude:\n• tamarisk bushes\n• date palms\n• rock hyraxes\n• desert lizards\n\nLayout:\nSingle full-page scene, medium-sized shapes with some background detail.\n\nStyle:\n• Bold, clean, uniform black outlines on white with large open areas to color — no shading, no hatching, no grey fills, no solid black areas\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n",
+      "educational_goal": "Develops fine motor control and color choice while introducing a real place the child will visit.",
+      "estimated_age": "6-8",
+      "prompt_file": "prompts/11_coloring.md",
+      "metadata": {
+        "difficulty": "medium",
+        "focus": "plants",
+        "itinerary_day": "Dead Sea day",
+        "subject": "tamarisk bushes",
+        "look_for": [
+          "tamarisk bushes",
+          "date palms",
+          "rock hyraxes"
+        ],
+        "knowledge_focus": "plants",
+        "image_brief": {
+          "subject": "tamarisk bushes",
+          "scene": "tamarisk bushes at Kfar Hanokdim, seen from a child's eye level, with plenty of large open areas to color.",
+          "elements": [
+            "tamarisk bushes",
+            "date palms",
+            "rock hyraxes",
+            "desert lizards"
+          ],
+          "render_mode": "coloring",
+          "composition": "Single full-page scene, medium-sized shapes with some background detail."
+        }
+      }
+    },
+    {
+      "number": 12,
+      "type": "reflection",
+      "title": "My Kfar Hanokdim Memories",
+      "instructions": "Your trip is nearly over! Draw or write your favorite moment, answer the questions, and color one star for every day you had fun.",
+      "image_prompt": "Create a black-and-white activity page with a large empty drawing area for a children's travel activity book.\n\nScene:\nA calm, warm closing page for a trip to Kfar Hanokdim: a large empty frame for a drawing, blank ruled lines beneath it, and a row of outlined stars along the bottom.\n\nInclude:\n• the date palm grove\n• desert lizards\n\nLayout:\nTop half: one large empty frame. Middle: 3 groups of two blank ruled lines each. Bottom: a row of 3 evenly spaced star outlines. Small motifs only in the margins.\n\nStyle:\n• Delicate black line art confined to the border, with the working area left completely blank white\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Frame interior and all ruled lines must be completely empty.\n• Stars must be plain outlines, unfilled and unnumbered.\n",
+      "educational_goal": "Consolidates memory of the trip and builds early metacognition — noticing what you enjoyed and what you learned.",
+      "estimated_age": "4-6",
+      "prompt_file": "prompts/12_reflection.md",
+      "metadata": {
+        "difficulty": "easy",
+        "focus": "local_food",
+        "prompts": [
+          "The best thing I saw was...",
+          "Something new I learned was...",
+          "Next time I want to..."
+        ],
+        "writing_lines": 6,
+        "stars": 3,
+        "closing_page": true,
+        "image_brief": {
+          "subject": "a keepsake page with an empty memory frame and blank writing lines",
+          "scene": "A calm, warm closing page for a trip to Kfar Hanokdim: a large empty frame for a drawing, blank ruled lines beneath it, and a row of outlined stars along the bottom.",
+          "elements": [
+            "the date palm grove",
+            "desert lizards"
+          ],
+          "render_mode": "frame",
+          "composition": "Top half: one large empty frame. Middle: 3 groups of two blank ruled lines each. Bottom: a row of 3 evenly spaced star outlines. Small motifs only in the margins.",
+          "extra_constraints": [
+            "Frame interior and all ruled lines must be completely empty.",
+            "Stars must be plain outlines, unfilled and unnumbered."
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "schema_version": "1.0",
+    "subtitle": "An activity book for young explorers",
+    "knowledge_source": "file",
+    "prompt_language": "en",
+    "requested_language": "en",
+    "seed": 0,
+    "request": {
+      "destination": "Kfar Hanokdim",
+      "language": "en",
+      "theme": null,
+      "page_count": 12,
+      "difficulty": null,
+      "children": [
+        {
+          "name": "Noa",
+          "age": 5
+        },
+        {
+          "name": "Amit",
+          "age": 7
+        }
+      ],
+      "trip": {
+        "itinerary": [
+          "Arrival and camel yard",
+          "Desert hike and Masada",
+          "Dead Sea day"
+        ],
+        "duration_days": null,
+        "start_date": null
+      },
+      "interests": [
+        "animals"
+      ],
+      "family_photos": [],
+      "seed": 0
+    },
+    "plan": [
+      {
+        "number": 1,
+        "activity_type": "cover",
+        "difficulty": "easy",
+        "target_age": 5,
+        "focus": "wildlife",
+        "itinerary_day": null,
+        "rationale": "Opens the book.",
+        "metadata": {}
+      },
+      {
+        "number": 2,
+        "activity_type": "hidden_objects",
+        "difficulty": "easy",
+        "target_age": 5,
+        "focus": "landmarks",
+        "itinerary_day": "Arrival and camel yard",
+        "rationale": "Find the Hidden Objects at easy difficulty, page 2 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 3,
+        "activity_type": "wildlife_facts",
+        "difficulty": "easy",
+        "target_age": 5,
+        "focus": "activities",
+        "itinerary_day": "Arrival and camel yard",
+        "rationale": "Wildlife Facts at easy difficulty, page 3 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 4,
+        "activity_type": "matching",
+        "difficulty": "easy",
+        "target_age": 5,
+        "focus": "plants",
+        "itinerary_day": "Arrival and camel yard",
+        "rationale": "Matching Game at easy difficulty, page 4 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 5,
+        "activity_type": "coloring",
+        "difficulty": "medium",
+        "target_age": 6,
+        "focus": "local_food",
+        "itinerary_day": "Arrival and camel yard",
+        "rationale": "Coloring Page at medium difficulty, page 5 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 6,
+        "activity_type": "maze",
+        "difficulty": "medium",
+        "target_age": 6,
+        "focus": "history",
+        "itinerary_day": "Desert hike and Masada",
+        "rationale": "Maze at medium difficulty, page 6 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 7,
+        "activity_type": "packing",
+        "difficulty": "medium",
+        "target_age": 6,
+        "focus": "interesting_facts",
+        "itinerary_day": "Desert hike and Masada",
+        "rationale": "Packing Checklist at medium difficulty, page 7 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 8,
+        "activity_type": "spot_difference",
+        "difficulty": "medium",
+        "target_age": 6,
+        "focus": "wildlife",
+        "itinerary_day": "Desert hike and Masada",
+        "rationale": "Spot the Difference at medium difficulty, page 8 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 9,
+        "activity_type": "quiz",
+        "difficulty": "medium",
+        "target_age": 7,
+        "focus": "landmarks",
+        "itinerary_day": "Dead Sea day",
+        "rationale": "Simple Quiz at medium difficulty, page 9 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 10,
+        "activity_type": "drawing",
+        "difficulty": "medium",
+        "target_age": 7,
+        "focus": "activities",
+        "itinerary_day": "Dead Sea day",
+        "rationale": "Drawing Page at medium difficulty, page 10 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 11,
+        "activity_type": "coloring",
+        "difficulty": "medium",
+        "target_age": 7,
+        "focus": "plants",
+        "itinerary_day": "Dead Sea day",
+        "rationale": "Coloring Page at medium difficulty, page 11 of 12 in the progression.",
+        "metadata": {}
+      },
+      {
+        "number": 12,
+        "activity_type": "reflection",
+        "difficulty": "easy",
+        "target_age": 5,
+        "focus": "local_food",
+        "itinerary_day": null,
+        "rationale": "Closes the book and looks back.",
+        "metadata": {}
+      }
+    ]
+  }
+}

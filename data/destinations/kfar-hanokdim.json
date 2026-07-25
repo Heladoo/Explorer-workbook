@@ -1,0 +1,65 @@
+{
+  "destination": "Kfar Hanokdim",
+  "aliases": ["Kfar HaNokdim", "Nokdim Village", "כפר הנוקדים"],
+  "region": "Judean Desert, Israel",
+  "landmarks": [
+    "the big Bedouin hospitality tent",
+    "the camel yard",
+    "the date palm grove",
+    "the Nokdim valley lookout",
+    "the Masada cliff fortress",
+    "the Dead Sea shore"
+  ],
+  "wildlife": [
+    "camels",
+    "Nubian ibex",
+    "donkeys",
+    "rock hyraxes",
+    "desert lizards",
+    "hoopoe birds",
+    "goats and sheep"
+  ],
+  "plants": [
+    "date palms",
+    "acacia trees",
+    "tamarisk bushes",
+    "white broom shrubs",
+    "desert wildflowers after rain"
+  ],
+  "activities": [
+    "riding a camel",
+    "sleeping in a Bedouin tent",
+    "baking pita on a saj griddle",
+    "a desert hike at sunrise",
+    "stargazing after dark",
+    "sitting around the campfire",
+    "a donkey ride"
+  ],
+  "history": [
+    "Bedouin families have crossed this desert for centuries",
+    "hospitality to travellers is an old desert rule",
+    "spice caravans once passed through the Negev",
+    "Masada nearby is almost two thousand years old"
+  ],
+  "local_food": [
+    "fresh pita from the saj",
+    "labneh cheese with olive oil",
+    "hummus",
+    "sweet tea with na'ana mint",
+    "cardamom coffee",
+    "dates from the palm trees"
+  ],
+  "weather": [
+    "hot and dry during the day",
+    "surprisingly cold at night",
+    "almost no rain",
+    "very clear starry skies"
+  ],
+  "interesting_facts": [
+    "A camel can drink over 100 litres of water in one go.",
+    "Bedouin tents are woven from black goat hair, which keeps them cool.",
+    "Ibex climb steep cliffs that look impossible to stand on.",
+    "The desert gets so cold at night that you need a jacket in summer.",
+    "With no city lights, you can see thousands of stars here."
+  ]
+}

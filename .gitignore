@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Generated workbooks. One sample run is committed so the artifacts are
+# reviewable without running anything.
+output/*
+!output/kfar-hanokdim/

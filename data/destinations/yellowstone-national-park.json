@@ -1,0 +1,61 @@
+{
+  "destination": "Yellowstone National Park",
+  "aliases": ["Yellowstone"],
+  "region": "Wyoming, Montana and Idaho, USA",
+  "landmarks": [
+    "Old Faithful geyser",
+    "the Grand Prismatic Spring",
+    "Yellowstone Lake",
+    "Mammoth Hot Springs",
+    "the Lower Falls",
+    "a boardwalk over the hot springs"
+  ],
+  "wildlife": [
+    "bison",
+    "elk",
+    "grizzly bears",
+    "grey wolves",
+    "bald eagles",
+    "pronghorn",
+    "yellow-bellied marmots"
+  ],
+  "plants": [
+    "lodgepole pines",
+    "sagebrush",
+    "summer wildflowers",
+    "aspen groves"
+  ],
+  "activities": [
+    "waiting for a geyser to erupt",
+    "walking the boardwalk trails",
+    "becoming a Junior Ranger",
+    "spotting animals from the road",
+    "listening to a ranger talk",
+    "watching for steam in the morning air"
+  ],
+  "history": [
+    "the world's first national park, created in 1872",
+    "people have lived and hunted here for thousands of years",
+    "early visitors arrived by stagecoach",
+    "rangers have protected the animals here for over a century"
+  ],
+  "local_food": [
+    "huckleberry ice cream",
+    "s'mores at the campfire",
+    "trail mix",
+    "pancakes at the lodge"
+  ],
+  "weather": [
+    "cold and crisp in the morning",
+    "afternoon thunderstorms in summer",
+    "snow can fall in any month",
+    "steam rises when the air is cold"
+  ],
+  "interesting_facts": [
+    "Old Faithful sends hot water into the air about every 90 minutes.",
+    "The whole park sits on top of an enormous sleeping volcano.",
+    "Bison are the largest land animals in North America — and they can run fast.",
+    "The Grand Prismatic Spring is coloured by tiny living things called microbes.",
+    "There are more geysers here than anywhere else on Earth."
+  ]
+}

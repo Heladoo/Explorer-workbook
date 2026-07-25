@@ -1,0 +1,60 @@
+{
+  "destination": "Prague",
+  "aliases": ["Praha", "Prague, Czech Republic"],
+  "region": "Bohemia, Czech Republic",
+  "landmarks": [
+    "Charles Bridge",
+    "Prague Castle",
+    "the Astronomical Clock",
+    "Old Town Square",
+    "Petrin Tower",
+    "the Vltava river"
+  ],
+  "wildlife": [
+    "swans on the Vltava",
+    "ducks by the riverbank",
+    "red squirrels in Petrin park",
+    "pigeons on the square",
+    "kestrels nesting on towers"
+  ],
+  "plants": [
+    "chestnut trees",
+    "linden trees",
+    "the rose garden on Petrin hill",
+    "window boxes full of geraniums"
+  ],
+  "activities": [
+    "walking across Charles Bridge",
+    "watching the Astronomical Clock strike the hour",
+    "riding the Petrin funicular",
+    "climbing the tower steps",
+    "a boat trip on the river",
+    "watching the castle guards change"
+  ],
+  "history": [
+    "Emperor Charles IV started the bridge in 1357",
+    "kings and queens lived in the castle for a thousand years",
+    "the old town grew up around a market square",
+    "astronomers built the great clock over 600 years ago"
+  ],
+  "local_food": [
+    "trdelnik pastry",
+    "potato pancakes",
+    "gingerbread hearts",
+    "thick hot chocolate",
+    "dumplings with sauce"
+  ],
+  "weather": [
+    "cold and sometimes snowy in winter",
+    "warm summer afternoons",
+    "rain showers in spring",
+    "golden autumn leaves"
+  ],
+  "interesting_facts": [
+    "The Astronomical Clock shows the sun, the moon and the seasons all at once.",
+    "Thirty statues stand along Charles Bridge, watching the river.",
+    "Prague Castle is one of the largest ancient castles in the world.",
+    "The bridge was built without any modern machines.",
+    "Petrin Tower looks like a small Eiffel Tower on a hill."
+  ]
+}

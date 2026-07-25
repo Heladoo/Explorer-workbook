@@ -1,0 +1,42 @@
+# $title
+
+*$subtitle*
+
+| Field | Value |
+| --- | --- |
+| Destination | $destination |
+| Language | $language |
+| Pages | $page_count |
+| Made for | $children |
+| Trip | $trip |
+| Special interests | $interests |
+| Knowledge source | $knowledge_source |
+| Generated | $generated_at |
+
+$notes
+## How to use this document
+
+This is the build specification for the workbook. Each page below lists what the
+child does, why it is there, and the exact prompt for the illustration it needs.
+The prompts are also written out one per file under `prompts/`, ready to paste
+into an image model. Machine-readable form: `workbook.json`.
+
+Image prompts are written in English regardless of the workbook language, since
+that is what image models are trained on. All copy the child reads is in the
+workbook language.
+
+## Page overview
+
+| # | Activity | Difficulty | Est. age | Educational goal | Prompt file |
+| --- | --- | --- | --- | --- | --- |
+$overview
+
+## Pages
+
+$pages
+## Destination knowledge used
+
+Everything above was built from these facts, supplied by the `$knowledge_source`
+provider.
+
+$knowledge
