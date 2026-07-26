@@ -25,13 +25,28 @@ class WrittenArtifacts:
     workbook_json: Path
     workbook_md: Path
     prompt_files: tuple[Path, ...]
+    workbook_html: Path | None = None
+    workbook_pdf: Path | None = None
 
     def as_list(self) -> tuple[Path, ...]:
-        return (self.workbook_json, self.workbook_md, *self.prompt_files)
+        extra = tuple(path for path in (self.workbook_html, self.workbook_pdf) if path)
+        return (self.workbook_json, self.workbook_md, *self.prompt_files, *extra)
 
 
-def write_bundle(bundle: WorkbookBundle, output_dir: Path | str) -> WrittenArtifacts:
-    """Write ``workbook.json``, ``workbook.md`` and ``prompts/*.md``."""
+def write_bundle(
+    bundle: WorkbookBundle,
+    output_dir: Path | str,
+    *,
+    html: bool = False,
+    pdf: bool = False,
+    images: dict[int, Path] | None = None,
+) -> WrittenArtifacts:
+    """Write ``workbook.json``, ``workbook.md`` and ``prompts/*.md``.
+
+    ``html`` and ``pdf`` additionally lay the book out for print. ``images``
+    maps page numbers to illustration files; pages without one get a
+    placeholder frame naming their prompt file.
+    """
     root = Path(output_dir)
     prompts_dir = root / "prompts"
     prompts_dir.mkdir(parents=True, exist_ok=True)
@@ -49,11 +64,36 @@ def write_bundle(bundle: WorkbookBundle, output_dir: Path | str) -> WrittenArtif
         written.append(path)
 
     _warn_about_stale(prompts_dir, {path.name for path in written})
+
+    html_path: Path | None = None
+    pdf_path: Path | None = None
+    if html or pdf:
+        if bundle.context is None:
+            raise ValueError("laying the book out for print needs the bundle's context")
+        if pdf:
+            # The PDF renderer writes the HTML it prints from, so one pass covers both.
+            from src.rendering.pdf_renderer import PdfRenderer
+
+            pdf_path = PdfRenderer(keep_html=True).render(
+                bundle.workbook, bundle.context, images=images, output_path=root / "workbook.pdf"
+            )
+            html_path = root / "workbook.html"
+        else:
+            from src.rendering.html_renderer import HtmlRenderer
+
+            html_path = root / "workbook.html"
+            html_path.write_text(
+                HtmlRenderer().render(bundle.workbook, bundle.context, images=images),
+                encoding="utf-8",
+            )
+
     return WrittenArtifacts(
         output_dir=root,
         workbook_json=json_path,
         workbook_md=md_path,
         prompt_files=tuple(written),
+        workbook_html=html_path,
+        workbook_pdf=pdf_path,
     )
 
 

@@ -2,7 +2,7 @@
   "title": "Noa and Amit's Kfar Hanokdim Adventure Book",
   "destination": "Kfar Hanokdim",
   "language": "en",
-  "generated_at": "2026-07-25T20:05:55+00:00",
+  "generated_at": "2026-07-26T06:13:34+00:00",
   "page_count": 12,
   "pages": [
     {
@@ -139,7 +139,7 @@
       "type": "matching",
       "title": "Match the Shadows",
       "instructions": "Each animal on the left has a shadow on the right. Draw a line from every animal to its own shadow.",
-      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nTwo vertical columns. The left column shows 4 outlined drawings from Kfar Hanokdim; the right column shows the same shapes as solid black silhouettes in a different order.\n\nInclude:\n• donkeys\n• Nubian ibex\n• goats and sheep\n• desert lizards\n\nLayout:\nLeft column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.\n• No connecting lines, arrows, numbers or letters anywhere on the page.\n",
+      "image_prompt": "Create a black-and-white puzzle illustration for a children's travel activity book.\n\nScene:\nTwo vertical columns. The left column shows 4 outlined drawings from Kfar Hanokdim; the right column shows the same shapes as solid black silhouettes in a different order.\n\nInclude:\n• donkeys\n• Nubian ibex\n• goats and sheep\n• desert lizards\n\nLayout:\nLeft column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): desert lizards, goats and sheep, donkeys, Nubian ibex. Wide empty gutter between the columns for the child to draw lines.\n\nStyle:\n• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle\n• Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces\n• Clean, uncluttered composition — every element clearly separated and easy to recognise\n• Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries\n• Visually consistent with every other page of this book: a single coherent book about Kfar Hanokdim, same line weight, same simple horizon treatment and the same friendly character design on every page\n• Recurring characters, drawn identically wherever they appear: two child explorers, about 5 and about 7 years old, with simple round friendly faces, practical outdoor clothes and small backpacks\n\nConstraints:\n• Portrait A4 (210 x 297 mm), vertical orientation, 300 DPI\n• Pure white background, generous margins, nothing important within 12 mm of the page edge\n• No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image\n• Prints cleanly in black and white on a home printer\n• Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.\n• No connecting lines, arrows, numbers or letters anywhere on the page.\n",
       "educational_goal": "Trains shape recognition and one-to-one correspondence by matching each subject to its silhouette.",
       "estimated_age": "4-6",
       "prompt_file": "prompts/04_matching.md",
@@ -155,16 +155,16 @@
           "desert lizards"
         ],
         "right_column": [
-          "donkeys",
-          "Nubian ibex",
+          "desert lizards",
           "goats and sheep",
-          "desert lizards"
+          "donkeys",
+          "Nubian ibex"
         ],
         "answer_key": {
-          "donkeys": 1,
-          "Nubian ibex": 2,
-          "goats and sheep": 3,
-          "desert lizards": 4
+          "donkeys": 3,
+          "Nubian ibex": 4,
+          "goats and sheep": 2,
+          "desert lizards": 1
         },
         "subject_kind": "animal",
         "image_brief": {
@@ -177,7 +177,7 @@
             "desert lizards"
           ],
           "render_mode": "puzzle",
-          "composition": "Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.",
+          "composition": "Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): desert lizards, goats and sheep, donkeys, Nubian ibex. Wide empty gutter between the columns for the child to draw lines.",
           "extra_constraints": [
             "Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.",
             "No connecting lines, arrows, numbers or letters anywhere on the page."

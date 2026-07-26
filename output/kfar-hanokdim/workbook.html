@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Noa and Amit&#x27;s Kfar Hanokdim Adventure Book</title>
+<style>
+/* Print styles for the workbook. A4 portrait, one activity per sheet.
+   Everything here is print-first: black on white, no background fills that
+   would drain a home printer's ink. */
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm 12mm 12mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  margin: 0;
+  font-family: "Comic Sans MS", "Trebuchet MS", "Verdana", sans-serif;
+  color: #111;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+/* -- page frame ------------------------------------------------------ */
+
+.page {
+  page-break-after: always;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  /* A4 minus the @page margins. */
+  height: 271mm;
+}
+
+.page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.page-head {
+  border-bottom: 2px solid #111;
+  padding-bottom: 3mm;
+  margin-bottom: 4mm;
+  flex: 0 0 auto;
+}
+
+.page-title {
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.page-instructions {
+  margin: 2mm 0 0;
+  font-size: 11.5pt;
+}
+
+.page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+/* Nothing in a working area may push past the bottom of its sheet. */
+.page-body > * {
+  min-height: 0;
+}
+
+.page-foot {
+  flex: 0 0 auto;
+  padding-top: 3mm;
+  border-top: 1px solid #bbb;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: #666;
+}
+
+/* -- illustration placeholders --------------------------------------- */
+
+.art {
+  border: 2px dashed #999;
+  border-radius: 3mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #777;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4mm;
+  gap: 2mm;
+}
+
+.art img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.art-label {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #555;
+}
+
+.art-ref {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 8.5pt;
+  color: #888;
+}
+
+.art-note {
+  font-size: 8.5pt;
+  max-width: 110mm;
+  color: #999;
+}
+
+.art.filled {
+  border: none;
+  padding: 0;
+}
+
+/* Pages whose working area needs the room more than the picture does. */
+.page-reflection .art {
+  flex: 0 0 40%;
+}
+
+.page-packing .art,
+.page-hidden_objects .art {
+  flex: 0 0 52%;
+}
+
+/* -- cover ------------------------------------------------------------ */
+
+.page-cover .page-head {
+  border-bottom: none;
+  text-align: center;
+}
+
+.page-cover .page-title {
+  font-size: 26pt;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+/* A cover carries no running foot. */
+.page-cover .page-foot {
+  display: none;
+}
+
+.name-line {
+  flex: 0 0 auto;
+  margin-top: 5mm;
+  font-size: 13pt;
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+}
+
+.name-line .rule {
+  flex: 1 1 auto;
+  border-bottom: 2px solid #111;
+  height: 1px;
+}
+
+/* -- checklist (packing, hidden objects) ------------------------------ */
+
+.checklist {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 2.5mm;
+  font-size: 10pt;
+  min-height: 14mm;
+}
+
+.checkbox {
+  flex: 0 0 auto;
+  width: 6mm;
+  height: 6mm;
+  border: 1.5px solid #111;
+  border-radius: 1mm;
+}
+
+.checklist li.blank {
+  border-style: dashed;
+  color: #888;
+  font-style: italic;
+}
+
+/* -- quiz -------------------------------------------------------------- */
+
+.quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  flex: 1 1 auto;
+}
+
+.quiz-row {
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 3mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5mm;
+  flex: 1 1 auto;
+}
+
+.quiz-question {
+  font-weight: 700;
+  font-size: 11.5pt;
+}
+
+.quiz-options {
+  display: flex;
+  gap: 3mm;
+  flex: 1 1 auto;
+}
+
+.quiz-option {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5mm;
+}
+
+.quiz-option .art {
+  width: 100%;
+}
+
+.bubble {
+  width: 7mm;
+  height: 7mm;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.option-label {
+  font-size: 9pt;
+  text-align: center;
+  color: #555;
+}
+
+/* -- matching ---------------------------------------------------------- */
+
+.matching {
+  display: grid;
+  grid-template-columns: 1fr 22mm 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 4mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.matching-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  min-height: 0;
+  height: 100%;
+}
+
+.matching-cell {
+  flex: 1 1 0;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1mm;
+  padding: 2mm;
+  text-align: center;
+  font-size: 9pt;
+  color: #555;
+}
+
+.matching-cell .dot {
+  width: 3mm;
+  height: 3mm;
+  border-radius: 50%;
+  background: #111;
+}
+
+.matching-gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 8.5pt;
+  text-align: center;
+}
+
+/* -- fact cards -------------------------------------------------------- */
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+}
+
+.card {
+  flex: 1 1 0;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3mm;
+  padding: 3mm;
+  min-height: 0;
+}
+
+.card-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2mm;
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: 12pt;
+}
+
+.card-caption {
+  font-size: 10pt;
+}
+
+.star {
+  width: 9mm;
+  height: 9mm;
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%,
+    79% 91%, 50% 70%, 21% 91%, 32% 57%,
+    2% 35%, 39% 35%
+  );
+  background: #111;
+}
+
+.star.outline {
+  background: #fff;
+  border: none;
+  position: relative;
+}
+
+.star.outline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #111;
+  clip-path: inherit;
+}
+
+.star.outline::after {
+  content: "";
+  position: absolute;
+  inset: 1mm;
+  background: #fff;
+  clip-path: inherit;
+}
+
+/* -- reflection -------------------------------------------------------- */
+
+.prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+  justify-content: space-between;
+}
+
+.prompt-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.prompt-label {
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.ruled {
+  border-bottom: 1.2px solid #444;
+  height: 7mm;
+}
+
+.stars {
+  display: flex;
+  gap: 3mm;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-top: 2mm;
+}
+
+/* -- two panel (spot the difference) ----------------------------------- */
+
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.panels .art {
+  flex: 1 1 0;
+}
+
+.panel-tag {
+  font-size: 9pt;
+  color: #777;
+}
+
+/* -- table of contents -------------------------------------------------- */
+
+.toc {
+  page-break-after: always;
+  break-after: page;
+}
+
+.toc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+
+.toc th,
+.toc td {
+  text-align: left;
+  padding: 2mm 2mm;
+  border-bottom: 1px solid #ddd;
+}
+
+.toc th {
+  border-bottom: 2px solid #111;
+}
+
+.toc .num {
+  width: 12mm;
+  color: #666;
+}
+
+</style>
+</head>
+<body>
+<section class="page toc">
+  <div class="page-head">
+    <h1 class="page-title">Noa and Amit&#x27;s Kfar Hanokdim Adventure Book</h1>
+    <p class="page-instructions">What&#x27;s inside this book</p>
+  </div>
+  <div class="page-body">
+    <table>
+      <thead>
+        <tr><th class="num">#</th><th>Page</th><th>Activity</th><th>Ages</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Noa and Amit&#x27;s Big Trip to Kfar Hanokdim</td><td>cover</td><td>4-6</td></tr>
+
+        <tr><td class="num">2</td><td>Find the Hidden Things</td><td>hidden objects</td><td>4-6</td></tr>
+
+        <tr><td class="num">3</td><td>Amazing Animals of Kfar Hanokdim</td><td>wildlife facts</td><td>4-6</td></tr>
+
+        <tr><td class="num">4</td><td>Match the Shadows</td><td>matching</td><td>4-6</td></tr>
+
+        <tr><td class="num">5</td><td>Color the big Bedouin hospitality tent</td><td>coloring</td><td>5-7</td></tr>
+
+        <tr><td class="num">6</td><td>The Path to the camel yard</td><td>maze</td><td>5-7</td></tr>
+
+        <tr><td class="num">7</td><td>Pack Your Explorer Bag</td><td>packing</td><td>5-7</td></tr>
+
+        <tr><td class="num">8</td><td>Spot the Differences</td><td>spot difference</td><td>5-7</td></tr>
+
+        <tr><td class="num">9</td><td>The Kfar Hanokdim Quiz</td><td>quiz</td><td>6-8</td></tr>
+
+        <tr><td class="num">10</td><td>Draw What You Saw</td><td>drawing</td><td>6-8</td></tr>
+
+        <tr><td class="num">11</td><td>Color tamarisk bushes</td><td>coloring</td><td>6-8</td></tr>
+
+        <tr><td class="num">12</td><td>My Kfar Hanokdim Memories</td><td>reflection</td><td>4-6</td></tr>
+
+      </tbody>
+    </table>
+  </div>
+  <div class="page-foot"><span>Kfar Hanokdim</span><span>Contents</span></div>
+</section>
+
+<section class="page page-cover" id="page-1">
+  <div class="page-head">
+    <h1 class="page-title">Noa and Amit&#x27;s Big Trip to Kfar Hanokdim</h1>
+    <p class="page-instructions">This adventure book belongs to Noa and Amit. Write your name on the line, color the cover, and get ready to explore Kfar Hanokdim!</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/01_cover.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+    <div class="name-line"><span>This book belongs to:</span><span class="rule"></span></div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/01_cover.md</span><span>1</span>
+  </div>
+</section>
+
+<section class="page page-hidden_objects" id="page-2">
+  <div class="page-head">
+    <h1 class="page-title">Find the Hidden Things</h1>
+    <p class="page-instructions">5 things are hiding in this picture of the Masada cliff fortress: rock hyraxes, hoopoe birds, desert lizards, labneh cheese with olive oil and donkeys. Circle each one as you find it.</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/02_hidden_objects.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+    <ul class="checklist">
+      <li class=""><span class="checkbox"></span><span>rock hyraxes</span></li>
+
+      <li class=""><span class="checkbox"></span><span>hoopoe birds</span></li>
+
+      <li class=""><span class="checkbox"></span><span>desert lizards</span></li>
+
+      <li class=""><span class="checkbox"></span><span>labneh cheese with olive oil</span></li>
+
+      <li class=""><span class="checkbox"></span><span>donkeys</span></li>
+
+    </ul>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/02_hidden_objects.md</span><span>2</span>
+  </div>
+</section>
+
+<section class="page page-wildlife_facts" id="page-3">
+  <div class="page-head">
+    <h1 class="page-title">Amazing Animals of Kfar Hanokdim</h1>
+    <p class="page-instructions">Meet 3 animals that live around Kfar Hanokdim. Color each one, then put a star next to the animal you would most like to see.</p>
+  </div>
+  <div class="page-body">
+    <div class="cards">
+      <div class="card">
+        <div class="art"><div class="art-note">Illustration goes here</div></div>
+        <div class="card-text">
+          <div class="card-name">rock hyraxes</div>
+          <div class="card-caption">rock hyraxes — look for one near the Nokdim valley lookout.</div>
+          <span class="star outline"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="art"><div class="art-note">Illustration goes here</div></div>
+        <div class="card-text">
+          <div class="card-name">goats and sheep</div>
+          <div class="card-caption">goats and sheep — look for one near the Dead Sea shore.</div>
+          <span class="star outline"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="art"><div class="art-note">Illustration goes here</div></div>
+        <div class="card-text">
+          <div class="card-name">hoopoe birds</div>
+          <div class="card-caption">hoopoe birds — look for one near the Masada cliff fortress.</div>
+          <span class="star outline"></span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/03_wildlife_facts.md</span><span>3</span>
+  </div>
+</section>
+
+<section class="page page-matching" id="page-4">
+  <div class="page-head">
+    <h1 class="page-title">Match the Shadows</h1>
+    <p class="page-instructions">Each animal on the left has a shadow on the right. Draw a line from every animal to its own shadow.</p>
+  </div>
+  <div class="page-body">
+    <div class="matching">
+      <div class="matching-column">
+        <div class="matching-cell"><span class="dot"></span><span>donkeys</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>Nubian ibex</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>desert lizards</span></div>
+
+      </div>
+      <div class="matching-gutter">draw your lines across here</div>
+      <div class="matching-column">
+        <div class="matching-cell"><span class="dot"></span><span>desert lizards</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>donkeys</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>Nubian ibex</span></div>
+
+      </div>
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/04_matching.md</span><span>4</span>
+  </div>
+</section>
+
+<section class="page page-coloring" id="page-5">
+  <div class="page-head">
+    <h1 class="page-title">Color the big Bedouin hospitality tent</h1>
+    <p class="page-instructions">Color this picture of the big Bedouin hospitality tent. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/05_coloring.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/05_coloring.md</span><span>5</span>
+  </div>
+</section>
+
+<section class="page page-maze" id="page-6">
+  <div class="page-head">
+    <h1 class="page-title">The Path to the camel yard</h1>
+    <p class="page-instructions">Help Noa get from the big Bedouin hospitality tent all the way to the camel yard. Draw one line through the maze without crossing any walls. Pick up fresh pita from the saj and acacia trees along the way.</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/06_maze.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/06_maze.md</span><span>6</span>
+  </div>
+</section>
+
+<section class="page page-packing" id="page-7">
+  <div class="page-head">
+    <h1 class="page-title">Pack Your Explorer Bag</h1>
+    <p class="page-instructions">You are going to Kfar Hanokdim! Tick the box next to everything you have packed, then draw one more thing you want to bring in the empty box.</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/07_packing.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+    <ul class="checklist">
+      <li class=""><span class="checkbox"></span><span>water bottle</span></li>
+
+      <li class=""><span class="checkbox"></span><span>comfortable shoes</span></li>
+
+      <li class=""><span class="checkbox"></span><span>small backpack</span></li>
+
+      <li class=""><span class="checkbox"></span><span>this activity book</span></li>
+
+      <li class=""><span class="checkbox"></span><span>pencils and crayons</span></li>
+
+      <li class=""><span class="checkbox"></span><span>snack</span></li>
+
+      <li class=""><span class="checkbox"></span><span>sun hat</span></li>
+
+      <li class=""><span class="checkbox"></span><span>sunscreen</span></li>
+
+      <li class=""><span class="checkbox"></span><span>sunglasses</span></li>
+
+      <li class=""><span class="checkbox"></span><span>warm coat</span></li>
+
+      <li class="blank"><span class="checkbox"></span><span>one thing of your own</span></li>
+
+    </ul>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/07_packing.md</span><span>7</span>
+  </div>
+</section>
+
+<section class="page page-spot_difference" id="page-8">
+  <div class="page-head">
+    <h1 class="page-title">Spot the Differences</h1>
+    <p class="page-instructions">These two pictures of goats and sheep look the same — but 6 things are different. Circle every difference you find.</p>
+  </div>
+  <div class="page-body">
+    <div class="panels">
+      <div class="art">
+        <div class="art-label">Picture 1</div>
+        <div class="art-ref">prompts/08_spot_difference.md</div>
+        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+      </div>
+
+      <div class="art">
+        <div class="art-label">Picture 2</div>
+        <div class="art-ref">prompts/08_spot_difference.md</div>
+        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/08_spot_difference.md</span><span>8</span>
+  </div>
+</section>
+
+<section class="page page-quiz" id="page-9">
+  <div class="page-head">
+    <h1 class="page-title">The Kfar Hanokdim Quiz</h1>
+    <p class="page-instructions">Circle the answer you think is right. There are 4 questions — ask a grown-up if you get stuck.</p>
+  </div>
+  <div class="page-body">
+    <div class="quiz">
+      <div class="quiz-row">
+        <div class="quiz-question">1. Which animal can you meet at Kfar Hanokdim?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">toucan</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">donkeys</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">polar bear</div></div>
+            <span class="bubble"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="quiz-row">
+        <div class="quiz-question">2. Which of these can you visit at Kfar Hanokdim?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">an ice castle</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">a pirate ship</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">the big Bedouin hospitality tent</div></div>
+            <span class="bubble"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="quiz-row">
+        <div class="quiz-question">3. Which of these is a local food at Kfar Hanokdim?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">sweet tea with na&#x27;ana mint</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">rainbow soup</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">moon cheese</div></div>
+            <span class="bubble"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="quiz-row">
+        <div class="quiz-question">4. Which of these can you do at Kfar Hanokdim?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">riding a dinosaur</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">sleeping in a Bedouin tent</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">swimming to the moon</div></div>
+            <span class="bubble"></span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/09_quiz.md</span><span>9</span>
+  </div>
+</section>
+
+<section class="page page-drawing" id="page-10">
+  <div class="page-head">
+    <h1 class="page-title">Draw What You Saw</h1>
+    <p class="page-instructions">Draw what you remember about baking pita on a saj griddle inside the frame — the way *you* saw it. Add as many small details as you can.</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Your drawing goes here</div>
+      <div class="art-ref">prompts/10_drawing.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/10_drawing.md</span><span>10</span>
+  </div>
+</section>
+
+<section class="page page-coloring" id="page-11">
+  <div class="page-head">
+    <h1 class="page-title">Color tamarisk bushes</h1>
+    <p class="page-instructions">Color this picture of tamarisk bushes. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/11_coloring.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/11_coloring.md</span><span>11</span>
+  </div>
+</section>
+
+<section class="page page-reflection" id="page-12">
+  <div class="page-head">
+    <h1 class="page-title">My Kfar Hanokdim Memories</h1>
+    <p class="page-instructions">Your trip is nearly over! Draw or write your favorite moment, answer the questions, and color one star for every day you had fun.</p>
+  </div>
+  <div class="page-body">
+    <div class="art">
+      <div class="art-label">Illustration goes here</div>
+      <div class="art-ref">prompts/12_reflection.md</div>
+      <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+    </div>
+
+    <div class="prompts">
+      <div class="prompt-block">
+        <div class="prompt-label">The best thing I saw was...</div>
+        <div class="ruled"></div>
+        <div class="ruled"></div>
+
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-label">Something new I learned was...</div>
+        <div class="ruled"></div>
+        <div class="ruled"></div>
+
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-label">Next time I want to...</div>
+        <div class="ruled"></div>
+        <div class="ruled"></div>
+
+      </div>
+
+    </div>
+    <div class="stars">
+      <span class="star outline"></span>
+      <span class="star outline"></span>
+      <span class="star outline"></span>
+
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/12_reflection.md</span><span>12</span>
+  </div>
+</section>
+
+</body>
+</html>

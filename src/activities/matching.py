@@ -48,8 +48,13 @@ class MatchingActivity(ActivityGenerator):
             kind_key = "common.kind_place"
         subjects = subjects[:count]
 
-        # The right-hand column is the same set in a different, fixed order.
-        shadow_order = list(context.sample(subjects, len(subjects), key="matching:shadows"))
+        # The right-hand column holds the same set in a different order —
+        # shuffled explicitly, because sampling every element of a pool returns
+        # it unchanged and would let the child match straight across.
+        shadow_order = list(subjects)
+        context.rng_for("matching:shadows").shuffle(shadow_order)
+        if len(shadow_order) > 1 and shadow_order == list(subjects):
+            shadow_order.append(shadow_order.pop(0))
 
         return self.draft(
             title=self.text(context, "matching.title"),

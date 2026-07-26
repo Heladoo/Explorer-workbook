@@ -13,6 +13,16 @@ STRINGS: dict[str, object] = {
     "common.kind_animal": "animal",
     "common.kind_place": "place",
     "common.this_place": "this place",
+    # -- printed page furniture (used by the PDF/HTML renderer) --------
+    "pdf.contents": "What's inside this book",
+    "pdf.name_label": "This book belongs to:",
+    "pdf.illustration": "Illustration goes here",
+    "pdf.art_note": "Generate this picture from the prompt file, then drop it in.",
+    "pdf.draw_here": "Your drawing goes here",
+    "pdf.your_own": "one thing of your own",
+    "pdf.match_gutter": "draw your lines across here",
+    "pdf.panel_top": "Picture 1",
+    "pdf.panel_bottom": "Picture 2",
     # -- workbook framing ---------------------------------------------
     "workbook.title_with_names": "{names}'s {destination} Adventure Book",
     "workbook.title_plain": "The {destination} Explorer Workbook",

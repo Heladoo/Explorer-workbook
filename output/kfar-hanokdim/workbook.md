@@ -11,7 +11,7 @@
 | Trip | 3 day(s), itinerary: Arrival and camel yard; Desert hike and Masada; Dead Sea day |
 | Special interests | animals |
 | Knowledge source | file |
-| Generated | 2026-07-25T20:05:55+00:00 |
+| Generated | 2026-07-26T06:13:34+00:00 |
 
 
 ## How to use this document
@@ -323,7 +323,7 @@ Include:
 • desert lizards
 
 Layout:
-Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.
+Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): desert lizards, goats and sheep, donkeys, Nubian ibex. Wide empty gutter between the columns for the child to draw lines.
 
 Style:
 • Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle
@@ -358,16 +358,16 @@ Constraints:
     "desert lizards"
   ],
   "right_column": [
-    "donkeys",
-    "Nubian ibex",
+    "desert lizards",
     "goats and sheep",
-    "desert lizards"
+    "donkeys",
+    "Nubian ibex"
   ],
   "answer_key": {
-    "donkeys": 1,
-    "Nubian ibex": 2,
-    "goats and sheep": 3,
-    "desert lizards": 4
+    "donkeys": 3,
+    "Nubian ibex": 4,
+    "goats and sheep": 2,
+    "desert lizards": 1
   },
   "subject_kind": "animal"
 }

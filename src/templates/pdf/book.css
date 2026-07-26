@@ -1,0 +1,467 @@
+/* Print styles for the workbook. A4 portrait, one activity per sheet.
+   Everything here is print-first: black on white, no background fills that
+   would drain a home printer's ink. */
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm 12mm 12mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  margin: 0;
+  font-family: "Comic Sans MS", "Trebuchet MS", "Verdana", sans-serif;
+  color: #111;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+/* -- page frame ------------------------------------------------------ */
+
+.page {
+  page-break-after: always;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  /* A4 minus the @page margins. */
+  height: 271mm;
+}
+
+.page:last-child {
+  page-break-after: auto;
+  break-after: auto;
+}
+
+.page-head {
+  border-bottom: 2px solid #111;
+  padding-bottom: 3mm;
+  margin-bottom: 4mm;
+  flex: 0 0 auto;
+}
+
+.page-title {
+  font-size: 20pt;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.page-instructions {
+  margin: 2mm 0 0;
+  font-size: 11.5pt;
+}
+
+.page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+/* Nothing in a working area may push past the bottom of its sheet. */
+.page-body > * {
+  min-height: 0;
+}
+
+.page-foot {
+  flex: 0 0 auto;
+  padding-top: 3mm;
+  border-top: 1px solid #bbb;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: #666;
+}
+
+/* -- illustration placeholders --------------------------------------- */
+
+.art {
+  border: 2px dashed #999;
+  border-radius: 3mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #777;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4mm;
+  gap: 2mm;
+}
+
+.art img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.art-label {
+  font-size: 10pt;
+  font-weight: 700;
+  color: #555;
+}
+
+.art-ref {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 8.5pt;
+  color: #888;
+}
+
+.art-note {
+  font-size: 8.5pt;
+  max-width: 110mm;
+  color: #999;
+}
+
+.art.filled {
+  border: none;
+  padding: 0;
+}
+
+/* Pages whose working area needs the room more than the picture does. */
+.page-reflection .art {
+  flex: 0 0 40%;
+}
+
+.page-packing .art,
+.page-hidden_objects .art {
+  flex: 0 0 52%;
+}
+
+/* -- cover ------------------------------------------------------------ */
+
+.page-cover .page-head {
+  border-bottom: none;
+  text-align: center;
+}
+
+.page-cover .page-title {
+  font-size: 26pt;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+/* A cover carries no running foot. */
+.page-cover .page-foot {
+  display: none;
+}
+
+.name-line {
+  flex: 0 0 auto;
+  margin-top: 5mm;
+  font-size: 13pt;
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+}
+
+.name-line .rule {
+  flex: 1 1 auto;
+  border-bottom: 2px solid #111;
+  height: 1px;
+}
+
+/* -- checklist (packing, hidden objects) ------------------------------ */
+
+.checklist {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 2.5mm;
+  font-size: 10pt;
+  min-height: 14mm;
+}
+
+.checkbox {
+  flex: 0 0 auto;
+  width: 6mm;
+  height: 6mm;
+  border: 1.5px solid #111;
+  border-radius: 1mm;
+}
+
+.checklist li.blank {
+  border-style: dashed;
+  color: #888;
+  font-style: italic;
+}
+
+/* -- quiz -------------------------------------------------------------- */
+
+.quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+  flex: 1 1 auto;
+}
+
+.quiz-row {
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 3mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5mm;
+  flex: 1 1 auto;
+}
+
+.quiz-question {
+  font-weight: 700;
+  font-size: 11.5pt;
+}
+
+.quiz-options {
+  display: flex;
+  gap: 3mm;
+  flex: 1 1 auto;
+}
+
+.quiz-option {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5mm;
+}
+
+.quiz-option .art {
+  width: 100%;
+}
+
+.bubble {
+  width: 7mm;
+  height: 7mm;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.option-label {
+  font-size: 9pt;
+  text-align: center;
+  color: #555;
+}
+
+/* -- matching ---------------------------------------------------------- */
+
+.matching {
+  display: grid;
+  grid-template-columns: 1fr 22mm 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 4mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.matching-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  min-height: 0;
+  height: 100%;
+}
+
+.matching-cell {
+  flex: 1 1 0;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1mm;
+  padding: 2mm;
+  text-align: center;
+  font-size: 9pt;
+  color: #555;
+}
+
+.matching-cell .dot {
+  width: 3mm;
+  height: 3mm;
+  border-radius: 50%;
+  background: #111;
+}
+
+.matching-gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 8.5pt;
+  text-align: center;
+}
+
+/* -- fact cards -------------------------------------------------------- */
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+}
+
+.card {
+  flex: 1 1 0;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3mm;
+  padding: 3mm;
+  min-height: 0;
+}
+
+.card-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2mm;
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: 12pt;
+}
+
+.card-caption {
+  font-size: 10pt;
+}
+
+.star {
+  width: 9mm;
+  height: 9mm;
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%,
+    79% 91%, 50% 70%, 21% 91%, 32% 57%,
+    2% 35%, 39% 35%
+  );
+  background: #111;
+}
+
+.star.outline {
+  background: #fff;
+  border: none;
+  position: relative;
+}
+
+.star.outline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #111;
+  clip-path: inherit;
+}
+
+.star.outline::after {
+  content: "";
+  position: absolute;
+  inset: 1mm;
+  background: #fff;
+  clip-path: inherit;
+}
+
+/* -- reflection -------------------------------------------------------- */
+
+.prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+  justify-content: space-between;
+}
+
+.prompt-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+
+.prompt-label {
+  font-size: 10.5pt;
+  font-weight: 700;
+}
+
+.ruled {
+  border-bottom: 1.2px solid #444;
+  height: 7mm;
+}
+
+.stars {
+  display: flex;
+  gap: 3mm;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-top: 2mm;
+}
+
+/* -- two panel (spot the difference) ----------------------------------- */
+
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: 3mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.panels .art {
+  flex: 1 1 0;
+}
+
+.panel-tag {
+  font-size: 9pt;
+  color: #777;
+}
+
+/* -- table of contents -------------------------------------------------- */
+
+.toc {
+  page-break-after: always;
+  break-after: page;
+}
+
+.toc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+
+.toc th,
+.toc td {
+  text-align: left;
+  padding: 2mm 2mm;
+  border-bottom: 1px solid #ddd;
+}
+
+.toc th {
+  border-bottom: 2px solid #111;
+}
+
+.toc .num {
+  width: 12mm;
+  color: #666;
+}

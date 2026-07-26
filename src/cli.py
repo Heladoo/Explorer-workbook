@@ -69,6 +69,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data-dir", help="Directory of curated destination packs.")
     parser.add_argument("--out", help="Output directory (default: output/<destination-slug>).")
     parser.add_argument(
+        "--html",
+        action="store_true",
+        help="Also lay the workbook out as a printable A4 HTML document.",
+    )
+    parser.add_argument(
+        "--pdf",
+        action="store_true",
+        help="Also print the workbook to A4 PDF (implies --html; needs playwright).",
+    )
+    parser.add_argument(
         "--list-destinations",
         action="store_true",
         help="List destinations that have a curated data pack, then exit.",
@@ -120,6 +130,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             provider=args.provider,
             data_dir=args.data_dir,
             output_dir=args.out,
+            html=args.html,
+            pdf=args.pdf,
         )
     except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -137,8 +149,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     for page in workbook.pages:
         print(f"    {page.number:>2}. {page.type:<16} {page.title}")
     print(f"  written to  : {artifacts.output_dir}")
-    print(f"    {artifacts.workbook_json.name}, {artifacts.workbook_md.name}, "
-          f"prompts/ ({len(artifacts.prompt_files)} files)")
+    written = [
+        artifacts.workbook_json.name,
+        artifacts.workbook_md.name,
+        f"prompts/ ({len(artifacts.prompt_files)} files)",
+    ]
+    if artifacts.workbook_html:
+        written.append(artifacts.workbook_html.name)
+    if artifacts.workbook_pdf:
+        written.append(artifacts.workbook_pdf.name)
+    print(f"    {', '.join(written)}")
     if workbook.metadata.get("language_fallback"):
         print(f"  note        : {workbook.metadata['language_fallback']}")
         print(f"                available: {', '.join(available_languages())}")

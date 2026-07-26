@@ -9,17 +9,21 @@ itinerary and interests) and it produces:
 | `workbook.json` | The full workbook structure: every page, its instructions, metadata and final image prompt. |
 | `workbook.md` | The human-readable build specification: page number, activity type, educational goal, instructions, required illustration, image prompt and estimated age. |
 | `prompts/NN_<activity>.md` | One file per page containing **only** the image prompt, ready to paste into GPT Image, DALL·E, Midjourney or Flux. |
+| `workbook.html` / `workbook.pdf` | Optional: the book laid out for print on A4, from HTML/CSS page templates. |
 
-No images are generated and no PDF is rendered. That is deliberate — see
-[Extending it](#extending-it).
+No images are generated — that stage is still a seam, see [Extending it](#extending-it).
 
 ## Quickstart
 
-Python 3.11+, no dependencies.
+Python 3.11+. The generator itself has no dependencies; the PDF stage needs
+Playwright and a Chromium build.
 
 ```bash
 python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pages 12
 # → output/kfar-hanokdim/{workbook.json, workbook.md, prompts/*.md}
+
+python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pdf
+# → the same, plus workbook.html and a printable A4 workbook.pdf
 ```
 
 From Python:
@@ -49,6 +53,8 @@ Useful flags:
 --provider auto|file|llm|heuristic
 --seed 42                  # reproducible output
 --list-destinations        # which places have a curated data pack
+--html                     # lay the book out for print, no browser needed
+--pdf                      # print it to A4 PDF (implies --html)
 ```
 
 ## How it works
@@ -68,6 +74,8 @@ Agent 3  ActivityGenerator plugins  → ActivityDraft   (title, instructions, go
 Agent 4  PromptGenerator            → image_prompt strings + prompts/*.md
         ↓
 Agent 5  MarkdownGenerator          → workbook.md          JSON writer → workbook.json
+        ↓
+Layout   HtmlRenderer → PdfRenderer → workbook.html, workbook.pdf   (optional)
 ```
 
 Activities return a **structured `ImageBrief`**, not prompt text. Agent 4 is the only
@@ -82,6 +90,8 @@ touching a single activity.
 | `src/activities/` | One module per activity, auto-discovered |
 | `src/locales/` | User-facing copy, one module per language |
 | `src/templates/` | Style guide and markdown templates |
+| `src/templates/pdf/` | Print page templates and `book.css` |
+| `src/rendering/` | Layout stage: workbook → printable HTML → PDF |
 | `src/pipeline.py` | Wires the agents together (all injectable) |
 | `src/output_writer.py` | The only module that touches the filesystem |
 | `src/ports.py` | `ImageBackend` / `DocumentRenderer` — the seams for images and PDF |
@@ -143,15 +153,40 @@ dict using the same keys as `en.py`.
 **Add a destination pack** — drop a JSON file in `data/destinations/` with the eight
 knowledge categories (see `kfar-hanokdim.json`).
 
+**Change how a page prints** — edit the HTML template in `src/templates/pdf/` or
+`book.css`. A new bespoke page layout is one `@layout("your_type")` function in
+`src/rendering/layouts.py` plus a template; an activity with no registered layout
+prints as a full-page illustration frame, so new plugins work untouched.
+
 **Generate real images** — implement `ImageBackend` from `src/ports.py`. Every page's
 `image_prompt` is already final; a backend only has to call an image model and save
-the result.
-
-**Render a PDF** — implement `DocumentRenderer` from `src/ports.py`. Everything the
-layout needs is already in `workbook.json`: page order, instructions, checkbox counts,
-maze grid size, quiz answer keys, star counts, and the illustration brief per page.
+the result. Pass the files to the renderer as `images={page_number: path}` and the
+placeholder frames become the artwork — nothing else changes.
 
 Neither requires changing an agent or an activity.
+
+## Print layout
+
+`--html` and `--pdf` run the layout stage: `HtmlRenderer` turns `workbook.json` into a
+print-styled A4 document, and `PdfRenderer` prints it with headless Chromium. The
+layout adds no content — it arranges what the activities already recorded.
+
+That is why activities keep text **out** of the illustrations: the page metadata
+becomes real page furniture. Packing checkboxes and item names, quiz questions with
+answer bubbles, matching columns in their planned order, reflection prompts with
+ruled lines and one star per trip day are all typeset by the layout, so the
+illustration stays a wordless picture that any image model can draw.
+
+Pages without artwork print a labelled placeholder frame naming their prompt file, so
+the book is printable and reviewable before a single image exists.
+
+```bash
+pip install playwright   # Chromium must be available; set CHROMIUM_EXECUTABLE if it
+                         # lives outside the usual Playwright browsers directory
+```
+
+`--html` needs neither. If Playwright or Chromium is missing, `--pdf` fails with an
+explanation and everything else still works.
 
 ## Activities
 
@@ -171,7 +206,9 @@ pip install pytest
 python -m pytest
 ```
 
-143 tests covering the plugin contract (every activity, every difficulty), planner
+163 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
-(the LLM one with an injected transport, never the network), and the end-to-end
-artifacts including byte-for-byte reproducibility.
+(the LLM one with an injected transport, never the network), the print layout
+(structure, escaping, per-activity furniture, placeholder-to-artwork swap), and the
+end-to-end artifacts including byte-for-byte reproducibility. The two PDF tests skip
+themselves when Chromium is unavailable.

@@ -56,6 +56,9 @@ def generate_workbook(
     output_dir: Path | str | None = None,
     output_root: Path | str | None = None,
     write: bool = True,
+    html: bool = False,
+    pdf: bool = False,
+    images: dict[int, Path] | None = None,
     builder: WorkbookBuilder | None = None,
 ) -> GenerationResult:
     """Generate a workbook and, unless ``write=False``, write the three artifacts.
@@ -63,6 +66,9 @@ def generate_workbook(
     ``provider`` chooses the knowledge chain: ``auto`` (curated packs, then the
     model), ``file``, ``llm`` or ``heuristic``. ``output_dir`` overrides the
     default ``output/<destination-slug>``.
+
+    ``html`` and ``pdf`` additionally lay the workbook out for print; ``images``
+    maps page numbers to illustration files when artwork exists.
     """
     request = WorkbookRequest(
         destination=destination,
@@ -91,4 +97,7 @@ def generate_workbook(
     target = Path(output_dir) if output_dir else default_output_dir(
         bundle.context.slug if bundle.context else request.destination, output_root
     )
-    return GenerationResult(bundle=bundle, artifacts=write_bundle(bundle, target))
+    return GenerationResult(
+        bundle=bundle,
+        artifacts=write_bundle(bundle, target, html=html, pdf=pdf, images=images),
+    )

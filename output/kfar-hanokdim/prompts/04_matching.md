@@ -10,7 +10,7 @@ Include:
 • desert lizards
 
 Layout:
-Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): donkeys, Nubian ibex, goats and sheep, desert lizards. Wide empty gutter between the columns for the child to draw lines.
+Left column top-to-bottom: donkeys, Nubian ibex, goats and sheep, desert lizards. Right column top-to-bottom (silhouettes): desert lizards, goats and sheep, donkeys, Nubian ibex. Wide empty gutter between the columns for the child to draw lines.
 
 Style:
 • Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle
