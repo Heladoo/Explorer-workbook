@@ -424,6 +424,120 @@ body {
   padding-top: 2mm;
 }
 
+/* -- word search -------------------------------------------------------- */
+
+.puzzle-grid {
+  display: grid;
+  gap: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: center;
+  justify-items: center;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 4mm;
+}
+
+.puzzle-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  width: 100%;
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 13pt;
+  letter-spacing: 0;
+}
+
+.word-bank {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2mm 3mm;
+  list-style: none;
+  padding: 3mm;
+  margin: 0;
+  border: 1.5px dashed #111;
+  border-radius: 2mm;
+  font-size: 10.5pt;
+}
+
+.word-bank li {
+  text-align: center;
+}
+
+/* -- crossword ----------------------------------------------------------- */
+
+.crossword-grid {
+  display: grid;
+  gap: 0;
+  flex: 0 0 auto;
+  justify-content: center;
+  /* Squares stay printable even on a wide grid. */
+  max-width: 150mm;
+  margin: 0 auto;
+}
+
+.crossword-cell {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  min-width: 7mm;
+}
+
+.crossword-cell.writable {
+  border: 1px solid #111;
+  margin: -0.5px;
+  background: #fff;
+}
+
+.crossword-cell.blank {
+  border: none;
+}
+
+.crossword-cell i {
+  position: absolute;
+  top: 0.4mm;
+  left: 0.6mm;
+  font-size: 6pt;
+  font-style: normal;
+  color: #444;
+  line-height: 1;
+}
+
+.clue-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.clue-column h2 {
+  font-size: 11pt;
+  margin: 0 0 2mm;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #111;
+  padding-bottom: 1mm;
+}
+
+.clues {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10pt;
+  line-height: 1.5;
+}
+
+.clues li {
+  margin-bottom: 1.5mm;
+}
+
+.clue-length {
+  color: #666;
+}
+
 /* -- two panel (spot the difference) ----------------------------------- */
 
 .panels {
@@ -486,29 +600,33 @@ body {
         <tr><th class="num">#</th><th>Page</th><th>Activity</th><th>Ages</th></tr>
       </thead>
       <tbody>
-        <tr><td class="num">1</td><td>Noa and Amit&#x27;s Big Trip to Kfar Hanokdim</td><td>cover</td><td>4-6</td></tr>
+        <tr><td class="num">1</td><td>Noa and Amit&#x27;s Big Trip to Kfar Hanokdim</td><td>cover</td><td>6-8</td></tr>
 
-        <tr><td class="num">2</td><td>Find the Hidden Things</td><td>hidden objects</td><td>4-6</td></tr>
+        <tr><td class="num">2</td><td>Find the Hidden Things</td><td>hidden objects</td><td>6-8</td></tr>
 
-        <tr><td class="num">3</td><td>Amazing Animals of Kfar Hanokdim</td><td>wildlife facts</td><td>4-6</td></tr>
+        <tr><td class="num">3</td><td>Amazing Animals of Kfar Hanokdim</td><td>wildlife facts</td><td>6-8</td></tr>
 
-        <tr><td class="num">4</td><td>Match the Shadows</td><td>matching</td><td>4-6</td></tr>
+        <tr><td class="num">4</td><td>Match the Shadows</td><td>matching</td><td>6-8</td></tr>
 
-        <tr><td class="num">5</td><td>Color the big Bedouin hospitality tent</td><td>coloring</td><td>5-7</td></tr>
+        <tr><td class="num">5</td><td>Color the Dead Sea shore</td><td>coloring</td><td>7-9</td></tr>
 
-        <tr><td class="num">6</td><td>The Path to the camel yard</td><td>maze</td><td>5-7</td></tr>
+        <tr><td class="num">6</td><td>The Path to the Nokdim valley lookout</td><td>maze</td><td>7-9</td></tr>
 
-        <tr><td class="num">7</td><td>Pack Your Explorer Bag</td><td>packing</td><td>5-7</td></tr>
+        <tr><td class="num">7</td><td>Kfar Hanokdim Word Search</td><td>word search</td><td>7-9</td></tr>
 
-        <tr><td class="num">8</td><td>Spot the Differences</td><td>spot difference</td><td>5-7</td></tr>
+        <tr><td class="num">8</td><td>Spot the Differences</td><td>spot difference</td><td>7-9</td></tr>
 
-        <tr><td class="num">9</td><td>The Kfar Hanokdim Quiz</td><td>quiz</td><td>6-8</td></tr>
+        <tr><td class="num">9</td><td>The Kfar Hanokdim Crossword</td><td>crossword</td><td>7-9</td></tr>
 
-        <tr><td class="num">10</td><td>Draw What You Saw</td><td>drawing</td><td>6-8</td></tr>
+        <tr><td class="num">10</td><td>Pack Your Explorer Bag</td><td>packing</td><td>7-9</td></tr>
 
-        <tr><td class="num">11</td><td>Color tamarisk bushes</td><td>coloring</td><td>6-8</td></tr>
+        <tr><td class="num">11</td><td>The Kfar Hanokdim Quiz</td><td>quiz</td><td>8-10</td></tr>
 
-        <tr><td class="num">12</td><td>My Kfar Hanokdim Memories</td><td>reflection</td><td>4-6</td></tr>
+        <tr><td class="num">12</td><td>Draw What You Saw</td><td>drawing</td><td>8-10</td></tr>
+
+        <tr><td class="num">13</td><td>Color the Dead Sea shore</td><td>coloring</td><td>8-10</td></tr>
+
+        <tr><td class="num">14</td><td>My Kfar Hanokdim Memories</td><td>reflection</td><td>6-8</td></tr>
 
       </tbody>
     </table>
@@ -539,7 +657,7 @@ body {
 <section class="page page-hidden_objects" id="page-2">
   <div class="page-head">
     <h1 class="page-title">Find the Hidden Things</h1>
-    <p class="page-instructions">5 things are hiding in this picture of the Masada cliff fortress: rock hyraxes, hoopoe birds, desert lizards, labneh cheese with olive oil and donkeys. Circle each one as you find it.</p>
+    <p class="page-instructions">5 things are hiding in this picture of the Dead Sea shore: camels, Nubian ibex, hoopoe birds, labneh cheese with olive oil and goats and sheep. Circle each one as you find it.</p>
   </div>
   <div class="page-body">
     <div class="art">
@@ -549,15 +667,15 @@ body {
     </div>
 
     <ul class="checklist">
-      <li class=""><span class="checkbox"></span><span>rock hyraxes</span></li>
+      <li class=""><span class="checkbox"></span><span>camels</span></li>
+
+      <li class=""><span class="checkbox"></span><span>Nubian ibex</span></li>
 
       <li class=""><span class="checkbox"></span><span>hoopoe birds</span></li>
 
-      <li class=""><span class="checkbox"></span><span>desert lizards</span></li>
-
       <li class=""><span class="checkbox"></span><span>labneh cheese with olive oil</span></li>
 
-      <li class=""><span class="checkbox"></span><span>donkeys</span></li>
+      <li class=""><span class="checkbox"></span><span>goats and sheep</span></li>
 
     </ul>
 
@@ -577,8 +695,8 @@ body {
       <div class="card">
         <div class="art"><div class="art-note">Illustration goes here</div></div>
         <div class="card-text">
-          <div class="card-name">rock hyraxes</div>
-          <div class="card-caption">rock hyraxes — look for one near the Nokdim valley lookout.</div>
+          <div class="card-name">desert lizards</div>
+          <div class="card-caption">desert lizards — look for one near the date palm grove.</div>
           <span class="star outline"></span>
         </div>
       </div>
@@ -587,7 +705,7 @@ body {
         <div class="art"><div class="art-note">Illustration goes here</div></div>
         <div class="card-text">
           <div class="card-name">goats and sheep</div>
-          <div class="card-caption">goats and sheep — look for one near the Dead Sea shore.</div>
+          <div class="card-caption">goats and sheep — look for one near the big Bedouin hospitality tent.</div>
           <span class="star outline"></span>
         </div>
       </div>
@@ -596,7 +714,7 @@ body {
         <div class="art"><div class="art-note">Illustration goes here</div></div>
         <div class="card-text">
           <div class="card-name">hoopoe birds</div>
-          <div class="card-caption">hoopoe birds — look for one near the Masada cliff fortress.</div>
+          <div class="card-caption">hoopoe birds — look for one near the camel yard.</div>
           <span class="star outline"></span>
         </div>
       </div>
@@ -617,22 +735,22 @@ body {
   <div class="page-body">
     <div class="matching">
       <div class="matching-column">
-        <div class="matching-cell"><span class="dot"></span><span>donkeys</span></div>
+        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
 
         <div class="matching-cell"><span class="dot"></span><span>Nubian ibex</span></div>
 
-        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
+        <div class="matching-cell"><span class="dot"></span><span>donkeys</span></div>
 
-        <div class="matching-cell"><span class="dot"></span><span>desert lizards</span></div>
+        <div class="matching-cell"><span class="dot"></span><span>hoopoe birds</span></div>
 
       </div>
       <div class="matching-gutter">draw your lines across here</div>
       <div class="matching-column">
-        <div class="matching-cell"><span class="dot"></span><span>desert lizards</span></div>
-
-        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
+        <div class="matching-cell"><span class="dot"></span><span>hoopoe birds</span></div>
 
         <div class="matching-cell"><span class="dot"></span><span>donkeys</span></div>
+
+        <div class="matching-cell"><span class="dot"></span><span>goats and sheep</span></div>
 
         <div class="matching-cell"><span class="dot"></span><span>Nubian ibex</span></div>
 
@@ -647,8 +765,8 @@ body {
 
 <section class="page page-coloring" id="page-5">
   <div class="page-head">
-    <h1 class="page-title">Color the big Bedouin hospitality tent</h1>
-    <p class="page-instructions">Color this picture of the big Bedouin hospitality tent. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!</p>
+    <h1 class="page-title">Color the Dead Sea shore</h1>
+    <p class="page-instructions">Color this picture of the Dead Sea shore. Look closely for desert wildflowers after rain, date palms and camels — you may see them for real on your trip!</p>
   </div>
   <div class="page-body">
     <div class="art">
@@ -666,8 +784,8 @@ body {
 
 <section class="page page-maze" id="page-6">
   <div class="page-head">
-    <h1 class="page-title">The Path to the camel yard</h1>
-    <p class="page-instructions">Help Noa get from the big Bedouin hospitality tent all the way to the camel yard. Draw one line through the maze without crossing any walls. Pick up fresh pita from the saj and acacia trees along the way.</p>
+    <h1 class="page-title">The Path to the Nokdim valley lookout</h1>
+    <p class="page-instructions">Help Noa get from the Masada cliff fortress all the way to the Nokdim valley lookout. Draw one line through the maze without crossing any walls. Pick up dates from the palm trees and desert wildflowers after rain along the way.</p>
   </div>
   <div class="page-body">
     <div class="art">
@@ -683,7 +801,604 @@ body {
   </div>
 </section>
 
-<section class="page page-packing" id="page-7">
+<section class="page page-word_search" id="page-7">
+  <div class="page-head">
+    <h1 class="page-title">Kfar Hanokdim Word Search</h1>
+    <p class="page-instructions">8 words from your trip are hiding in the grid — across, down and sometimes slanted. Find and circle each one: Acacia, Camels, Cardamom, Desert, Donkey, Goats, Grove and Lookout.</p>
+  </div>
+  <div class="page-body">
+    <div class="puzzle-grid" style="grid-template-columns: repeat(12, 1fr);">
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">K</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">U</span>
+
+      <span class="puzzle-cell">T</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">P</span>
+
+      <span class="puzzle-cell">Q</span>
+
+      <span class="puzzle-cell">Q</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">W</span>
+
+      <span class="puzzle-cell">Y</span>
+
+      <span class="puzzle-cell">B</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">V</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">U</span>
+
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">B</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">V</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">J</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">Q</span>
+
+      <span class="puzzle-cell">N</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">T</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">U</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">I</span>
+
+      <span class="puzzle-cell">P</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">J</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">T</span>
+
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">H</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">V</span>
+
+      <span class="puzzle-cell">N</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">B</span>
+
+      <span class="puzzle-cell">T</span>
+
+      <span class="puzzle-cell">T</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">N</span>
+
+      <span class="puzzle-cell">K</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">Y</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">O</span>
+
+      <span class="puzzle-cell">I</span>
+
+      <span class="puzzle-cell">H</span>
+
+      <span class="puzzle-cell">L</span>
+
+      <span class="puzzle-cell">R</span>
+
+      <span class="puzzle-cell">X</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">B</span>
+
+      <span class="puzzle-cell">Q</span>
+
+      <span class="puzzle-cell">S</span>
+
+      <span class="puzzle-cell">B</span>
+
+      <span class="puzzle-cell">P</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">F</span>
+
+      <span class="puzzle-cell">M</span>
+
+      <span class="puzzle-cell">D</span>
+
+      <span class="puzzle-cell">P</span>
+
+      <span class="puzzle-cell">W</span>
+
+      <span class="puzzle-cell">N</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">W</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">E</span>
+
+      <span class="puzzle-cell">G</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">C</span>
+
+      <span class="puzzle-cell">I</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">A</span>
+
+      <span class="puzzle-cell">H</span>
+
+      <span class="puzzle-cell">Z</span>
+
+      <span class="puzzle-cell">Z</span>
+
+    </div>
+    <ul class="word-bank">
+      <li>Acacia</li>
+
+      <li>Camels</li>
+
+      <li>Cardamom</li>
+
+      <li>Desert</li>
+
+      <li>Donkey</li>
+
+      <li>Goats</li>
+
+      <li>Grove</li>
+
+      <li>Lookout</li>
+
+    </ul>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/07_word_search.md</span><span>7</span>
+  </div>
+</section>
+
+<section class="page page-spot_difference" id="page-8">
+  <div class="page-head">
+    <h1 class="page-title">Spot the Differences</h1>
+    <p class="page-instructions">These two pictures of rock hyraxes look the same — but 6 things are different. Circle every difference you find.</p>
+  </div>
+  <div class="page-body">
+    <div class="panels">
+      <div class="art">
+        <div class="art-label">Picture 1</div>
+        <div class="art-ref">prompts/08_spot_difference.md</div>
+        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+      </div>
+
+      <div class="art">
+        <div class="art-label">Picture 2</div>
+        <div class="art-ref">prompts/08_spot_difference.md</div>
+        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/08_spot_difference.md</span><span>8</span>
+  </div>
+</section>
+
+<section class="page page-crossword" id="page-9">
+  <div class="page-head">
+    <h1 class="page-title">The Kfar Hanokdim Crossword</h1>
+    <p class="page-instructions">Read each clue and write the answer into the squares, one letter per square. There are 7 clues — the words cross each other, so a letter you already know can help with the next one.</p>
+  </div>
+  <div class="page-body">
+    <div class="crossword-grid" style="grid-template-columns: repeat(8, 1fr); width: min(100%, 104mm);">
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>1</i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>2</i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>3</i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>4</i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>5</i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>6</i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell blank"><i></i></span>
+
+      <span class="crossword-cell writable"><i>7</i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+      <span class="crossword-cell writable"><i></i></span>
+
+    </div>
+    <div class="clue-lists">
+      <div class="clue-column">
+        <h2>Across</h2>
+        <ol class="clues">
+          <li><b>3.</b> ___ ibex <span class="clue-length">(6)</span></li>
+
+          <li><b>6.</b> Rock ___ <span class="clue-length">(7)</span></li>
+
+          <li><b>7.</b> The big ___ hospitality tent <span class="clue-length">(7)</span></li>
+
+        </ol>
+      </div>
+      <div class="clue-column">
+        <h2>Down</h2>
+        <ol class="clues">
+          <li><b>1.</b> ___ trees <span class="clue-length">(6)</span></li>
+
+          <li><b>2.</b> A desert hike at ___ <span class="clue-length">(7)</span></li>
+
+          <li><b>4.</b> White broom ___ <span class="clue-length">(6)</span></li>
+
+          <li><b>5.</b> Baking pita on a saj ___ <span class="clue-length">(7)</span></li>
+
+        </ol>
+      </div>
+    </div>
+
+  </div>
+  <div class="page-foot">
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/09_crossword.md</span><span>9</span>
+  </div>
+</section>
+
+<section class="page page-packing" id="page-10">
   <div class="page-head">
     <h1 class="page-title">Pack Your Explorer Bag</h1>
     <p class="page-instructions">You are going to Kfar Hanokdim! Tick the box next to everything you have packed, then draw one more thing you want to bring in the empty box.</p>
@@ -691,7 +1406,7 @@ body {
   <div class="page-body">
     <div class="art">
       <div class="art-label">Illustration goes here</div>
-      <div class="art-ref">prompts/07_packing.md</div>
+      <div class="art-ref">prompts/10_packing.md</div>
       <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
     </div>
 
@@ -716,47 +1431,24 @@ body {
 
       <li class=""><span class="checkbox"></span><span>warm coat</span></li>
 
+      <li class=""><span class="checkbox"></span><span>gloves</span></li>
+
+      <li class=""><span class="checkbox"></span><span>woolly hat</span></li>
+
       <li class="blank"><span class="checkbox"></span><span>one thing of your own</span></li>
 
     </ul>
 
   </div>
   <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/07_packing.md</span><span>7</span>
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/10_packing.md</span><span>10</span>
   </div>
 </section>
 
-<section class="page page-spot_difference" id="page-8">
-  <div class="page-head">
-    <h1 class="page-title">Spot the Differences</h1>
-    <p class="page-instructions">These two pictures of goats and sheep look the same — but 6 things are different. Circle every difference you find.</p>
-  </div>
-  <div class="page-body">
-    <div class="panels">
-      <div class="art">
-        <div class="art-label">Picture 1</div>
-        <div class="art-ref">prompts/08_spot_difference.md</div>
-        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
-      </div>
-
-      <div class="art">
-        <div class="art-label">Picture 2</div>
-        <div class="art-ref">prompts/08_spot_difference.md</div>
-        <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
-      </div>
-
-    </div>
-
-  </div>
-  <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/08_spot_difference.md</span><span>8</span>
-  </div>
-</section>
-
-<section class="page page-quiz" id="page-9">
+<section class="page page-quiz" id="page-11">
   <div class="page-head">
     <h1 class="page-title">The Kfar Hanokdim Quiz</h1>
-    <p class="page-instructions">Circle the answer you think is right. There are 4 questions — ask a grown-up if you get stuck.</p>
+    <p class="page-instructions">Circle the answer you think is right. There are 5 questions — ask a grown-up if you get stuck.</p>
   </div>
   <div class="page-body">
     <div class="quiz">
@@ -769,7 +1461,7 @@ body {
           </div>
 
           <div class="quiz-option">
-            <div class="art"><div class="art-note">donkeys</div></div>
+            <div class="art"><div class="art-note">goats and sheep</div></div>
             <span class="bubble"></span>
           </div>
 
@@ -795,7 +1487,7 @@ body {
           </div>
 
           <div class="quiz-option">
-            <div class="art"><div class="art-note">the big Bedouin hospitality tent</div></div>
+            <div class="art"><div class="art-note">the camel yard</div></div>
             <span class="bubble"></span>
           </div>
 
@@ -806,7 +1498,7 @@ body {
         <div class="quiz-question">3. Which of these is a local food at Kfar Hanokdim?</div>
         <div class="quiz-options">
           <div class="quiz-option">
-            <div class="art"><div class="art-note">sweet tea with na&#x27;ana mint</div></div>
+            <div class="art"><div class="art-note">cardamom coffee</div></div>
             <span class="bubble"></span>
           </div>
 
@@ -832,7 +1524,7 @@ body {
           </div>
 
           <div class="quiz-option">
-            <div class="art"><div class="art-note">sleeping in a Bedouin tent</div></div>
+            <div class="art"><div class="art-note">riding a camel</div></div>
             <span class="bubble"></span>
           </div>
 
@@ -844,53 +1536,74 @@ body {
         </div>
       </div>
 
+      <div class="quiz-row">
+        <div class="quiz-question">5. Which animal can you meet at Kfar Hanokdim?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">toucan</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">polar bear</div></div>
+            <span class="bubble"></span>
+          </div>
+
+          <div class="quiz-option">
+            <div class="art"><div class="art-note">camels</div></div>
+            <span class="bubble"></span>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
   </div>
   <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/09_quiz.md</span><span>9</span>
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/11_quiz.md</span><span>11</span>
   </div>
 </section>
 
-<section class="page page-drawing" id="page-10">
+<section class="page page-drawing" id="page-12">
   <div class="page-head">
     <h1 class="page-title">Draw What You Saw</h1>
-    <p class="page-instructions">Draw what you remember about baking pita on a saj griddle inside the frame — the way *you* saw it. Add as many small details as you can.</p>
+    <p class="page-instructions">Draw what you remember about fresh pita from the saj inside the frame — the way *you* saw it. Add as many small details as you can.</p>
   </div>
   <div class="page-body">
     <div class="art">
       <div class="art-label">Your drawing goes here</div>
-      <div class="art-ref">prompts/10_drawing.md</div>
+      <div class="art-ref">prompts/12_drawing.md</div>
       <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
     </div>
 
 
   </div>
   <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/10_drawing.md</span><span>10</span>
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/12_drawing.md</span><span>12</span>
   </div>
 </section>
 
-<section class="page page-coloring" id="page-11">
+<section class="page page-coloring" id="page-13">
   <div class="page-head">
-    <h1 class="page-title">Color tamarisk bushes</h1>
-    <p class="page-instructions">Color this picture of tamarisk bushes. Look closely for tamarisk bushes, date palms and rock hyraxes — you may see them for real on your trip!</p>
+    <h1 class="page-title">Color the Dead Sea shore</h1>
+    <p class="page-instructions">Color this picture of the Dead Sea shore. Look closely for desert wildflowers after rain, white broom shrubs and rock hyraxes — you may see them for real on your trip!</p>
   </div>
   <div class="page-body">
     <div class="art">
       <div class="art-label">Illustration goes here</div>
-      <div class="art-ref">prompts/11_coloring.md</div>
+      <div class="art-ref">prompts/13_coloring.md</div>
       <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
     </div>
 
 
   </div>
   <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/11_coloring.md</span><span>11</span>
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/13_coloring.md</span><span>13</span>
   </div>
 </section>
 
-<section class="page page-reflection" id="page-12">
+<section class="page page-reflection" id="page-14">
   <div class="page-head">
     <h1 class="page-title">My Kfar Hanokdim Memories</h1>
     <p class="page-instructions">Your trip is nearly over! Draw or write your favorite moment, answer the questions, and color one star for every day you had fun.</p>
@@ -898,7 +1611,7 @@ body {
   <div class="page-body">
     <div class="art">
       <div class="art-label">Illustration goes here</div>
-      <div class="art-ref">prompts/12_reflection.md</div>
+      <div class="art-ref">prompts/14_reflection.md</div>
       <div class="art-note">Generate this picture from the prompt file, then drop it in.</div>
     </div>
 
@@ -924,6 +1637,13 @@ body {
 
       </div>
 
+      <div class="prompt-block">
+        <div class="prompt-label">The food I liked most was...</div>
+        <div class="ruled"></div>
+        <div class="ruled"></div>
+
+      </div>
+
     </div>
     <div class="stars">
       <span class="star outline"></span>
@@ -934,7 +1654,7 @@ body {
 
   </div>
   <div class="page-foot">
-    <span>Kfar Hanokdim</span><span class="art-ref">prompts/12_reflection.md</span><span>12</span>
+    <span>Kfar Hanokdim</span><span class="art-ref">prompts/14_reflection.md</span><span>14</span>
   </div>
 </section>
 

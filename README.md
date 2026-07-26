@@ -117,30 +117,31 @@ from whatever the knowledge provider returned.
 **Add an activity** — one file, no other edits:
 
 ```python
-# src/activities/word_search.py
+# src/activities/postcard.py
 from src.activities.base import ActivityGenerator, ImageBrief, RenderMode, register_activity
 
 @register_activity
-class WordSearchActivity(ActivityGenerator):
-    activity_type = "word_search"
-    display_name = "Word Search"
-    educational_goal = "Builds vocabulary for local places and animals."
+class PostcardActivity(ActivityGenerator):
+    activity_type = "postcard"
+    display_name = "Write a Postcard"
+    educational_goal = "Practises writing for a reader and choosing what is worth telling."
     min_age, max_age = 6, 12
     energy = "calm"
-    required_knowledge = ("wildlife",)
+    required_knowledge = ("landmarks",)
 
     def generate(self, context, planned):
-        words = self.pick(context, "wildlife", 6)
+        subject = self.pick(context, "landmarks", 1, salt=planned.number)[0]
         return self.draft(
-            title=f"{context.destination} Word Search",
-            instructions="Find every animal hiding in the grid.",
+            title=f"A Postcard from {context.destination}",
+            instructions=f"Draw {subject} on the front, then write to someone at home.",
             planned=planned,
             image_brief=ImageBrief(
-                subject="an empty word search grid",
-                render_mode=RenderMode.PUZZLE,
-                composition="A 10x10 grid of empty squares.",
+                subject="a blank postcard, front and back",
+                render_mode=RenderMode.FRAME,
+                composition="Top half: an empty framed picture area. Bottom half: "
+                            "an address panel with ruled lines and a stamp box.",
             ),
-            metadata={"words": list(words)},
+            metadata={"subject": subject, "writing_lines": 6},
         )
 ```
 
@@ -191,7 +192,15 @@ explanation and everything else still works.
 ## Activities
 
 `cover`, `coloring`, `maze`, `spot_difference`, `hidden_objects`, `packing`,
-`matching`, `wildlife_facts`, `quiz`, `drawing`, `reflection`.
+`matching`, `wildlife_facts`, `quiz`, `word_search`, `crossword`, `drawing`,
+`reflection`.
+
+**`word_search` and `crossword` need no illustration at all.** The puzzle is
+generated here — a real letter grid with the words genuinely hidden in it, a real
+interlocking crossword with an answer key — and travels in the page metadata for
+the layout to typeset. Their image prompt is an optional decorative border, so
+they cost nothing to produce beyond the text. Clues come free: a knowledge phrase
+with its answer blanked out ("The big ___ hospitality tent") is a natural clue.
 
 The planner opens with the cover, closes with the reflection page, ramps difficulty
 across the body, caps difficulty by the youngest child's age, alternates quiet and
@@ -206,9 +215,11 @@ pip install pytest
 python -m pytest
 ```
 
-163 tests covering the plugin contract (every activity, every difficulty), planner
+203 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
-(the LLM one with an injected transport, never the network), the print layout
+(the LLM one with an injected transport, never the network), the generated puzzles
+(the tests solve them — every listed word is searched for in the grid, every
+crossword answer is read back out of the solution), the print layout
 (structure, escaping, per-activity furniture, placeholder-to-artwork swap), and the
 end-to-end artifacts including byte-for-byte reproducibility. The two PDF tests skip
 themselves when Chromium is unavailable.

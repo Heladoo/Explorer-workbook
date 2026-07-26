@@ -109,10 +109,15 @@ class ActivityGenerator(ABC):
         count: int,
         *,
         fallback: Iterable[str] = (),
+        salt: object = "",
     ) -> tuple[str, ...]:
-        """Deterministically sample ``count`` entries from a knowledge category."""
+        """Deterministically sample ``count`` entries from a knowledge category.
+
+        Pass ``salt`` (usually the page number) when an activity can appear more
+        than once in a book, so the second page doesn't repeat the first's picks.
+        """
         values = context.knowledge.get(category) or tuple(fallback)
-        return context.sample(values, count, key=f"{self.activity_type}:{category}")
+        return context.sample(values, count, key=f"{self.activity_type}:{category}:{salt}")
 
     def visual_focus(
         self,

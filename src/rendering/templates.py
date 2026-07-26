@@ -55,7 +55,8 @@ class TemplateSet:
 
 #: Suffixes that mark a value as trusted markup rather than text to escape.
 _MARKUP_KEYS = ("body", "art", "items", "rows", "options", "cards", "panels",
-                "prompts", "stars", "lines", "left", "right", "pages", "contents", "css")
+                "prompts", "stars", "lines", "left", "right", "pages", "contents", "css",
+                "cells", "words", "across", "down")
 
 
 def _is_markup(key: str) -> bool:

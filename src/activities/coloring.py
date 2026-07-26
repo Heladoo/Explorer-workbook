@@ -31,11 +31,18 @@ class ColoringActivity(ActivityGenerator):
     energy = "calm"
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
+        # Salted with the page number: a book may hold two coloring pages, and
+        # they must not land on the same subject.
         focus = self.visual_focus(planned, allowed=NOUN_CATEGORIES)
-        subjects = self.pick(context, focus, 1) or self.pick(context, "landmarks", 1)
+        subjects = self.pick(context, focus, 1, salt=planned.number) or self.pick(
+            context, "landmarks", 1, salt=planned.number
+        )
         subject = subjects[0] if subjects else context.destination
 
-        extras = [*self.pick(context, "plants", 2), *self.pick(context, "wildlife", 2)]
+        extras = [
+            *self.pick(context, "plants", 2, salt=planned.number),
+            *self.pick(context, "wildlife", 2, salt=planned.number),
+        ]
         if extras:
             instructions = self.text(
                 context,

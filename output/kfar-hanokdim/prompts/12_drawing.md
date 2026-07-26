@@ -1,19 +1,19 @@
-Create a black-and-white puzzle illustration for a children's travel activity book.
+Create a black-and-white activity page with a large empty drawing area for a children's travel activity book.
 
 Scene:
-Two vertical columns. The left column shows 4 outlined drawings from Kfar Hanokdim; the right column shows the same shapes as solid black silhouettes in a different order.
+A large empty rectangular frame with a decorative border of Kfar Hanokdim motifs woven around its edges.
 
 Include:
-• goats and sheep
+• acacia trees
+• desert wildflowers after rain
+• desert lizards
 • Nubian ibex
-• donkeys
-• hoopoe birds
 
 Layout:
-Left column top-to-bottom: goats and sheep, Nubian ibex, donkeys, hoopoe birds. Right column top-to-bottom (silhouettes): hoopoe birds, donkeys, goats and sheep, Nubian ibex. Wide empty gutter between the columns for the child to draw lines.
+The frame occupies about 80% of the page and its interior is completely blank white. Only the border carries decoration.
 
 Style:
-• Crisp black line art with high contrast and clear separation between elements, so the puzzle stays readable when printed small — no shading or textures that could be mistaken for part of the puzzle
+• Delicate black line art confined to the border, with the working area left completely blank white
 • Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces
 • Clean, uncluttered composition — every element clearly separated and easy to recognise
 • Age-appropriate for a 7-9 year old: gentle and welcoming, nothing frightening, no weapons, no injuries
@@ -25,5 +25,5 @@ Constraints:
 • Pure white background, generous margins, nothing important within 12 mm of the page edge
 • No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image
 • Prints cleanly in black and white on a home printer
-• Each silhouette must be the exact outline of its partner, same pose and same size, filled solid black.
-• No connecting lines, arrows, numbers or letters anywhere on the page.
+• The inside of the frame must be pure white — no scenery, no guide lines, no faint shapes of any kind.
+• Keep the border decoration thin so it never intrudes on the drawing area.

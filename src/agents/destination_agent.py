@@ -252,9 +252,12 @@ class LLMKnowledgeProvider:
         model: str = DEFAULT_MODEL,
         api_key: str | None = None,
         transport: Callable[[str, dict[str, str], bytes], str] | None = None,
-        max_tokens: int = 1500,
+        max_tokens: int = 4000,
         timeout: float = 60.0,
     ) -> None:
+        # ``max_tokens`` caps thinking *and* response text together, and current
+        # models think by default — a budget sized for the JSON alone would let
+        # thinking crowd out the answer and truncate it mid-object.
         self.model = model
         self.api_key = api_key if api_key is not None else os.environ.get("ANTHROPIC_API_KEY", "")
         self.transport = transport or _urllib_transport

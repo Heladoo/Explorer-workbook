@@ -1,0 +1,178 @@
+"""Word Search (תפזורת): find the destination's words hidden in a letter grid.
+
+The grid is generated here, in full, and travels in the page metadata — so this
+page needs no illustration at all beyond an optional decorative border. That
+makes it the cheapest page in the book to produce.
+"""
+
+from __future__ import annotations
+
+from src.activities._wordbank import build_word_bank
+from src.activities.base import (
+    ActivityGenerator,
+    ImageBrief,
+    PlannedPage,
+    RenderMode,
+    register_activity,
+)
+from src.models.context import WorkbookContext
+from src.models.page import ActivityDraft
+
+_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+_GRID_SIZE = {"easy": 10, "medium": 12, "hard": 14}
+_WORD_COUNT = {"easy": 6, "medium": 8, "hard": 10}
+_MAX_WORD_LENGTH = {"easy": 6, "medium": 8, "hard": 10}
+
+#: (row step, column step) per difficulty — reversed and diagonal come later.
+_DIRECTIONS: dict[str, tuple[tuple[int, int], ...]] = {
+    "easy": ((0, 1), (1, 0)),
+    "medium": ((0, 1), (1, 0), (1, 1)),
+    "hard": ((0, 1), (1, 0), (1, 1), (0, -1), (-1, 0), (-1, -1)),
+}
+
+_PLACEMENT_ATTEMPTS = 300
+
+
+@register_activity
+class WordSearchActivity(ActivityGenerator):
+    """A real, solvable letter grid built from the destination's own words."""
+
+    activity_type = "word_search"
+    display_name = "Word Search"
+    educational_goal = (
+        "Builds letter recognition, spelling and systematic visual scanning, "
+        "using vocabulary from the place the child is visiting."
+    )
+    min_age = 6
+    max_age = 12
+    weight = 14
+    energy = "calm"
+
+    def supports(self, context: WorkbookContext) -> bool:
+        if not super().supports(context):
+            return False
+        # Needs enough distinct words to make a grid worth solving.
+        return len(build_word_bank(context, count=4, key="supports")) >= 4
+
+    def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
+        size = _GRID_SIZE[planned.difficulty]
+        entries = build_word_bank(
+            context,
+            count=_WORD_COUNT[planned.difficulty],
+            key=f"word_search:{planned.number}",
+            max_length=_MAX_WORD_LENGTH[planned.difficulty],
+        )
+        words = [entry.word for entry in entries]
+
+        grid, placements = self._build_grid(
+            words, size, _DIRECTIONS[planned.difficulty], context, planned
+        )
+        placed = [placement["word"] for placement in placements]
+
+        return self.draft(
+            title=self.text(context, "word_search.title", destination=context.destination),
+            instructions=self.text(
+                context,
+                "word_search.instructions",
+                count=len(placed),
+                words=self.strings(context).join([word.title() for word in placed]),
+            ),
+            planned=planned,
+            image_brief=ImageBrief(
+                subject="a decorative border for a word search page",
+                scene=(
+                    f"A thin decorative border of {context.destination} motifs framing an "
+                    "otherwise completely empty page."
+                ),
+                elements=tuple(self.pick(context, "plants", 2))
+                + tuple(self.pick(context, "wildlife", 1)),
+                render_mode=RenderMode.FRAME,
+                composition=(
+                    "Border only, no more than 15 mm wide. The entire centre of the page "
+                    "is left blank white — the puzzle grid is typeset there, not drawn."
+                ),
+                extra_constraints=(
+                    "Do not draw a grid, squares, letters or any puzzle content.",
+                    "This border is optional decoration; the page is complete without it.",
+                ),
+            ),
+            metadata={
+                "grid": grid,
+                "grid_size": size,
+                "words": placed,
+                "placements": placements,
+                "word_count": len(placed),
+                "illustration": "decorative",
+                "needs_illustration": False,
+            },
+        )
+
+    # -- grid construction ------------------------------------------------
+
+    def _build_grid(
+        self,
+        words: list[str],
+        size: int,
+        directions: tuple[tuple[int, int], ...],
+        context: WorkbookContext,
+        planned: PlannedPage,
+    ) -> tuple[list[str], list[dict[str, object]]]:
+        """Place what fits, then fill the gaps. Longest words go in first."""
+        rng = context.rng_for(f"word_search:grid:{planned.number}")
+        cells: dict[tuple[int, int], str] = {}
+        placements: list[dict[str, object]] = []
+
+        for word in sorted(words, key=len, reverse=True):
+            if len(word) > size:
+                continue
+            placement = self._place(word, cells, size, directions, rng)
+            if placement:
+                placements.append(placement)
+
+        for row in range(size):
+            for column in range(size):
+                if (row, column) not in cells:
+                    cells[(row, column)] = _ALPHABET[rng.randrange(len(_ALPHABET))]
+
+        grid = ["".join(cells[(row, column)] for column in range(size)) for row in range(size)]
+        placements.sort(key=lambda placement: placement["word"])
+        return grid, placements
+
+    def _place(
+        self,
+        word: str,
+        cells: dict[tuple[int, int], str],
+        size: int,
+        directions: tuple[tuple[int, int], ...],
+        rng,
+    ) -> dict[str, object] | None:
+        """Try random positions until the word fits without a letter conflict."""
+        for _ in range(_PLACEMENT_ATTEMPTS):
+            row_step, column_step = directions[rng.randrange(len(directions))]
+            row = rng.randrange(size)
+            column = rng.randrange(size)
+            end_row = row + row_step * (len(word) - 1)
+            end_column = column + column_step * (len(word) - 1)
+            if not (0 <= end_row < size and 0 <= end_column < size):
+                continue
+
+            coordinates = [
+                (row + row_step * index, column + column_step * index)
+                for index in range(len(word))
+            ]
+            if any(
+                cells.get(coordinate) not in (None, letter)
+                for coordinate, letter in zip(coordinates, word)
+            ):
+                continue
+
+            for coordinate, letter in zip(coordinates, word):
+                cells[coordinate] = letter
+            return {
+                "word": word,
+                "row": row,
+                "column": column,
+                "direction": [row_step, column_step],
+            }
+        return None

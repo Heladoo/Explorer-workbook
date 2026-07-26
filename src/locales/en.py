@@ -130,6 +130,26 @@ STRINGS: dict[str, object] = {
         "growing wings",
         "juggling clouds",
     ],
+    # -- word search --------------------------------------------------------
+    "word_search.title": "{destination} Word Search",
+    "word_search.instructions": (
+        "{count} words from your trip are hiding in the grid — across, down and "
+        "sometimes slanted. Find and circle each one: {words}."
+    ),
+    # -- crossword ----------------------------------------------------------
+    "crossword.title": "The {destination} Crossword",
+    "crossword.instructions": (
+        "Read each clue and write the answer into the squares, one letter per "
+        "square. There are {count} clues — the words cross each other, so a "
+        "letter you already know can help with the next one."
+    ),
+    "crossword.clue_wildlife": "An animal you can meet at {destination}",
+    "crossword.clue_landmarks": "A place worth visiting at {destination}",
+    "crossword.clue_plants": "Something green that grows at {destination}",
+    "crossword.clue_local_food": "Something good to eat at {destination}",
+    "crossword.clue_activities": "Something fun to do at {destination}",
+    "crossword.across": "Across",
+    "crossword.down": "Down",
     # -- drawing ----------------------------------------------------------
     "drawing.title": "Draw What You Saw",
     "drawing.instructions": (

@@ -418,6 +418,120 @@ body {
   padding-top: 2mm;
 }
 
+/* -- word search -------------------------------------------------------- */
+
+.puzzle-grid {
+  display: grid;
+  gap: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: center;
+  justify-items: center;
+  border: 1.5px solid #111;
+  border-radius: 2mm;
+  padding: 4mm;
+}
+
+.puzzle-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  width: 100%;
+  font-family: "DejaVu Sans Mono", monospace;
+  font-size: 13pt;
+  letter-spacing: 0;
+}
+
+.word-bank {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2mm 3mm;
+  list-style: none;
+  padding: 3mm;
+  margin: 0;
+  border: 1.5px dashed #111;
+  border-radius: 2mm;
+  font-size: 10.5pt;
+}
+
+.word-bank li {
+  text-align: center;
+}
+
+/* -- crossword ----------------------------------------------------------- */
+
+.crossword-grid {
+  display: grid;
+  gap: 0;
+  flex: 0 0 auto;
+  justify-content: center;
+  /* Squares stay printable even on a wide grid. */
+  max-width: 150mm;
+  margin: 0 auto;
+}
+
+.crossword-cell {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  min-width: 7mm;
+}
+
+.crossword-cell.writable {
+  border: 1px solid #111;
+  margin: -0.5px;
+  background: #fff;
+}
+
+.crossword-cell.blank {
+  border: none;
+}
+
+.crossword-cell i {
+  position: absolute;
+  top: 0.4mm;
+  left: 0.6mm;
+  font-size: 6pt;
+  font-style: normal;
+  color: #444;
+  line-height: 1;
+}
+
+.clue-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.clue-column h2 {
+  font-size: 11pt;
+  margin: 0 0 2mm;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #111;
+  padding-bottom: 1mm;
+}
+
+.clues {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10pt;
+  line-height: 1.5;
+}
+
+.clues li {
+  margin-bottom: 1.5mm;
+}
+
+.clue-length {
+  color: #666;
+}
+
 /* -- two panel (spot the difference) ----------------------------------- */
 
 .panels {

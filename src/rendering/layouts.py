@@ -178,6 +178,72 @@ def _reflection(layout_context: LayoutContext, page: Page) -> str:
     )
 
 
+@layout("word_search")
+def _word_search(layout_context: LayoutContext, page: Page) -> str:
+    """The grid is real data, so it is typeset — never drawn by an image model."""
+    grid = page.metadata.get("grid", [])
+    cells = "\n".join(
+        layout_context.templates.render("body_word_search_cell", letter=letter)
+        for row in grid
+        for letter in row
+    )
+    words = "\n".join(
+        layout_context.templates.render("body_word_search_word", word=word.title())
+        for word in page.metadata.get("words", ())
+    )
+    return layout_context.templates.render(
+        "body_word_search",
+        columns=page.metadata.get("grid_size", len(grid[0]) if grid else 0),
+        cells=cells,
+        words=words,
+    )
+
+
+@layout("crossword")
+def _crossword(layout_context: LayoutContext, page: Page) -> str:
+    """Print the empty grid with its numbers; the solution stays in metadata."""
+    layout_rows = page.metadata.get("layout", [])
+    numbers = {
+        (entry["row"], entry["column"]): entry["number"]
+        for entry in page.metadata.get("numbers", ())
+    }
+    cells = []
+    for row_index, row in enumerate(layout_rows):
+        for column_index, square in enumerate(row):
+            writable = square == "."
+            cells.append(
+                layout_context.templates.render(
+                    "body_crossword_cell",
+                    cell_class="writable" if writable else "blank",
+                    number=numbers.get((row_index, column_index), "") if writable else "",
+                )
+            )
+
+    def clue_list(clues) -> str:
+        return "\n".join(
+            layout_context.templates.render(
+                "body_crossword_clue",
+                number=clue["number"],
+                clue=clue["clue"],
+                length=clue["length"],
+            )
+            for clue in clues
+        )
+
+    columns = page.metadata.get("columns", 0)
+    return layout_context.templates.render(
+        "body_crossword",
+        columns=columns,
+        # 13 mm squares where the page allows it, shrinking on a wide grid.
+        width=columns * 13,
+        cells="\n".join(cells),
+        across=clue_list(page.metadata.get("across", ())),
+        down=clue_list(page.metadata.get("down", ())),
+        across_label=layout_context.text("crossword.across"),
+        down_label=layout_context.text("crossword.down"),
+    )
+
+
 @layout("spot_difference")
 def _two_panel(layout_context: LayoutContext, page: Page) -> str:
     panels = []
