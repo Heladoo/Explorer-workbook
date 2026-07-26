@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travel Activity Book Generator</title>
+<style>
+$css
+</style>
+</head>
+<body>
+<main>
+  <header class="masthead">
+    <h1>Travel Activity Book Generator</h1>
+    <p>Fill this in and get a printable activity book for the trip — pages, puzzles
+       and one image prompt per illustration.</p>
+  </header>
+
+$message
+
+  <form method="post" action="/generate" class="card">
+    <fieldset>
+      <legend>Where are you going?</legend>
+
+      <label class="field">
+        <span class="label">Destination <em>required</em></span>
+        <input type="text" name="destination" value="$destination" list="known-destinations"
+               placeholder="Kfar Hanokdim, Prague, Yellowstone National Park…" required autofocus>
+        <span class="hint">Any destination works. These have a curated data pack:
+          $known_names</span>
+      </label>
+      <datalist id="known-destinations">
+$known_options
+      </datalist>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Trip days</span>
+          <input type="number" name="duration_days" value="$duration_days" min="1" max="60"
+                 placeholder="3">
+        </label>
+        <label class="field">
+          <span class="label">Start date</span>
+          <input type="text" name="start_date" value="$start_date" placeholder="12 August">
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="label">Itinerary</span>
+        <textarea name="itinerary" rows="3"
+                  placeholder="One line per day:&#10;Arrival and camel yard&#10;Desert hike and Masada">$itinerary</textarea>
+        <span class="hint">Pages get spread across these days.</span>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Who is it for?</legend>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Children's names</span>
+          <input type="text" name="children" value="$children" placeholder="Noa, Amit">
+        </label>
+        <label class="field">
+          <span class="label">Ages</span>
+          <input type="text" name="ages" value="$ages" placeholder="5, 7">
+          <span class="hint">One age per name, same order.</span>
+        </label>
+      </div>
+
+      <span class="label">Special interests</span>
+      <div class="chips">
+$interest_chips
+      </div>
+      <label class="field">
+        <span class="label">Anything else they love</span>
+        <input type="text" name="interests_other" value="$interests_other"
+               placeholder="volcanoes, boats">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>The book</legend>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Language</span>
+          <select name="language">
+$language_options
+          </select>
+        </label>
+        <label class="field">
+          <span class="label">Pages</span>
+          <input type="number" name="pages" value="$pages" min="3" max="40">
+        </label>
+        <label class="field">
+          <span class="label">Difficulty</span>
+          <select name="difficulty">
+$difficulty_options
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Facts come from</span>
+          <select name="provider">
+$provider_options
+          </select>
+          <span class="hint">The model needs <code>ANTHROPIC_API_KEY</code>; it falls
+            back to packs without one.</span>
+        </label>
+        <label class="field">
+          <span class="label">Seed</span>
+          <input type="number" name="seed" value="$seed" min="0">
+          <span class="hint">Same seed, same book.</span>
+        </label>
+      </div>
+
+      <span class="label">Also produce</span>
+      <div class="chips">
+        <label class="chip"><input type="checkbox" name="html" value="1" $html_checked>
+          <span>Printable page layout (HTML)</span></label>
+        <label class="chip"><input type="checkbox" name="pdf" value="1" $pdf_checked>
+          <span>PDF for printing</span></label>
+      </div>
+      <p class="hint">JSON, Markdown and the prompt files are always written.</p>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit">Generate the book</button>
+      <span class="hint">Takes a second or two. A PDF takes a few more.</span>
+    </div>
+  </form>
+
+  <footer>
+    Runs entirely on your machine. No images are generated — each page gets a prompt
+    file you can paste into an image model.
+  </footer>
+</main>
+</body>
+</html>

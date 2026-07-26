@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <title>Noa and Amit&#x27;s Kfar Hanokdim Adventure Book</title>
@@ -555,6 +555,32 @@ body {
 .panel-tag {
   font-size: 9pt;
   color: #777;
+}
+
+/* -- right-to-left languages -------------------------------------------- */
+
+/* Everything above is written with logical flow in mind, so RTL needs only
+   the handful of places where a physical side was assumed. */
+
+[dir="rtl"] .toc th,
+[dir="rtl"] .toc td,
+[dir="rtl"] .clue-column h2 {
+  text-align: right;
+}
+
+[dir="rtl"] .art-ref,
+[dir="rtl"] .puzzle-cell {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir="rtl"] .crossword-cell i {
+  left: auto;
+  right: 0.6mm;
+}
+
+[dir="rtl"] .clues b {
+  unicode-bidi: isolate;
 }
 
 /* -- table of contents -------------------------------------------------- */

@@ -11,7 +11,7 @@
 | Trip | 3 day(s), itinerary: Arrival and camel yard; Desert hike and Masada; Dead Sea day |
 | Special interests | animals |
 | Knowledge source | file |
-| Generated | 2026-07-26T11:37:48+00:00 |
+| Generated | 2026-07-26T11:59:54+00:00 |
 
 
 ## How to use this document
@@ -1098,13 +1098,13 @@ Constraints:
   ],
   "blank_slots": 1,
   "matched_conditions": [
-    "hot_items",
-    "cold_items",
-    "rain_items",
-    "hike_items",
-    "water_items",
-    "night_items",
-    "wildlife_items"
+    "hot",
+    "cold",
+    "rain",
+    "hike",
+    "water",
+    "night",
+    "wildlife"
   ]
 }
 ```

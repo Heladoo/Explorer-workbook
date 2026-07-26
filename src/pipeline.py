@@ -117,7 +117,9 @@ class WorkbookBuilder:
 
         # Agent 1 — destination knowledge.
         knowledge = self.knowledge_agent.fetch(
-            context.destination, interests=context.interests
+            context.destination,
+            interests=context.interests,
+            language=strings_for(context.language).language,
         )
         context = context.with_knowledge(knowledge)
 
@@ -159,12 +161,12 @@ class WorkbookBuilder:
 
     def _title(self, context: WorkbookContext) -> str:
         strings = strings_for(context.language)
-        names = context.child_names_phrase()
+        names = strings.join(context.child_names)
         if names:
             return strings.text(
-                "workbook.title_with_names", names=names, destination=context.destination
+                "workbook.title_with_names", names=names, destination=context.display_destination
             )
-        return strings.text("workbook.title_plain", destination=context.destination)
+        return strings.text("workbook.title_plain", destination=context.display_destination)
 
     def _metadata(
         self, context: WorkbookContext, plan: tuple[PlannedPage, ...]

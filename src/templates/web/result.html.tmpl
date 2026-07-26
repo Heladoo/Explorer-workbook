@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$title</title>
+<style>
+$css
+</style>
+</head>
+<body>
+<main>
+  <header class="masthead">
+    <p class="eyebrow">Your book is ready</p>
+    <h1 dir="auto">$title</h1>
+    <p>$page_count pages for $destination$children_phrase.</p>
+  </header>
+
+$message
+
+  <div class="card">
+    <h2>Open it</h2>
+    <div class="downloads">
+$downloads
+    </div>
+
+    <h2>What's inside</h2>
+    <ol class="pages">
+$pages
+    </ol>
+
+    <h2>Illustrations</h2>
+    <p class="hint">$prompt_summary</p>
+    <details>
+      <summary>All $prompt_count prompt files</summary>
+      <ul class="prompt-list">
+$prompt_files
+      </ul>
+    </details>
+
+    <div class="actions">
+      <a class="button" href="/">Make another</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

@@ -59,7 +59,7 @@ class CrosswordActivity(ActivityGenerator):
 
         clue_count = len(puzzle["across"]) + len(puzzle["down"])
         return self.draft(
-            title=self.text(context, "crossword.title", destination=context.destination),
+            title=self.text(context, "crossword.title", destination=context.display_destination),
             instructions=self.text(context, "crossword.instructions", count=clue_count),
             planned=planned,
             image_brief=ImageBrief(
@@ -303,5 +303,5 @@ class CrosswordActivity(ActivityGenerator):
         if blanked and blanked != "___":
             return blanked
         return self.text(
-            context, f"crossword.clue_{entry.category}", destination=context.destination
+            context, f"crossword.clue_{entry.category}", destination=context.display_destination
         )

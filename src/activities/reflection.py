@@ -44,7 +44,7 @@ class ReflectionActivity(ActivityGenerator):
         motifs = [*self.pick(context, "landmarks", 1), *self.pick(context, "wildlife", 1)]
 
         return self.draft(
-            title=self.text(context, "reflection.title", destination=context.destination),
+            title=self.text(context, "reflection.title", destination=context.display_destination),
             instructions=self.text(context, "reflection.instructions"),
             planned=planned,
             image_brief=ImageBrief(

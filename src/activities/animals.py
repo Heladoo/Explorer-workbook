@@ -47,12 +47,12 @@ class WildlifeFactsActivity(ActivityGenerator):
             cards.append({"animal": animal, "caption": line})
 
         return self.draft(
-            title=self.text(context, "wildlife_facts.title", destination=context.destination),
+            title=self.text(context, "wildlife_facts.title", destination=context.display_destination),
             instructions=self.text(
                 context,
                 "wildlife_facts.instructions",
                 count=len(animals),
-                destination=context.destination,
+                destination=context.display_destination,
             ),
             planned=planned,
             image_brief=ImageBrief(

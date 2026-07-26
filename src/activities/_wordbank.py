@@ -56,9 +56,19 @@ class WordEntry:
 
 
 def normalize(text: str) -> str:
-    """Fold accents and strip anything that is not a letter."""
-    folded = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    return re.sub(r"[^A-Za-z]", "", folded).upper()
+    """Strip everything that is not a letter, folding accents but keeping script.
+
+    Decomposing and dropping combining marks turns "Český" into "CESKY" while
+    leaving Hebrew intact (niqqud are combining marks, so they drop out and the
+    consonants remain) — a word search works in any alphabet.
+    """
+    decomposed = unicodedata.normalize("NFKD", text)
+    letters = [
+        character
+        for character in decomposed
+        if character.isalpha() and not unicodedata.combining(character)
+    ]
+    return "".join(letters).upper()
 
 
 def puzzle_word(phrase: str, *, min_length: int = 3, max_length: int = 10) -> str | None:

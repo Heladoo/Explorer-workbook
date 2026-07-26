@@ -28,15 +28,15 @@ class CoverActivity(ActivityGenerator):
     energy = "calm"
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
-        names = context.child_names_phrase()
+        names = self.strings(context).join(context.child_names)
         if names:
-            title = self.text(context, "cover.title_with_names", names=names, destination=context.destination)
+            title = self.text(context, "cover.title_with_names", names=names, destination=context.display_destination)
             instructions = self.text(
-                context, "cover.instructions_with_names", names=names, destination=context.destination
+                context, "cover.instructions_with_names", names=names, destination=context.display_destination
             )
         else:
-            title = self.text(context, "cover.title_plain", destination=context.destination)
-            instructions = self.text(context, "cover.instructions_plain", destination=context.destination)
+            title = self.text(context, "cover.title_plain", destination=context.display_destination)
+            instructions = self.text(context, "cover.instructions_plain", destination=context.display_destination)
 
         landmarks = self.pick(context, "landmarks", 2)
         wildlife = self.pick(context, "wildlife", 1)

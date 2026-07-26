@@ -67,7 +67,7 @@ class QuizActivity(ActivityGenerator):
             options = self._arrange(context, answer, distractors[:2], len(questions))
             questions.append(
                 {
-                    "question": self.text(context, question_key, destination=context.destination),
+                    "question": self.text(context, question_key, destination=context.display_destination),
                     "options": options,
                     "answer": answer,
                     "answer_index": options.index(answer) + 1,
@@ -92,7 +92,7 @@ class QuizActivity(ActivityGenerator):
             options = self._arrange(context, answer, distractors[:2], len(questions))
             questions.append(
                 {
-                    "question": self.text(context, question_key, destination=context.destination),
+                    "question": self.text(context, question_key, destination=context.display_destination),
                     "options": options,
                     "answer": answer,
                     "answer_index": options.index(answer) + 1,
@@ -106,7 +106,7 @@ class QuizActivity(ActivityGenerator):
         ]
 
         return self.draft(
-            title=self.text(context, "quiz.title", destination=context.destination),
+            title=self.text(context, "quiz.title", destination=context.display_destination),
             instructions=self.text(context, "quiz.instructions", count=len(questions)),
             planned=planned,
             image_brief=ImageBrief(

@@ -71,7 +71,7 @@ class WordSearchActivity(ActivityGenerator):
         placed = [placement["word"] for placement in placements]
 
         return self.draft(
-            title=self.text(context, "word_search.title", destination=context.destination),
+            title=self.text(context, "word_search.title", destination=context.display_destination),
             instructions=self.text(
                 context,
                 "word_search.instructions",

@@ -9,6 +9,7 @@ LANGUAGE = "en"
 STRINGS: dict[str, object] = {
     # -- shared -------------------------------------------------------
     "common.and": "and",
+    "common.join_last": "{first} and {last}",
     "common.explorer": "the explorer",
     "common.kind_animal": "animal",
     "common.kind_place": "place",
@@ -85,6 +86,13 @@ STRINGS: dict[str, object] = {
         "pencils and crayons",
         "snack",
     ],
+    "packing.hot_keywords": ["hot", "sun", "desert", "warm", "dry", "summer", "heat"],
+    "packing.cold_keywords": ["cold", "snow", "winter", "freez", "chilly", "ice", "alpine"],
+    "packing.rain_keywords": ["rain", "wet", "monsoon", "shower", "humid", "storm"],
+    "packing.hike_keywords": ["hike", "hiking", "trek", "trail", "walk", "climb", "mountain"],
+    "packing.water_keywords": ["swim", "beach", "lake", "river", "sea", "boat", "spring"],
+    "packing.night_keywords": ["night", "star", "stargaz", "cave", "sunset", "campfire"],
+    "packing.wildlife_keywords": ["bird", "wildlife", "safari", "animal", "watch"],
     "packing.hot_items": ["sun hat", "sunscreen", "sunglasses"],
     "packing.cold_items": ["warm coat", "gloves", "woolly hat"],
     "packing.rain_items": ["raincoat", "umbrella"],

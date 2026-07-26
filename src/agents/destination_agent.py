@@ -41,12 +41,23 @@ class KnowledgeProvider(Protocol):
 
     name: str
 
-    def fetch(self, destination: str, *, interests: Sequence[str] = ()) -> DestinationKnowledge | None:
+    def fetch(
+        self,
+        destination: str,
+        *,
+        interests: Sequence[str] = (),
+        language: str = "en",
+    ) -> DestinationKnowledge | None:
         """Return knowledge, or ``None`` when this provider has nothing to say."""
 
 
 class FileKnowledgeProvider:
-    """Loads curated destination packs from a directory of JSON files."""
+    """Loads curated destination packs from a directory of JSON files.
+
+    A pack may be translated by adding ``<slug>.<language>.json`` beside it —
+    ``kfar-hanokdim.he.json``. The translated file is preferred when the
+    workbook language matches, and the base pack is the fallback.
+    """
 
     name = "file"
 
@@ -54,17 +65,24 @@ class FileKnowledgeProvider:
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
 
     def fetch(
-        self, destination: str, *, interests: Sequence[str] = ()
+        self,
+        destination: str,
+        *,
+        interests: Sequence[str] = (),
+        language: str = "en",
     ) -> DestinationKnowledge | None:
-        pack = self._find_pack(destination)
+        pack = self._find_pack(destination, language)
         if pack is None:
             return None
         return DestinationKnowledge.from_dict(pack, source=self.name)
 
-    def _find_pack(self, destination: str) -> dict[str, Any] | None:
+    def _find_pack(self, destination: str, language: str = "en") -> dict[str, Any] | None:
         if not self.data_dir.is_dir():
             return None
         wanted = slugify(destination)
+        base = (language or "en").split("-")[0].lower()
+        matches: dict[str, dict[str, Any]] = {}
+
         for path in sorted(self.data_dir.glob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
@@ -72,22 +90,59 @@ class FileKnowledgeProvider:
                 logger.warning("skipping unreadable destination pack %s: %s", path.name, exc)
                 continue
             names = [data.get("destination", path.stem), *data.get("aliases", [])]
-            if any(slugify(str(name)) == wanted for name in names if name):
-                return data
-        return None
+            if not any(slugify(str(name)) == wanted for name in names if name):
+                continue
+            # "kfar-hanokdim.he" -> "he"; a bare "kfar-hanokdim" is the base pack.
+            suffix = path.stem.rsplit(".", 1)
+            pack_language = str(data.get("language", suffix[1] if len(suffix) > 1 else "en"))
+            matches.setdefault(pack_language.lower(), data)
+
+        if not matches:
+            return None
+        if base in matches:
+            return matches[base]
+        if base != "en":
+            logger.info(
+                "no %s pack for %r; using %s and localizing only the page copy",
+                base, destination, ", ".join(sorted(matches)),
+            )
+        return matches.get("en") or next(iter(matches.values()))
 
     def known_destinations(self) -> tuple[str, ...]:
-        """Destination names that have a curated pack, for CLI help and tests."""
+        """Destination names that have a curated pack, for CLI help and tests.
+
+        Translated packs name the same destination, so they are counted once.
+        """
         if not self.data_dir.is_dir():
             return ()
-        names = []
+        names: dict[str, None] = {}
         for path in sorted(self.data_dir.glob("*.json")):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            names.append(str(data.get("destination", path.stem)))
+            names.setdefault(str(data.get("destination", path.stem)), None)
         return tuple(names)
+
+    def languages_for(self, destination: str) -> tuple[str, ...]:
+        """Which languages this destination has a curated pack in."""
+        if not self.data_dir.is_dir():
+            return ()
+        wanted = slugify(destination)
+        found: set[str] = set()
+        for path in sorted(self.data_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            names = [data.get("destination", path.stem), *data.get("aliases", [])]
+            if not any(slugify(str(name)) == wanted for name in names if name):
+                continue
+            suffix = path.stem.rsplit(".", 1)
+            found.add(
+                str(data.get("language", suffix[1] if len(suffix) > 1 else "en")).lower()
+            )
+        return tuple(sorted(found))
 
 
 class HeuristicKnowledgeProvider:
@@ -195,7 +250,11 @@ class HeuristicKnowledgeProvider:
     }
 
     def fetch(
-        self, destination: str, *, interests: Sequence[str] = ()
+        self,
+        destination: str,
+        *,
+        interests: Sequence[str] = (),
+        language: str = "en",
     ) -> DestinationKnowledge:
         collected: dict[str, list[str]] = {name: [] for name in KNOWLEDGE_FIELDS}
         haystack = destination.lower()
@@ -265,7 +324,11 @@ class LLMKnowledgeProvider:
         self.timeout = timeout
 
     def fetch(
-        self, destination: str, *, interests: Sequence[str] = ()
+        self,
+        destination: str,
+        *,
+        interests: Sequence[str] = (),
+        language: str = "en",
     ) -> DestinationKnowledge | None:
         if not self.api_key:
             logger.warning(
@@ -366,20 +429,24 @@ class DestinationKnowledgeAgent:
         self.completer = completer
 
     def fetch(
-        self, destination: str, *, interests: Sequence[str] = ()
+        self,
+        destination: str,
+        *,
+        interests: Sequence[str] = (),
+        language: str = "en",
     ) -> DestinationKnowledge:
         for provider in self.providers:
-            knowledge = provider.fetch(destination, interests=interests)
+            knowledge = provider.fetch(destination, interests=interests, language=language)
             if knowledge is not None and not knowledge.is_empty:
                 logger.info("destination knowledge for %r from %s", destination, provider.name)
-                return self._complete(knowledge, destination, interests)
+                return self._complete(knowledge, destination, interests, language)
         logger.info("no provider had knowledge for %r; using generic material", destination)
         if self.completer is None:
             raise RuntimeError(
                 f"no knowledge provider produced anything for {destination!r} and no "
                 "fallback provider is configured"
             )
-        fallback = self.completer.fetch(destination, interests=interests)
+        fallback = self.completer.fetch(destination, interests=interests, language=language)
         if fallback is None or fallback.is_empty:
             raise RuntimeError(f"fallback knowledge provider returned nothing for {destination!r}")
         return fallback
@@ -389,10 +456,11 @@ class DestinationKnowledgeAgent:
         knowledge: DestinationKnowledge,
         destination: str,
         interests: Sequence[str],
+        language: str = "en",
     ) -> DestinationKnowledge:
         if self.completer is None or knowledge.coverage() == len(KNOWLEDGE_FIELDS):
             return knowledge
-        fallback = self.completer.fetch(destination, interests=interests)
+        fallback = self.completer.fetch(destination, interests=interests, language=language)
         return knowledge.filled_with(fallback) if fallback else knowledge
 
 

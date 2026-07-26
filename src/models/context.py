@@ -111,10 +111,18 @@ class DestinationKnowledge:
     interesting_facts: tuple[str, ...] = ()
     source: str = "unknown"
     notes: tuple[str, ...] = ()
+    #: The destination's name as the child should read it. A translated pack
+    #: sets this; ``destination`` itself stays canonical for slugs and prompts.
+    display_name: str = ""
+    #: Localized term -> English, for knowledge that is not in English. Image
+    #: prompts are always written in English, so the prompt generator maps
+    #: terms back through this before rendering. Empty for English packs.
+    illustration_terms: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         for name in KNOWLEDGE_FIELDS + ("notes",):
             object.__setattr__(self, name, _as_tuple(getattr(self, name)))
+        object.__setattr__(self, "illustration_terms", tuple(self.illustration_terms))
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], *, source: str = "unknown") -> "DestinationKnowledge":
@@ -122,7 +130,19 @@ class DestinationKnowledge:
         payload = {name: data.get(name, ()) for name in KNOWLEDGE_FIELDS}
         payload["notes"] = data.get("notes", ())
         payload["source"] = data.get("source", source)
+        payload["display_name"] = data.get("display_name", "")
+        terms = data.get("illustration_terms") or {}
+        payload["illustration_terms"] = tuple(
+            (str(term), str(english)) for term, english in dict(terms).items()
+        )
         return cls(**payload)
+
+    @property
+    def english_terms(self) -> dict[str, str]:
+        """Localized term -> English, longest first so substrings don't win."""
+        return dict(
+            sorted(self.illustration_terms, key=lambda pair: len(pair[0]), reverse=True)
+        )
 
     @property
     def is_empty(self) -> bool:
@@ -156,6 +176,8 @@ class DestinationKnowledge:
         data["source"] = self.source
         if self.notes:
             data["notes"] = list(self.notes)
+        if self.illustration_terms:
+            data["illustration_terms"] = dict(self.illustration_terms)
         return data
 
 
@@ -189,6 +211,11 @@ class WorkbookContext:
     @property
     def slug(self) -> str:
         return slugify(self.destination)
+
+    @property
+    def display_destination(self) -> str:
+        """The destination as page copy should say it, translated where known."""
+        return self.knowledge.display_name or self.destination
 
     @property
     def child_names(self) -> tuple[str, ...]:

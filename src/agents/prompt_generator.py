@@ -17,6 +17,7 @@ from string import Template
 
 from src.models.context import WorkbookContext
 from src.models.page import ImageBrief, RenderMode
+from src.strings import strings_for
 
 DEFAULT_TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "templates"
 
@@ -84,23 +85,26 @@ class PromptGenerator:
         )
 
     def render(self, brief: ImageBrief, context: WorkbookContext) -> str:
-        """Return the full prompt for one page."""
+        """Return the full prompt for one page, always in English."""
         if brief.prompt_override:
             return brief.prompt_override.strip() + "\n"
 
+        english = self._term_map(context)
         sections: list[str] = [self.style.opening(brief.render_mode)]
 
-        scene = brief.scene or brief.subject
+        scene = self._englishize(brief.scene or brief.subject, english)
         sections.append(f"Scene:\n{scene}")
 
         if brief.elements:
-            bullets = "\n".join(f"• {element}" for element in brief.elements)
+            bullets = "\n".join(
+                f"• {self._englishize(element, english)}" for element in brief.elements
+            )
             sections.append(f"Include:\n{bullets}")
 
         if brief.composition:
-            sections.append(f"Layout:\n{brief.composition}")
+            sections.append(f"Layout:\n{self._englishize(brief.composition, english)}")
 
-        sections.append(self._style_block(brief, context))
+        sections.append(self._style_block(brief, context, english))
 
         return "\n\n".join(section.strip() for section in sections) + "\n"
 
@@ -110,8 +114,38 @@ class PromptGenerator:
 
     # -- internals -------------------------------------------------------
 
-    def _style_block(self, brief: ImageBrief, context: WorkbookContext) -> str:
-        extra = "".join(f"\n• {constraint}" for constraint in brief.extra_constraints)
+    def _term_map(self, context: WorkbookContext) -> dict[str, str]:
+        """Localized term -> English, empty when everything is already English.
+
+        Two sources: the destination pack (its own entries) and the locale
+        (copy such as packing items and quiz options). Longest first, so a
+        short term never eats part of a longer one.
+        """
+        merged = {**strings_for(context.language).terms, **context.knowledge.english_terms}
+        return dict(sorted(merged.items(), key=lambda pair: len(pair[0]), reverse=True))
+
+    def _englishize(self, text: str, english: dict[str, str]) -> str:
+        """Swap localized knowledge terms back to English.
+
+        Activities compose scene sentences out of English boilerplate and
+        knowledge entries, so a Hebrew pack would otherwise leave Hebrew nouns
+        inside an English prompt. Terms are applied longest-first so a short
+        term never eats part of a longer one.
+        """
+        if not english:
+            return text
+        for term, replacement in english.items():
+            if term in text:
+                text = text.replace(term, replacement)
+        return text
+
+    def _style_block(
+        self, brief: ImageBrief, context: WorkbookContext, english: dict[str, str] | None = None
+    ) -> str:
+        extra = "".join(
+            f"\n• {self._englishize(constraint, english or {})}"
+            for constraint in brief.extra_constraints
+        )
         return self._style_template.substitute(
             mode_style=self.style.mode_style(brief.render_mode),
             age_band=context.age_band,

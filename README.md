@@ -18,6 +18,17 @@ No images are generated — that stage is still a seam, see [Extending it](#exte
 Python 3.11+. The generator itself has no dependencies; the PDF stage needs
 Playwright and a Chromium build.
 
+**A web form, if you'd rather not use the CLI:**
+
+```bash
+python -m src.web          # then open http://127.0.0.1:8000
+```
+
+Fill in the trip, press the button, and the book is written and linked back to
+you. Stdlib `http.server` only, bound to localhost.
+
+**Or the CLI:**
+
 ```bash
 python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pages 12
 # → output/kfar-hanokdim/{workbook.json, workbook.md, prompts/*.md}
@@ -57,6 +68,25 @@ Useful flags:
 --pdf                      # print it to A4 PDF (implies --html)
 ```
 
+## Languages
+
+`--language he` produces a Hebrew workbook: translated copy, a right-to-left
+printed page, and Hebrew puzzles (the word search grid is built from Hebrew
+letters). **Image prompts stay English** wherever the workbook goes, because that
+is what image models are trained on — a translated pack carries an
+`illustration_terms` map and the locale carries a `TERMS` map, and the prompt
+generator uses them to put the English noun back before rendering. The
+destination's canonical name, slugs and filenames stay English too; only what the
+child reads is translated.
+
+Two files make a language:
+
+- `src/locales/<code>.py` — `LANGUAGE`, optional `DIRECTION = "rtl"`, `STRINGS`
+  (same keys as `en.py`), optional `TERMS` for copy that reaches an image prompt.
+- `data/destinations/<slug>.<code>.json` — a translated pack, with
+  `display_name` and `illustration_terms`. Optional: without it the pages use
+  the base pack's English facts and only the copy is translated.
+
 ## How it works
 
 Five agents, one shared immutable `WorkbookContext`, activities as plugins.
@@ -92,6 +122,8 @@ touching a single activity.
 | `src/templates/` | Style guide and markdown templates |
 | `src/templates/pdf/` | Print page templates and `book.css` |
 | `src/rendering/` | Layout stage: workbook → printable HTML → PDF |
+| `src/web.py` | Local web form (`python -m src.web`) |
+| `src/templates/web/` | The form, result page and their CSS |
 | `src/pipeline.py` | Wires the agents together (all injectable) |
 | `src/output_writer.py` | The only module that touches the filesystem |
 | `src/ports.py` | `ImageBackend` / `DocumentRenderer` — the seams for images and PDF |
@@ -148,8 +180,8 @@ class PostcardActivity(ActivityGenerator):
 The package auto-discovers it, the planner starts scheduling it, and the prompt and
 markdown generators handle it without knowing it exists.
 
-**Add a language** — drop `src/locales/he.py` with `LANGUAGE = "he"` and a `STRINGS`
-dict using the same keys as `en.py`.
+**Add a language** — see [Languages](#languages) above; `src/locales/he.py` is a
+worked example.
 
 **Add a destination pack** — drop a JSON file in `data/destinations/` with the eight
 knowledge categories (see `kfar-hanokdim.json`).
@@ -215,11 +247,13 @@ pip install pytest
 python -m pytest
 ```
 
-203 tests covering the plugin contract (every activity, every difficulty), planner
+240 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
 (the LLM one with an injected transport, never the network), the generated puzzles
 (the tests solve them — every listed word is searched for in the grid, every
-crossword answer is read back out of the solution), the print layout
+crossword answer is read back out of the solution), Hebrew end to end (translated
+copy with English prompts, RTL markup, Hebrew word-search grids), the web form
+(generation, bad input, escaping, path-traversal), the print layout
 (structure, escaping, per-activity furniture, placeholder-to-artwork swap), and the
 end-to-end artifacts including byte-for-byte reproducibility. The two PDF tests skip
 themselves when Chromium is unavailable.

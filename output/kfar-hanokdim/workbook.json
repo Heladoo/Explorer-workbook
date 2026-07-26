@@ -2,7 +2,7 @@
   "title": "Noa and Amit's Kfar Hanokdim Adventure Book",
   "destination": "Kfar Hanokdim",
   "language": "en",
-  "generated_at": "2026-07-26T11:37:48+00:00",
+  "generated_at": "2026-07-26T11:59:54+00:00",
   "page_count": 14,
   "pages": [
     {
@@ -655,13 +655,13 @@
         ],
         "blank_slots": 1,
         "matched_conditions": [
-          "hot_items",
-          "cold_items",
-          "rain_items",
-          "hike_items",
-          "water_items",
-          "night_items",
-          "wildlife_items"
+          "hot",
+          "cold",
+          "rain",
+          "hike",
+          "water",
+          "night",
+          "wildlife"
         ],
         "image_brief": {
           "subject": "an open explorer backpack surrounded by things to pack",

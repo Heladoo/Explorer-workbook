@@ -73,6 +73,7 @@ class HtmlRenderer:
         return self.templates.render(
             "book",
             language=workbook.language,
+            direction=strings.direction,
             title=workbook.title,
             css=self.templates.read_asset(self.css_filename),
             contents=self._contents(workbook, strings) if self.include_contents else "",

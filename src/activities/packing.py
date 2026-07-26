@@ -12,17 +12,10 @@ from src.activities.base import (
 from src.models.context import WorkbookContext
 from src.models.page import ActivityDraft
 
-#: Maps knowledge keywords to a pool of extra items in the locale files.
+#: Conditions the packing list reacts to. Both the keywords and the items come
+#: from the locale, so a Hebrew workbook matches Hebrew weather text.
 #: Destination-agnostic: it reacts to what the knowledge says, not to a place.
-_KEYWORD_POOLS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("packing.hot_items", ("hot", "sun", "desert", "warm", "dry", "summer", "heat")),
-    ("packing.cold_items", ("cold", "snow", "winter", "freez", "chilly", "ice", "alpine")),
-    ("packing.rain_items", ("rain", "wet", "monsoon", "shower", "humid", "storm")),
-    ("packing.hike_items", ("hike", "hiking", "trek", "trail", "walk", "climb", "mountain")),
-    ("packing.water_items", ("swim", "beach", "lake", "river", "sea", "boat", "spring")),
-    ("packing.night_items", ("night", "star", "stargaz", "cave", "sunset", "campfire")),
-    ("packing.wildlife_items", ("bird", "wildlife", "safari", "animal", "watch")),
-)
+_CONDITIONS = ("hot", "cold", "rain", "hike", "water", "night", "wildlife")
 
 _ITEM_COUNT = {"easy": 8, "medium": 10, "hard": 12}
 
@@ -56,10 +49,11 @@ class PackingActivity(ActivityGenerator):
         ).lower()
 
         matched_pools = []
-        for pool_key, keywords in _KEYWORD_POOLS:
-            if any(keyword in haystack for keyword in keywords):
-                matched_pools.append(pool_key)
-                for item in strings.items(pool_key):
+        for condition in _CONDITIONS:
+            keywords = strings.items(f"packing.{condition}_keywords")
+            if any(keyword.lower() in haystack for keyword in keywords):
+                matched_pools.append(condition)
+                for item in strings.items(f"packing.{condition}_items"):
                     if item not in items:
                         items.append(item)
 
@@ -68,7 +62,7 @@ class PackingActivity(ActivityGenerator):
 
         return self.draft(
             title=self.text(context, "packing.title"),
-            instructions=self.text(context, "packing.instructions", destination=context.destination),
+            instructions=self.text(context, "packing.instructions", destination=context.display_destination),
             planned=planned,
             image_brief=ImageBrief(
                 subject="an open explorer backpack surrounded by things to pack",
@@ -91,6 +85,6 @@ class PackingActivity(ActivityGenerator):
             metadata={
                 "items": items,
                 "blank_slots": 1,
-                "matched_conditions": [key.split(".")[-1] for key in matched_pools],
+                "matched_conditions": matched_pools,
             },
         )
