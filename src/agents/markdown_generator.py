@@ -124,9 +124,11 @@ class MarkdownGenerator:
                 "content."
             )
         if context.family_photos:
+            files = ", ".join(f"`{Path(photo).name}`" for photo in context.family_photos)
             notes.append(
-                "> **Note:** family photos were supplied but the MVP does not place images. "
-                f"They are recorded in the page metadata ({len(context.family_photos)} file(s))."
+                "> **Note:** every image prompt asks for the children in the supplied "
+                f"reference photo(s) — {files}. Attach them when you generate the artwork; "
+                "the prompts describe how to use them. The MVP does not place images itself."
             )
         return "\n\n".join(notes) + "\n\n" if notes else ""
 

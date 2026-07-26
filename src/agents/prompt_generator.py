@@ -158,7 +158,23 @@ class PromptGenerator:
         return f"a single coherent book about {context.destination}, {self.style.signature}"
 
     def _characters(self, context: WorkbookContext) -> str:
-        """A recurring cast description, so the same kids appear on every page."""
+        """A recurring cast description, so the same kids appear on every page.
+
+        When reference photos were supplied, the prompt asks the image model to
+        draw *those* children rather than invented ones — most image tools take
+        a reference image alongside the prompt, and the file names are listed so
+        whoever runs it knows what to attach.
+        """
+        if context.family_photos:
+            names = ", ".join(Path(photo).name for photo in context.family_photos)
+            count = len(context.family_photos)
+            return (
+                "\n• Recurring characters: draw the children from the attached reference "
+                f"photograph{'s' if count > 1 else ''} ({names}). Keep each child "
+                "recognisable — hair, skin tone, glasses and rough age — but redraw them in "
+                "this book's simple line style rather than tracing the photo. Draw them "
+                "identically on every page they appear."
+            )
         if not context.children:
             return ""
         ages = [child.age for child in context.children if child.age is not None]

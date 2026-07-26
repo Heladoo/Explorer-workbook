@@ -9,37 +9,37 @@ $css
 </style>
 </head>
 <body>
-<main>
+<main class="lean">
   <header class="masthead">
-    <p class="eyebrow">Your book is ready</p>
+    <p class="eyebrow">All done</p>
     <h1 dir="auto">$title</h1>
-    <p>$page_count pages for $destination$children_phrase.</p>
+    <p>$page_count pages, ready to print.</p>
   </header>
 
 $message
 
   <div class="card">
-    <h2>Open it</h2>
     <div class="downloads">
 $downloads
     </div>
 
-    <h2>What's inside</h2>
+    <h2>What's in it</h2>
     <ol class="pages">
 $pages
     </ol>
 
-    <h2>Illustrations</h2>
+    <h2>About the drawings</h2>
     <p class="hint">$prompt_summary</p>
+$reference_note
     <details>
-      <summary>All $prompt_count prompt files</summary>
+      <summary>All $prompt_count prompts</summary>
       <ul class="prompt-list">
 $prompt_files
       </ul>
     </details>
 
     <div class="actions">
-      <a class="button" href="/">Make another</a>
+      <a class="button" href="/">Make another one</a>
     </div>
   </div>
 </main>

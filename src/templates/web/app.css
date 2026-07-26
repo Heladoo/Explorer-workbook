@@ -235,3 +235,64 @@ footer {
   font-size: .8rem;
   color: var(--muted);
 }
+
+/* -- lean form ----------------------------------------------------------- */
+
+main.lean { max-width: 34rem; }
+
+main.lean .masthead h1 { font-size: 2.1rem; }
+
+main.lean .card { padding: 1.6rem; }
+
+main.lean .field { margin-bottom: 1.4rem; }
+main.lean .field:last-of-type { margin-bottom: 0; }
+
+.field.big input[type="text"] {
+  font-size: 1.15rem;
+  padding: .75rem .8rem;
+}
+
+.field.big .label { font-size: .95rem; }
+
+/* photo drop area */
+
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  border: 2px dashed var(--line);
+  border-radius: .6rem;
+  padding: 1rem;
+  cursor: pointer;
+  background: var(--paper);
+  transition: border-color .15s;
+}
+.dropzone:hover { border-color: var(--accent); }
+.dropzone:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.dropzone input[type="file"] {
+  font: inherit;
+  font-size: .82rem;
+  max-width: 13rem;
+}
+
+.dropzone-text strong { display: block; font-size: .92rem; }
+.dropzone-text small { color: var(--muted); font-size: .8rem; }
+
+/* language picker */
+
+.chip.radio { padding: .45rem 1.1rem; }
+
+.thumbs {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: .6rem;
+}
+.thumbs img {
+  width: 3.6rem;
+  height: 3.6rem;
+  object-fit: cover;
+  border-radius: .4rem;
+  border: 1px solid var(--line);
+}

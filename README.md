@@ -24,8 +24,19 @@ Playwright and a Chromium build.
 python -m src.web          # then open http://127.0.0.1:8000
 ```
 
-Fill in the trip, press the button, and the book is written and linked back to
-you. Stdlib `http.server` only, bound to localhost.
+Four fields, and only the first is required:
+
+| | |
+| --- | --- |
+| **Where are you going?** | The one thing we genuinely need. |
+| **What's the plan?** | Optional itinerary, one line per day — pages follow along. |
+| **Who's coming?** | Optional photos. Every image prompt then asks for children who look like them, and names the files to attach. |
+| **Which language?** | English or עברית. |
+
+Everything else the generator decides: 12 pages, curated facts where we have
+them, difficulty ramping across the book, and a PDF when a browser is available.
+Stdlib `http.server` only, bound to localhost; photos never leave the machine.
+The CLI still exposes the full set of options.
 
 **Or the CLI:**
 
@@ -123,6 +134,7 @@ touching a single activity.
 | `src/templates/pdf/` | Print page templates and `book.css` |
 | `src/rendering/` | Layout stage: workbook → printable HTML → PDF |
 | `src/web.py` | Local web form (`python -m src.web`) |
+| `src/uploads.py` | Multipart parsing for the photo upload |
 | `src/templates/web/` | The form, result page and their CSS |
 | `src/pipeline.py` | Wires the agents together (all injectable) |
 | `src/output_writer.py` | The only module that touches the filesystem |
@@ -194,7 +206,9 @@ prints as a full-page illustration frame, so new plugins work untouched.
 **Generate real images** — implement `ImageBackend` from `src/ports.py`. Every page's
 `image_prompt` is already final; a backend only has to call an image model and save
 the result. Pass the files to the renderer as `images={page_number: path}` and the
-placeholder frames become the artwork — nothing else changes.
+placeholder frames become the artwork — nothing else changes. When reference photos
+were supplied, the prompts already ask for those children by filename, so a backend
+just attaches `context.family_photos` to the request.
 
 Neither requires changing an agent or an activity.
 
@@ -247,13 +261,14 @@ pip install pytest
 python -m pytest
 ```
 
-240 tests covering the plugin contract (every activity, every difficulty), planner
+257 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
 (the LLM one with an injected transport, never the network), the generated puzzles
 (the tests solve them — every listed word is searched for in the grid, every
 crossword answer is read back out of the solution), Hebrew end to end (translated
 copy with English prompts, RTL markup, Hebrew word-search grids), the web form
-(generation, bad input, escaping, path-traversal), the print layout
+(the four-field flow, photo uploads and how they reach the prompts, multipart
+parsing, bad input, escaping, path-traversal), the print layout
 (structure, escaping, per-activity furniture, placeholder-to-artwork swap), and the
 end-to-end artifacts including byte-for-byte reproducibility. The two PDF tests skip
 themselves when Chromium is unavailable.
