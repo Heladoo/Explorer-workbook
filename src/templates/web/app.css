@@ -296,3 +296,154 @@ main.lean .field:last-of-type { margin-bottom: 0; }
   border-radius: .4rem;
   border: 1px solid var(--line);
 }
+
+/* -- tucked optional fields ------------------------------------------------ */
+
+details.tucked {
+  border: 1px dashed var(--line);
+  border-radius: .6rem;
+  padding: .7rem .9rem;
+}
+details.tucked summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: .88rem;
+  list-style: none;
+}
+details.tucked summary::-webkit-details-marker { display: none; }
+details.tucked summary::before {
+  content: "+ ";
+  color: var(--accent);
+  font-weight: 700;
+}
+details.tucked[open] summary::before { content: "− "; }
+details.tucked summary em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted);
+}
+details.tucked .field { margin-top: 1rem; }
+
+/* -- feedback -------------------------------------------------------------- */
+
+.feedback {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+.feedback h2 { border-bottom: none; margin-bottom: .5rem; padding-bottom: 0; }
+.feedback-options {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .6rem;
+}
+.feedback-options button {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-weight: 500;
+  font-size: .88rem;
+  padding: .5rem 1rem;
+}
+.feedback-options button:hover { border-color: var(--accent); }
+
+/* Base (nothing picked yet): only the rating buttons show. */
+.feedback textarea,
+.feedback-send { margin-top: .5rem; display: none; }
+.feedback-thanks {
+  display: none;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: .92rem;
+}
+
+/* A rating was picked: reveal the comment box and send button. */
+.feedback.expanded textarea,
+.feedback.expanded .feedback-send { display: block; }
+
+/* Sent: this rule must stay last so it wins over .expanded at equal
+   specificity — both classes are present on the element at this point. */
+.feedback.sent .feedback-options,
+.feedback.sent textarea,
+.feedback.sent .feedback-send { display: none; }
+.feedback.sent .feedback-thanks { display: block; }
+
+/* -- stats page -------------------------------------------------------------- */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: .8rem;
+  margin: 1rem 0 1.5rem;
+}
+.stat {
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  padding: .8rem .9rem;
+  background: var(--paper);
+}
+.stat .n {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: block;
+  line-height: 1.2;
+}
+.stat .label {
+  font-size: .76rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.funnel { list-style: none; margin: 0; padding: 0; }
+.funnel li {
+  display: grid;
+  grid-template-columns: 9rem 1fr 3.2rem;
+  align-items: center;
+  gap: .6rem;
+  padding: .35rem 0;
+  font-size: .88rem;
+}
+.funnel .bar {
+  height: .55rem;
+  border-radius: .3rem;
+  background: var(--line);
+  overflow: hidden;
+}
+.funnel .bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.funnel .pct { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+table.variants {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin: .5rem 0 1.2rem;
+}
+table.variants th, table.variants td {
+  text-align: left;
+  padding: .4rem .5rem;
+  border-bottom: 1px solid var(--line);
+}
+table.variants .control { color: var(--muted); }
+table.variants .lift-up { color: #2e7d32; }
+table.variants .lift-down { color: #b3261e; }
+.decisive-note { font-size: .78rem; color: var(--muted); margin-top: -.6rem; margin-bottom: 1.2rem; }
+
+.comment {
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  padding: .6rem .8rem;
+  margin-bottom: .5rem;
+  font-size: .88rem;
+}
+.comment .rating {
+  font-weight: 700;
+  text-transform: capitalize;
+  margin-inline-end: .4rem;
+}
+.comment time { color: var(--muted); font-size: .76rem; float: right; }

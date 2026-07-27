@@ -41,7 +41,49 @@ $prompt_files
     <div class="actions">
       <a class="button" href="/">Make another one</a>
     </div>
+
+    <div class="feedback" id="feedback" data-visitor="$visitor" data-book="$book_id">
+      <h2>Quick one — how'd that go?</h2>
+      <div class="feedback-options">
+        <button type="button" data-rating="great">🙌 Loved it</button>
+        <button type="button" data-rating="fine">🙂 It's fine</button>
+        <button type="button" data-rating="poor">😕 Not really</button>
+      </div>
+      <textarea rows="2" placeholder="Anything you want to tell us? (optional)"></textarea>
+      <button type="button" class="feedback-send">Send</button>
+      <p class="feedback-thanks">Thanks — that helps.</p>
+    </div>
   </div>
 </main>
+<script>
+(function () {
+  var box = document.getElementById('feedback');
+  if (!box) return;
+  var rating = null;
+  var buttons = box.querySelectorAll('[data-rating]');
+  var textarea = box.querySelector('textarea');
+  var send = box.querySelector('.feedback-send');
+
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      rating = button.getAttribute('data-rating');
+      buttons.forEach(function (b) { b.style.opacity = (b === button) ? '1' : '.45'; });
+      box.classList.add('expanded');
+    });
+  });
+
+  send.addEventListener('click', function () {
+    if (!rating) return;
+    var body = new URLSearchParams({
+      visitor: box.getAttribute('data-visitor'),
+      book: box.getAttribute('data-book'),
+      rating: rating,
+      comment: textarea.value.slice(0, 2000)
+    });
+    fetch('/feedback', { method: 'POST', body: body }).catch(function () {});
+    box.classList.add('sent');
+  });
+})();
+</script>
 </body>
 </html>

@@ -235,6 +235,46 @@ pip install playwright   # Chromium must be available; set CHROMIUM_EXECUTABLE i
 `--html` needs neither. If Playwright or Chromium is missing, `--pdf` fails with an
 explanation and everything else still works.
 
+## Analytics, experiments & feedback
+
+`python -m src.web` also tracks how the form is doing, deliberately the dull way:
+events are appended to a JSONL file next to the generated books
+(`output/.analytics/events.jsonl`), there are no third-party beacons, no IP
+addresses are stored, and the only identifier is a random value in a first-party
+`visitor` cookie. `AnalyticsSink` (`src/analytics.py`) is a `Protocol`, so pointing
+this at a real analytics service later is a new class, not a rewrite — the same
+seam as `ImageBackend` and `DocumentRenderer` in `src/ports.py`. Run with
+`--no-analytics` to disable it entirely; nothing is written to disk.
+
+Open `http://127.0.0.1:8000/stats` for the report:
+
+- **Funnel** — distinct visitors who opened the form, submitted it, got a book,
+  and opened what they got, each as a share of the step before and of the top.
+- **Conversion rate** — books made as a share of people who opened the form.
+- **A/B results** — see below.
+- **Feedback** — the tally of 🙌/🙂/😕 ratings plus the last few comments.
+- **Destinations** — what people are actually asking for.
+
+**A/B testing** (`src/experiments.py`) needs no server-side state: a visitor's
+variant is `sha256(f"{experiment_key}:{visitor_id}")`, so the same visitor always
+lands in the same arm and different experiments never influence each other.
+Two are live right now:
+
+| Experiment | Variants | Question |
+| --- | --- | --- |
+| `cta` | `make_my_book` / `build_it` | Does a more concrete call to action get more books made? |
+| `optional_fields` | `visible` / `tucked` | Do the optional fields help, or do they scare people off? |
+
+Each visitor's assignment travels on their `form_view`, `form_submitted` and
+`book_created` events, so the stats page can compute per-variant conversion and
+lift against the control without ever storing a visitor→variant table. Add an
+experiment by adding an `Experiment(...)` to `ACTIVE` — nothing else changes.
+
+**Feedback**: the result page ends with a three-tap rating and an optional
+comment, sent with a plain `fetch()` to `/feedback` — no page reload, no
+framework, and a failed request is swallowed silently so a flaky network never
+looks like a broken book.
+
 ## Activities
 
 `cover`, `coloring`, `maze`, `spot_difference`, `hidden_objects`, `packing`,
@@ -261,7 +301,7 @@ pip install pytest
 python -m pytest
 ```
 
-257 tests covering the plugin contract (every activity, every difficulty), planner
+326 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
 (the LLM one with an injected transport, never the network), the generated puzzles
 (the tests solve them — every listed word is searched for in the grid, every
@@ -269,6 +309,11 @@ crossword answer is read back out of the solution), Hebrew end to end (translate
 copy with English prompts, RTL markup, Hebrew word-search grids), the web form
 (the four-field flow, photo uploads and how they reach the prompts, multipart
 parsing, bad input, escaping, path-traversal), the print layout
-(structure, escaping, per-activity furniture, placeholder-to-artwork swap), and the
-end-to-end artifacts including byte-for-byte reproducibility. The two PDF tests skip
-themselves when Chromium is unavailable.
+(structure, escaping, per-activity furniture, placeholder-to-artwork swap), the
+end-to-end artifacts including byte-for-byte reproducibility, and analytics/A-B
+testing/feedback: assignment stability and even distribution, the report math
+(funnel percentages, per-variant conversion and lift, the "no leader when nobody
+converted" edge case), and the whole flow through a running server — cookie
+issuance, funnel events in order, variant-consistent rendering, feedback
+validation, and the `/stats` page itself. The two PDF tests skip themselves when
+Chromium is unavailable.
