@@ -15,6 +15,7 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 - [ ] Decide how to release without exposing all project files, data, and internal symbols `[user]`
 - [ ] Figure out how many image generations are actually needed (scope/cost for the `ImageBackend` seam) `[user]`
 - [ ] Delete all unused prompt files `[user]`
+- [ ] Rename `output/kfar-hanokdim/` (the committed sample run) to something like `output/example/`, and reconsider whether it's still relevant to keep — revisit later `[user]`
 - [ ] Add CI (e.g. GitHub Actions) to run `pytest` automatically on push/PR — no workflow currently exists `[claude]`
 - [ ] Add a dependency manifest (`pyproject.toml` / `requirements.txt`) pinning versions, including Playwright for `--pdf` — none exists today; overlaps with the release task above `[claude]`
 - [ ] Add test coverage tooling/reporting (e.g. `pytest-cov`) — no coverage measurement configured, separate from the git/GitHub coverage check above `[claude]`
