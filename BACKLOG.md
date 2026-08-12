@@ -31,6 +31,7 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 - [ ] Explore an automatic flow from doodle-style reference images to sorted local destination data `[user]`
 - [ ] Validate and improve the quality of generated image prompts `[user]`
 - [ ] Maze activity feels boring — explore ways to enrich the experience `[user]`
+- [ ] Add a workbook-completion flow: a generated workbook isn't "done" until every page's art exists — track and show completion as a percentage / remaining-steps count, walk the user through each page's image prompt (`prompts/NN_<activity>.md` / `ImageBrief`) letting them choose per page between auto-generating the image (once `ImageBackend` is implemented) or uploading their own art, and mark the workbook complete once every page has art `[user]`
 - [ ] Visual QA pass on the Hebrew/RTL layout (`HtmlRenderer` / PDF output) — only one non-English locale exists and RTL-specific rendering bugs are easy to miss without actually looking at output `[claude]`
 
 ## Bug
