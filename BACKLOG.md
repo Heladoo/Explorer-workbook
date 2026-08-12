@@ -10,14 +10,14 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 
 ## Infrastructure
 
-- [ ] Check git coverage and project backup strategy `[user]`
+- [ ] Verify git/GitHub coverage: confirm the entire project (all files and data) is checked in to local git and pushed to GitHub, nothing important is only local or gitignored `[user]`
 - [ ] Check user web form interaction (audit the actual UX flow end-to-end) `[user]`
 - [ ] Decide how to release without exposing all project files, data, and internal symbols `[user]`
 - [ ] Figure out how many image generations are actually needed (scope/cost for the `ImageBackend` seam) `[user]`
 - [ ] Delete all unused prompt files `[user]`
 - [ ] Add CI (e.g. GitHub Actions) to run `pytest` automatically on push/PR — no workflow currently exists `[claude]`
 - [ ] Add a dependency manifest (`pyproject.toml` / `requirements.txt`) pinning versions, including Playwright for `--pdf` — none exists today; overlaps with the release task above `[claude]`
-- [ ] Add test coverage tooling/reporting (e.g. `pytest-cov`) — no coverage measurement configured; feeds the "check git coverage" task above `[claude]`
+- [ ] Add test coverage tooling/reporting (e.g. `pytest-cov`) — no coverage measurement configured, separate from the git/GitHub coverage check above `[claude]`
 - [ ] Add rotation/retention policy for the web form's analytics sink (`output_root/.analytics/events.jsonl`), which currently grows unbounded `[claude]`
 
 ## Feature
