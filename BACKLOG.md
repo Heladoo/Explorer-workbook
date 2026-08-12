@@ -10,7 +10,7 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 
 ## Infrastructure
 
-- [ ] Verify git/GitHub coverage: confirm the entire project (all files and data) is checked in to local git and pushed to GitHub, nothing important is only local or gitignored `[user]`
+- [x] Verify git/GitHub coverage: confirm the entire project (all files and data) is checked in to local git and pushed to GitHub, nothing important is only local or gitignored `[user]` — done 2026-08-12: working tree clean, both local branches match `origin` exactly, no stashes, `.gitignore` only excludes caches/venvs/generated `output/*` (sample run stays committed). Two findings surfaced, not fixed here: (1) repo has no `main`/`master` — GitHub's default branch is literally `claude/travel-activity-book-generator-09n1i0`, and PR #1 targets that branch; (2) the repo is **public**, which sharpens the existing "release without exposing files/data/symbols" item above.
 - [ ] Check user web form interaction (audit the actual UX flow end-to-end) `[user]`
 - [ ] Decide how to release without exposing all project files, data, and internal symbols `[user]`
 - [ ] Figure out how many image generations are actually needed (scope/cost for the `ImageBackend` seam) `[user]`
