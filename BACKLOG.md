@@ -37,4 +37,4 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 ## Bug
 
 - [ ] Word search words must not be editable/changeable after generation (data integrity between word list and grid) `[user]`
-- [ ] `src/uploads.py`'s hand-rolled multipart parser has no max body/file-size limit — a large upload to the web form could exhaust memory `[claude]`
+- [x] `src/uploads.py`'s hand-rolled multipart parser has no max body/file-size limit — a large upload to the web form could exhaust memory `[claude]` — done 2026-08-13: `web.py` already capped total request body at 32 MB before reading it off the socket, but a single file within that budget was unbounded. Added `MAX_FILE_BYTES` (10 MB) in `uploads.py` itself so the parser enforces a per-file cap independently of the caller, raising `UploadError` (already surfaced as a 400 by `web.py`). Covered by a new test in `tests/test_web.py`; full suite passes.

@@ -10,7 +10,7 @@ import urllib.request
 
 import pytest
 
-from src.uploads import parse_multipart, safe_stem
+from src.uploads import MAX_FILE_BYTES, UploadError, parse_multipart, safe_stem
 from src.web import MAX_PHOTOS, WorkbookFormHandler, serve
 
 from tests.conftest import DATA_DIR
@@ -125,6 +125,13 @@ def test_a_text_file_is_not_an_image():
     body, content_type = _multipart([], [("photos", "notes.txt", "text/plain", b"hello")])
     _, uploads = parse_multipart(body, content_type)
     assert not uploads[0].looks_like_an_image
+
+
+def test_a_file_over_the_size_limit_is_refused():
+    oversized = b"\x00" * (MAX_FILE_BYTES + 1)
+    body, content_type = _multipart([], [("photos", "huge.png", "image/png", oversized)])
+    with pytest.raises(UploadError, match="huge.png"):
+        parse_multipart(body, content_type)
 
 
 @pytest.mark.parametrize(
