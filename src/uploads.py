@@ -12,6 +12,11 @@ from dataclasses import dataclass
 from email.parser import BytesParser
 from email.policy import HTTP
 
+#: Largest single file this parser will hold in memory. Independent of any
+#: caller's own request-body cap, so this module is safe even if called
+#: directly on an unbounded body.
+MAX_FILE_BYTES = 10 * 1024 * 1024
+
 #: Image types we accept, mapped to the extension we save them under. The
 #: browser's declared type is a hint; the signature below is what we trust.
 IMAGE_TYPES = {
@@ -92,6 +97,11 @@ def parse_multipart(body: bytes, content_type: str) -> tuple[dict[str, list[str]
         if filename is None:
             fields.setdefault(name, []).append(payload.decode("utf-8", "replace"))
         elif payload:  # an empty file input submits a nameless, empty part
+            if len(payload) > MAX_FILE_BYTES:
+                raise UploadError(
+                    f"{filename} is over {MAX_FILE_BYTES // (1024 * 1024)} MB — "
+                    "try a smaller photo"
+                )
             uploads.append(
                 Upload(
                     field=name,
