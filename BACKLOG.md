@@ -13,8 +13,8 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 - [x] Verify git/GitHub coverage: confirm the entire project (all files and data) is checked in to local git and pushed to GitHub, nothing important is only local or gitignored `[user]` — done 2026-08-12: working tree clean, both local branches match `origin` exactly, no stashes, `.gitignore` only excludes caches/venvs/generated `output/*` (sample run stays committed). Two findings surfaced, not fixed here: (1) repo has no `main`/`master` — GitHub's default branch is literally `claude/travel-activity-book-generator-09n1i0`, and PR #1 targets that branch; (2) the repo is **public**, which sharpens the existing "release without exposing files/data/symbols" item above.
 - [ ] Check user web form interaction (audit the actual UX flow end-to-end) `[user]`
 - [ ] Decide how to release without exposing all project files, data, and internal symbols `[user]`
-- [ ] Figure out how many image generations are actually needed (scope/cost for the `ImageBackend` seam) `[user]`
-- [ ] Delete all unused prompt files `[user]`
+- [x] Figure out how many image generations are actually needed (scope/cost for the `ImageBackend` seam) `[user]` — done 2026-08-13: already computed and surfaced per run via each page's `needs_illustration` metadata flag (`False` only for `word_search`/`crossword`, since those are fully typeset puzzles) — `src/web.py`'s result page already reports it: "N pages want a picture... the other M are already finished."
+- [x] Delete all unused prompt files `[user]` — done 2026-08-13: `output_writer.py`'s `_warn_about_stale()` already detects leftover `prompts/*.md` files from an earlier, longer run and logs a warning rather than silently deleting them (deliberate, so nothing a user might still want is auto-removed). Nothing to delete right now — the committed sample has exactly 14 prompt files for its 14 pages.
 - [ ] Rename `output/kfar-hanokdim/` (the committed sample run) to something like `output/example/`, and reconsider whether it's still relevant to keep — revisit later `[user]`
 - [ ] Add CI (e.g. GitHub Actions) to run `pytest` automatically on push/PR — no workflow currently exists `[claude]`
 - [ ] Add a dependency manifest (`pyproject.toml` / `requirements.txt`) pinning versions, including Playwright for `--pdf` — none exists today; overlaps with the release task above `[claude]`
@@ -36,5 +36,5 @@ Status values: `open` (default, omitted below), `in-progress`, `done`.
 
 ## Bug
 
-- [ ] Word search words must not be editable/changeable after generation (data integrity between word list and grid) `[user]`
+- [x] Word search words must not be editable/changeable after generation (data integrity between word list and grid) `[user]` — done 2026-08-13: `word_search.py`'s `_build_grid` generates the grid and word list together in one step, both stored in the same page metadata that the print layout typesets directly (`layouts.py:_word_search`). No CLI, web form, or renderer path lets words be edited independently of the grid, so there's no live mechanism for the two to drift apart.
 - [ ] `src/uploads.py`'s hand-rolled multipart parser has no max body/file-size limit — a large upload to the web form could exhaust memory `[claude]`
