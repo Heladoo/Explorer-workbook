@@ -273,8 +273,9 @@ Pages without artwork print a labelled placeholder frame naming their prompt fil
 the book is printable and reviewable before a single image exists.
 
 ```bash
-pip install playwright   # Chromium must be available; set CHROMIUM_EXECUTABLE if it
-                         # lives outside the usual Playwright browsers directory
+pip install .[pdf]   # or: pip install playwright
+                      # Chromium must be available; set CHROMIUM_EXECUTABLE if it
+                      # lives outside the usual Playwright browsers directory
 ```
 
 `--html` needs neither. If Playwright or Chromium is missing, `--pdf` fails with an

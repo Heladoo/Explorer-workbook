@@ -4,10 +4,23 @@ __pycache__/
 .venv/
 venv/
 
-# Local secrets (OPENROUTER_API_KEY, ...) — never committed.
+# Secrets / local config — never committed.
 .env
+.env.*
 
-# Generated workbooks. One sample run is committed so the artifacts are
-# reviewable without running anything.
+# Generated workbooks, uploaded reference photos, and analytics all live
+# under output/. Only the specific files of the curated sample run are
+# committed, so anything else dropped under output/kfar-hanokdim/ (a
+# reference/ folder from a real upload, a regenerated workbook, etc.)
+# stays ignored by default instead of riding along on the directory
+# exception.
 output/*
 !output/kfar-hanokdim/
+output/kfar-hanokdim/*
+!output/kfar-hanokdim/workbook.md
+!output/kfar-hanokdim/workbook.html
+!output/kfar-hanokdim/workbook.json
+!output/kfar-hanokdim/workbook.pdf
+!output/kfar-hanokdim/prompts
+output/kfar-hanokdim/prompts/*
+!output/kfar-hanokdim/prompts/*.md

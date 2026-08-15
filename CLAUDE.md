@@ -52,8 +52,10 @@ python -m src.web                 # http://127.0.0.1:8000
 python -m src.web --no-analytics  # disable the JSONL analytics sink
 ```
 
-There is no lint/format/type-check tooling configured in this repo (no pyproject.toml,
-no linter config) — `pytest` is the only gate. `pytest.ini` sets `testpaths = tests`.
+There is no lint/format/type-check tooling configured in this repo — `pytest` is the
+only gate. `pytest.ini` sets `testpaths = tests`. `pyproject.toml` exists only as a
+dependency manifest (`pdf`/`dev` optional-dependency groups); it declares no lint or
+type-check config.
 
 ## Architecture
 
