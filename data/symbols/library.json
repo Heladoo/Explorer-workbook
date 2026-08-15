@@ -1,0 +1,1288 @@
+{
+  "symbols": [
+    {
+      "key": "stop-sign",
+      "label": "a stop sign",
+      "subject": "a road stop sign on its post, the sign seen face-on",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "traffic-light",
+      "label": "a traffic light",
+      "subject": "a traffic light on its post, three lamps stacked vertically",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "police-car",
+      "label": "a police car",
+      "subject": "a police car seen from the side, with a light bar on the roof",
+      "topic": "vehicles",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "bus",
+      "label": "a bus",
+      "subject": "a city bus seen from the side, with rows of windows and a door",
+      "topic": "vehicles",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "bicycle",
+      "label": "a bicycle",
+      "subject": "a bicycle seen from the side, both wheels fully visible",
+      "topic": "vehicles",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "red-car",
+      "label": "a red car",
+      "subject": "a small family car seen from the side",
+      "topic": "vehicles",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "truck",
+      "label": "a lorry",
+      "subject": "a delivery lorry seen from the side, cab and box body",
+      "topic": "vehicles",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "zebra-crossing",
+      "label": "a zebra crossing",
+      "subject": "a zebra crossing: a row of wide stripes painted across a road",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot"
+      ]
+    },
+    {
+      "key": "street-lamp",
+      "label": "a street lamp",
+      "subject": "a tall street lamp with a curved arm and a lamp head",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "road-sign-arrow",
+      "label": "an arrow road sign",
+      "subject": "a rectangular road sign with a single direction arrow on it",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot"
+      ]
+    },
+    {
+      "key": "taxi",
+      "label": "a taxi",
+      "subject": "a taxi seen from the side, with a chequered stripe along the door",
+      "topic": "vehicles",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "tractor",
+      "label": "a tractor",
+      "subject": "a farm tractor seen from the side, with large rear wheels and small front ones",
+      "topic": "vehicles",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "farm"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "train",
+      "label": "a train",
+      "subject": "a small steam train seen from the side, engine and one carriage",
+      "topic": "vehicles",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "bridge",
+      "label": "a bridge",
+      "subject": "an arched bridge seen from the side, spanning water",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "clock-tower",
+      "label": "a clock on a building",
+      "subject": "a round clock face mounted high on a building tower",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "fountain",
+      "label": "a fountain",
+      "subject": "a round stone fountain with water arcing up from the middle",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "statue",
+      "label": "a statue",
+      "subject": "a statue of a standing figure on a rectangular stone plinth",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "staircase",
+      "label": "a staircase",
+      "subject": "an outdoor flight of stone steps seen from the side",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot"
+      ]
+    },
+    {
+      "key": "front-door",
+      "label": "an interesting door",
+      "subject": "a panelled front door with a handle and a small window above it",
+      "topic": "buildings",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot"
+      ]
+    },
+    {
+      "key": "chimney",
+      "label": "a chimney",
+      "subject": "a brick chimney on a sloped rooftop",
+      "topic": "buildings",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "flag",
+      "label": "a flag",
+      "subject": "a plain rectangular flag flying from a flagpole",
+      "topic": "buildings",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "house",
+      "label": "a house",
+      "subject": "a small house seen from the front, peaked roof and a chimney",
+      "topic": "buildings",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "dog-on-lead",
+      "label": "a dog on a lead",
+      "subject": "a small dog standing, wearing a collar with a lead trailing from it",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "dog",
+      "label": "a dog",
+      "subject": "a dog sitting upright, seen from the side, wearing a collar",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "cat",
+      "label": "a cat",
+      "subject": "a cat sitting upright with its tail curled around its paws",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "pigeon",
+      "label": "a bird on the ground",
+      "subject": "a plump pigeon standing on the ground, seen from the side",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "butterfly",
+      "label": "a butterfly",
+      "subject": "a butterfly seen from above with both wings open and spread",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "insect",
+      "label": "an insect",
+      "subject": "a ladybug seen from above, round wing case with spots, antennae showing",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "ladybug",
+        "ladybird"
+      ]
+    },
+    {
+      "key": "big-tree",
+      "label": "a very big tree",
+      "subject": "a large broad tree with a thick trunk and a full round crown",
+      "topic": "nature",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "flower-pot",
+      "label": "a flower in a pot",
+      "subject": "a flowerpot with a single flower and two leaves growing from it",
+      "topic": "nature",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "boat",
+      "label": "a boat",
+      "subject": "a small sailing boat seen from the side, on the water",
+      "topic": "water",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "water",
+        "coast"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "sailing boat",
+        "fishing boat"
+      ]
+    },
+    {
+      "key": "fish",
+      "label": "a fish",
+      "subject": "a single fish seen from the side, swimming",
+      "topic": "water",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "water",
+        "coast"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "fresh fish"
+      ]
+    },
+    {
+      "key": "man-with-mustache",
+      "label": "a man with a mustache",
+      "subject": "a smiling man's face with a big mustache, front-on",
+      "topic": "people",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "ice-cream",
+      "label": "an ice cream",
+      "subject": "an ice cream cone with two round scoops on top",
+      "topic": "food",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "postbox",
+      "label": "a postbox",
+      "subject": "a freestanding postbox with a posting slot on the front",
+      "topic": "street",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "bench",
+      "label": "a bench",
+      "subject": "a park bench seen from the side, with slatted seat and back",
+      "topic": "street",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "rubbish-bin",
+      "label": "a rubbish bin",
+      "subject": "a public rubbish bin with an open top",
+      "topic": "street",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "umbrella",
+      "label": "an open umbrella",
+      "subject": "an open umbrella seen from the side, with a curved handle",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "wet"
+      ],
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "suitcase",
+      "label": "a suitcase",
+      "subject": "a suitcase standing upright with a handle on top",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "hat",
+      "label": "someone wearing a hat",
+      "subject": "a wide-brimmed sun hat seen from the side",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "draft",
+      "climate": [
+        "hot"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "sunglasses",
+      "label": "sunglasses",
+      "subject": "a pair of sunglasses seen from the front, both lenses visible",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "balloon",
+      "label": "a balloon",
+      "subject": "a single round balloon with a curling string",
+      "topic": "gear",
+      "ubiquity": "common",
+      "status": "draft",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "airplane",
+      "label": "an airplane",
+      "subject": "a small friendly airplane in flight, seen from the side, nose tilted upward",
+      "topic": "vehicles",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "winter-coat",
+      "label": "a winter coat",
+      "subject": "a puffy winter coat with a hood, seen from the front, arms slightly out",
+      "topic": "gear",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "snow"
+      ],
+      "climate": [
+        "cold"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "skis-and-poles",
+      "label": "skis and ski poles",
+      "subject": "a pair of skis crossed with two ski poles, seen from the front",
+      "topic": "gear",
+      "ubiquity": "local",
+      "status": "ready",
+      "environments": [
+        "snow"
+      ],
+      "climate": [
+        "cold"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "mountain",
+      "label": "a mountain",
+      "subject": "a single triangular snow-capped mountain peak, seen face-on",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "mountain"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "mountains",
+        "hill"
+      ]
+    },
+    {
+      "key": "campfire",
+      "label": "a campfire",
+      "subject": "a small campfire with crossed logs and rising flames",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "forest",
+        "mountain",
+        "farm"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "chairlift",
+      "label": "a chairlift",
+      "subject": "a chairlift seat hanging from an overhead cable, seen from the side",
+      "topic": "vehicles",
+      "ubiquity": "local",
+      "status": "ready",
+      "environments": [
+        "snow"
+      ],
+      "climate": [
+        "cold"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "souvlaki",
+      "label": "souvlaki",
+      "subject": "two souvlaki skewers with chunks of meat and vegetables, seen from the side",
+      "topic": "food",
+      "ubiquity": "local",
+      "status": "ready",
+      "regions": [
+        "greece"
+      ],
+      "roles": [
+        "spot"
+      ],
+      "aliases": [
+        "souvlaki skewers",
+        "kebabs",
+        "skewers"
+      ]
+    },
+    {
+      "key": "pasta",
+      "label": "a bowl of pasta",
+      "subject": "a bowl of pasta with a curl of steam rising, seen from the side",
+      "topic": "food",
+      "ubiquity": "local",
+      "status": "ready",
+      "regions": [
+        "mediterranean",
+        "europe"
+      ],
+      "roles": [
+        "spot"
+      ],
+      "aliases": [
+        "spaghetti",
+        "noodles"
+      ]
+    },
+    {
+      "key": "owl",
+      "label": "an owl",
+      "subject": "an owl perched on a branch, wide round eyes, wings folded",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "forest"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "owls"
+      ]
+    },
+    {
+      "key": "dolphins",
+      "label": "dolphins",
+      "subject": "two dolphins leaping out of the water side by side",
+      "topic": "animals",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "water",
+        "coast"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "brown-bear",
+      "label": "a bear",
+      "subject": "a young brown bear standing upright on its hind legs, front paws forward",
+      "topic": "animals",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "forest",
+        "mountain"
+      ],
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "swallows-nesting",
+      "label": "swallows in a nest",
+      "subject": "two swallow parents feeding chicks in a nest",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "village",
+        "farm"
+      ],
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "goat",
+      "label": "a goat",
+      "subject": "a goat standing in profile, small horns and a short beard",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "farm",
+        "mountain"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ],
+      "aliases": [
+        "goats grazing"
+      ]
+    },
+    {
+      "key": "kestrel",
+      "label": "a kestrel",
+      "subject": "a kestrel in flight, wings spread wide, seen from below",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "squirrel",
+      "label": "a squirrel",
+      "subject": "a squirrel sitting upright holding an acorn",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "environments": [
+        "city",
+        "village",
+        "forest"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "swan",
+      "label": "a swan",
+      "subject": "a swan gliding on water, neck curved",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "water"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "fox",
+      "label": "a fox",
+      "subject": "a fox standing in profile, bushy tail, looking forward",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "forest",
+        "village"
+      ],
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "monkey",
+      "label": "a monkey",
+      "subject": "a monkey hanging by one arm from a vine, tail curled",
+      "topic": "animals",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "forest"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "camel",
+      "label": "a camel",
+      "subject": "a camel standing in profile, single hump",
+      "topic": "animals",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "desert"
+      ],
+      "climate": [
+        "hot",
+        "dry"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "horse",
+      "label": "a horse",
+      "subject": "a horse standing in profile, mane flowing",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "environments": [
+        "farm",
+        "village"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "cow",
+      "label": "a cow",
+      "subject": "a dairy cow standing in profile, patchy markings",
+      "topic": "animals",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "environments": [
+        "farm"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "nubian-ibex",
+      "label": "a Nubian ibex",
+      "subject": "a Nubian ibex standing in profile, long curved ridged horns",
+      "topic": "animals",
+      "ubiquity": "local",
+      "status": "ready",
+      "environments": [
+        "desert",
+        "mountain"
+      ],
+      "regions": [
+        "israel",
+        "middle-east"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "seal",
+      "label": "a seal",
+      "subject": "a seal resting on its belly, whiskered face raised",
+      "topic": "animals",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "coast",
+        "water"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "eagle",
+      "label": "an eagle",
+      "subject": "an eagle gliding with wings spread, seen from below",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "mountain"
+      ],
+      "roles": [
+        "shadow"
+      ]
+    },
+    {
+      "key": "turtle",
+      "label": "a tortoise",
+      "subject": "a tortoise walking, seen in profile",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "shadow"
+      ],
+      "aliases": [
+        "wild tortoises"
+      ]
+    },
+    {
+      "key": "donkey",
+      "label": "a donkey",
+      "subject": "a donkey standing in profile, long ears upright",
+      "topic": "animals",
+      "ubiquity": "common",
+      "status": "ready",
+      "environments": [
+        "farm",
+        "village"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "water-bottle",
+      "label": "a water bottle",
+      "subject": "a reusable water bottle with a flip-top cap, seen from the side",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "baseball-cap",
+      "label": "a baseball cap",
+      "subject": "a baseball cap seen from the side, curved brim facing forward",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "hot"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "binoculars",
+      "label": "binoculars",
+      "subject": "a pair of binoculars seen from the front, both lenses visible",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "rain-coat",
+      "label": "a rain coat",
+      "subject": "a hooded rain coat with two front pockets, seen from the front",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "wet"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "sunscreen",
+      "label": "sunscreen",
+      "subject": "a tube of sunscreen standing upright with a sun icon on the label",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "hot"
+      ],
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "tuxedo",
+      "label": "a tuxedo",
+      "subject": "a tuxedo jacket with a bow tie, seen from the front",
+      "topic": "gear",
+      "ubiquity": "local",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "hiking-shoes",
+      "label": "hiking shoes",
+      "subject": "a hiking boot seen from the side, with a thick lugged sole",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "environments": [
+        "mountain",
+        "forest"
+      ],
+      "roles": [
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "flip-flops",
+      "label": "flip-flops",
+      "subject": "a pair of flip-flop sandals seen from above",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "hot"
+      ],
+      "environments": [
+        "coast",
+        "water"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "gloves",
+      "label": "gloves",
+      "subject": "a pair of gloves, palms facing forward",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "cold"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "woolly-hat",
+      "label": "a woolly hat",
+      "subject": "a knitted woolly hat with a pompom on top",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "climate": [
+        "cold"
+      ],
+      "roles": [
+        "spot",
+        "pack",
+        "shadow"
+      ]
+    },
+    {
+      "key": "apple-tree",
+      "label": "an apple tree",
+      "subject": "an apple tree full of round apples, seen face-on",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "farm",
+        "village"
+      ],
+      "climate": [
+        "temperate"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "palm-tree",
+      "label": "a palm tree",
+      "subject": "a palm tree with a curved trunk and a crown of fronds",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "coast",
+        "desert"
+      ],
+      "climate": [
+        "hot"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "cactus",
+      "label": "a cactus",
+      "subject": "a tall saguaro-style cactus with two raised arms",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": [
+        "desert"
+      ],
+      "climate": [
+        "hot",
+        "dry"
+      ],
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "honey",
+      "label": "a jar of honey",
+      "subject": "a round jar of honey with a honey dipper resting on top",
+      "topic": "food",
+      "ubiquity": "common",
+      "status": "ready",
+      "roles": [
+        "spot",
+        "shadow"
+      ]
+    },
+    {
+      "key": "pomegranate",
+      "label": "a pomegranate",
+      "subject": "a pomegranate cut open showing its ruby-red seed clusters, whole fruit beside it",
+      "topic": "food",
+      "ubiquity": "regional",
+      "status": "ready",
+      "regions": ["greece", "mediterranean", "middle-east"],
+      "roles": ["spot", "shadow"]
+    },
+    {
+      "key": "greek-vase",
+      "label": "a Greek vase",
+      "subject": "a tall ancient Greek amphora with a geometric key pattern band and two curved handles",
+      "topic": "gear",
+      "ubiquity": "local",
+      "status": "ready",
+      "regions": ["greece"],
+      "roles": ["shadow"]
+    },
+    {
+      "key": "village",
+      "label": "a hillside village",
+      "subject": "a cluster of stone houses with red-tiled roofs and chimneys, built up a hillside",
+      "topic": "buildings",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": ["village", "mountain"],
+      "regions": ["greece", "mediterranean"],
+      "roles": ["shadow"]
+    },
+    {
+      "key": "chestnuts",
+      "label": "chestnuts",
+      "subject": "a chestnut tree branch with serrated leaves and two round chestnuts",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": ["forest", "mountain"],
+      "climate": ["temperate"],
+      "regions": ["greece", "mediterranean", "europe"],
+      "roles": ["spot", "shadow"],
+      "aliases": ["chestnut"]
+    },
+    {
+      "key": "old-church",
+      "label": "a small stone church",
+      "subject": "a small stone chapel with a peaked tiled roof, an arched wooden door and a cross on top",
+      "topic": "buildings",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": ["village"],
+      "regions": ["greece", "mediterranean", "europe"],
+      "roles": ["spot", "shadow"]
+    },
+    {
+      "key": "greek-flag",
+      "label": "the Greek flag",
+      "subject": "the Greek flag with blue and white stripes and a white cross, waving on a pole",
+      "topic": "buildings",
+      "ubiquity": "local",
+      "status": "ready",
+      "regions": ["greece"],
+      "roles": ["spot", "shadow"]
+    },
+    {
+      "key": "bouzouki",
+      "label": "a bouzouki",
+      "subject": "a Greek bouzouki, a long-necked stringed instrument with a round bowl body",
+      "topic": "gear",
+      "ubiquity": "local",
+      "status": "ready",
+      "regions": ["greece"],
+      "roles": ["spot", "shadow"]
+    },
+    {
+      "key": "olives",
+      "label": "olives",
+      "subject": "an olive branch with narrow leaves and a cluster of oval olives",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": ["farm"],
+      "climate": ["hot", "dry"],
+      "regions": ["greece", "mediterranean"],
+      "roles": ["spot", "shadow"],
+      "aliases": ["olive"]
+    },
+    {
+      "key": "grapes",
+      "label": "a bunch of grapes",
+      "subject": "a bunch of round grapes on the vine with a curling tendril and a leaf",
+      "topic": "nature",
+      "ubiquity": "regional",
+      "status": "ready",
+      "environments": ["farm"],
+      "climate": ["temperate"],
+      "regions": ["greece", "mediterranean"],
+      "roles": ["spot", "shadow"]
+    },
+    {
+      "key": "backpack",
+      "label": "an explorer backpack",
+      "subject": "a sturdy explorer backpack, front view, buckled front flap, side pockets and a chest strap",
+      "topic": "gear",
+      "ubiquity": "everywhere",
+      "status": "ready",
+      "roles": []
+    }
+  ]
+}

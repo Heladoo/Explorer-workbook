@@ -54,10 +54,14 @@ class MarkdownGenerator:
 
     def _overview_row(self, page: Page) -> str:
         goal = _cell(page.educational_goal)
+        prompt_cell = (
+            f"[`{page.prompt_filename}`](prompts/{page.prompt_filename})"
+            if page.image_brief is not None
+            else "—"
+        )
         return (
             f"| {page.number} | {page.type} | {page.metadata.get('difficulty', '—')} "
-            f"| {page.estimated_age or '—'} | {goal} | "
-            f"[`{page.prompt_filename}`](prompts/{page.prompt_filename}) |"
+            f"| {page.estimated_age or '—'} | {goal} | {prompt_cell} |"
         )
 
     def _render_page(self, page: Page) -> str:
@@ -68,12 +72,22 @@ class MarkdownGenerator:
             goal=page.educational_goal or "—",
             age=page.estimated_age or "—",
             difficulty=page.metadata.get("difficulty", "—"),
-            prompt_path=f"prompts/{page.prompt_filename}",
+            prompt_file_cell=self._prompt_file_cell(page),
             instructions=page.instructions.replace("\n", "\n> "),
             illustration=self._illustration(page),
-            image_prompt=page.image_prompt.rstrip(),
+            image_prompt_section=self._image_prompt_section(page),
             details=self._details(page),
         )
+
+    def _prompt_file_cell(self, page: Page) -> str:
+        if page.image_brief is None:
+            return "—"
+        return f"[`{page.prompt_filename}`](prompts/{page.prompt_filename})"
+
+    def _image_prompt_section(self, page: Page) -> str:
+        if page.image_brief is None:
+            return "**Image prompt**\n\n_No illustration prompt for this page._"
+        return f"**Image prompt**\n\n```text\n{page.image_prompt.rstrip()}\n```"
 
     def _illustration(self, page: Page) -> str:
         brief = page.image_brief

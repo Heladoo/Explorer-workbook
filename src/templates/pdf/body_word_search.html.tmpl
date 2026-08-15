@@ -1,5 +1,7 @@
-    <div class="puzzle-grid" style="grid-template-columns: repeat($columns, 1fr);">
+    <div class="puzzle-stage">
+      <div class="puzzle-grid" style="--puzzle-columns: $columns; --puzzle-rows: $rows">
 $cells
+      </div>
     </div>
     <ul class="word-bank">
 $words

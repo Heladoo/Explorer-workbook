@@ -15,10 +15,12 @@ from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 DEFAULT_LANGUAGE = "en"
+_DEFAULT_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 _LOCALES: dict[str, Mapping[str, Any]] = {}
 _DIRECTIONS: dict[str, str] = {}
 _TERMS: dict[str, dict[str, str]] = {}
+_ALPHABETS: dict[str, str] = {}
 
 
 def _load_locales() -> dict[str, Mapping[str, Any]]:
@@ -35,6 +37,7 @@ def _load_locales() -> dict[str, Mapping[str, Any]]:
         _LOCALES[language] = getattr(module, "STRINGS", {})
         _DIRECTIONS[language] = getattr(module, "DIRECTION", "ltr")
         _TERMS[language] = dict(getattr(module, "TERMS", {}))
+        _ALPHABETS[language] = getattr(module, "ALPHABET", _DEFAULT_ALPHABET)
     return _LOCALES
 
 
@@ -66,6 +69,12 @@ class Strings:
         _load_locales()
         return dict(_TERMS.get(self.language, {}))
 
+    @property
+    def alphabet(self) -> str:
+        """Letters to fill the gaps of a word-search grid, in this language."""
+        _load_locales()
+        return _ALPHABETS.get(self.language, _DEFAULT_ALPHABET)
+
     def text(self, key: str, **kwargs: Any) -> str:
         """Look up ``key`` and interpolate ``kwargs`` into it."""
         value = self.table.get(key)
@@ -77,6 +86,16 @@ class Strings:
             return value.format(**kwargs)
         except KeyError as exc:
             raise KeyError(f"string {key!r} needs placeholder {exc.args[0]!r}") from exc
+
+    def optional(self, key: str, default: str) -> str:
+        """Look up ``key``, falling back to ``default`` when a locale omits it.
+
+        Used for large translatable banks (the scavenger hunt symbols) where a
+        missing entry should degrade to the English name rather than crash a
+        whole book. :meth:`text` stays strict for everything else.
+        """
+        value = self.table.get(key)
+        return value if isinstance(value, str) else default
 
     def items(self, key: str) -> tuple[str, ...]:
         """Look up a list-valued entry, such as a pool of packing items."""

@@ -18,6 +18,7 @@ from typing import Sequence
 from src.agents.destination_agent import build_knowledge_agent
 from src.output_writer import WrittenArtifacts, default_output_dir, write_bundle
 from src.pipeline import WorkbookBuilder, WorkbookBundle, WorkbookRequest
+from src.qa import LeakFinding, find_english_leaks
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,9 @@ class GenerationResult:
 
     bundle: WorkbookBundle
     artifacts: WrittenArtifacts | None = None
+    #: Possible English leaked into a non-English workbook — see :mod:`src.qa`.
+    #: Always empty for an English workbook.
+    language_qa: tuple[LeakFinding, ...] = ()
 
     @property
     def workbook(self):
@@ -58,7 +62,9 @@ def generate_workbook(
     write: bool = True,
     html: bool = False,
     pdf: bool = False,
+    ink_saver: bool = False,
     images: dict[int, Path] | None = None,
+    symbol_images: dict[str, Path] | None = None,
     builder: WorkbookBuilder | None = None,
 ) -> GenerationResult:
     """Generate a workbook and, unless ``write=False``, write the three artifacts.
@@ -67,8 +73,10 @@ def generate_workbook(
     model), ``file``, ``llm`` or ``heuristic``. ``output_dir`` overrides the
     default ``output/<destination-slug>``.
 
-    ``html`` and ``pdf`` additionally lay the workbook out for print; ``images``
-    maps page numbers to illustration files when artwork exists.
+    ``html`` and ``pdf`` additionally lay the workbook out for print; ``ink_saver``
+    flattens that print layout's brand colors to grayscale. ``images`` maps page
+    numbers to illustration files when artwork exists, and ``symbol_images`` maps
+    a symbol slug to its drawing for pages laid out as a table of pictures.
     """
     request = WorkbookRequest(
         destination=destination,
@@ -90,14 +98,24 @@ def generate_workbook(
         knowledge_agent=build_knowledge_agent(provider, data_dir=data_dir)
     )
     bundle = active_builder.build(request)
+    language_qa = tuple(find_english_leaks(bundle.workbook, bundle.context))
 
     if not write:
-        return GenerationResult(bundle=bundle)
+        return GenerationResult(bundle=bundle, language_qa=language_qa)
 
     target = Path(output_dir) if output_dir else default_output_dir(
         bundle.context.slug if bundle.context else request.destination, output_root
     )
     return GenerationResult(
         bundle=bundle,
-        artifacts=write_bundle(bundle, target, html=html, pdf=pdf, images=images),
+        artifacts=write_bundle(
+            bundle,
+            target,
+            html=html,
+            pdf=pdf,
+            ink_saver=ink_saver,
+            images=images,
+            symbol_images=symbol_images,
+        ),
+        language_qa=language_qa,
     )

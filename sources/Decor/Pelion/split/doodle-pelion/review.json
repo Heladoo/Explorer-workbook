@@ -1,0 +1,56 @@
+{
+  "entries": [
+    {
+      "crop": "sources/Decor/Pelion/split/doodle-pelion/symbol_028.png",
+      "key": "stone-chapel",
+      "label": "a small stone chapel",
+      "subject": "a small stone chapel with a bell-topped roof, an arched wooden door and a round window",
+      "topic": "buildings",
+      "ubiquity": "regional",
+      "status": "ready",
+      "roles": ["spot", "shadow", "decor"],
+      "regions": ["greece", "mediterranean"],
+      "_fit_rank": 1,
+      "_fit_note": "common wayside sight in Greek villages, always outdoors, simple recognisable shape"
+    },
+    {
+      "crop": "sources/Decor/Pelion/split/doodle-pelion/symbol_034.png",
+      "key": "taverna-table",
+      "label": "a taverna table and chairs",
+      "subject": "a small round outdoor table with a bottle and two glasses, flanked by two simple wooden chairs",
+      "topic": "street",
+      "ubiquity": "regional",
+      "status": "ready",
+      "roles": ["spot", "shadow", "decor"],
+      "regions": ["greece", "mediterranean"],
+      "_fit_rank": 2,
+      "_fit_note": "common outdoor village-square sight, simple recognisable shape"
+    },
+    {
+      "crop": "sources/Decor/Pelion/split/doodle-pelion/symbol_026.png",
+      "key": "horseback-rider",
+      "label": "a horseback rider",
+      "subject": "a person riding a horse at a walk, seen from the side",
+      "topic": "people",
+      "ubiquity": "local",
+      "status": "ready",
+      "roles": ["spot", "shadow", "decor"],
+      "regions": ["greece", "mediterranean"],
+      "_fit_rank": 3,
+      "_fit_note": "easy to recognise but not a guaranteed sight — downgraded to local, not regional"
+    },
+    {
+      "crop": "sources/Decor/Pelion/split/doodle-pelion/symbol_024.png",
+      "key": "traditional-loom",
+      "label": "a traditional weaving loom",
+      "subject": "an upright wooden weaving loom strung with vertical threads and a patterned woven cloth",
+      "topic": "gear",
+      "ubiquity": "local",
+      "status": "ready",
+      "roles": ["decor"],
+      "regions": ["greece"],
+      "_fit_rank": 4,
+      "_fit_note": "usually indoors (craft house/museum), weakest fit for a real-world find — decor only, not spot/shadow"
+    }
+  ]
+}

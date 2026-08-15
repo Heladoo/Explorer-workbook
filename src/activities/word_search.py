@@ -1,8 +1,8 @@
 """Word Search (תפזורת): find the destination's words hidden in a letter grid.
 
 The grid is generated here, in full, and travels in the page metadata — so this
-page needs no illustration at all beyond an optional decorative border. That
-makes it the cheapest page in the book to produce.
+page needs no illustration at all. That makes it the cheapest page in the book
+to produce.
 """
 
 from __future__ import annotations
@@ -10,18 +10,16 @@ from __future__ import annotations
 from src.activities._wordbank import build_word_bank
 from src.activities.base import (
     ActivityGenerator,
-    ImageBrief,
     PlannedPage,
-    RenderMode,
     register_activity,
 )
 from src.models.context import WorkbookContext
 from src.models.page import ActivityDraft
 
-_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 _GRID_SIZE = {"easy": 10, "medium": 12, "hard": 14}
-_WORD_COUNT = {"easy": 6, "medium": 8, "hard": 10}
+#: 8 is the floor at every difficulty — a shorter easy sheet used to feel
+#: thin next to the other pages' fixed 16-cell/5-7-item counts.
+_WORD_COUNT = {"easy": 8, "medium": 8, "hard": 10}
 _MAX_WORD_LENGTH = {"easy": 6, "medium": 8, "hard": 10}
 
 #: (row step, column step) per difficulty — reversed and diagonal come later.
@@ -32,6 +30,15 @@ _DIRECTIONS: dict[str, tuple[tuple[int, int], ...]] = {
 }
 
 _PLACEMENT_ATTEMPTS = 300
+
+#: A diagonal step in either row or column direction is ``(±1, ±1)``. Only
+#: "medium"/"hard" ``_DIRECTIONS`` above include one; "easy" never does, so
+#: its instructions must not claim a slanted word is ever possible.
+_DIAGONAL_STEPS = frozenset({(1, 1), (1, -1), (-1, 1), (-1, -1)})
+
+
+def _has_diagonal(directions: tuple[tuple[int, int], ...]) -> bool:
+    return any(step in _DIAGONAL_STEPS for step in directions)
 
 
 @register_activity
@@ -65,45 +72,30 @@ class WordSearchActivity(ActivityGenerator):
         )
         words = [entry.word for entry in entries]
 
-        grid, placements = self._build_grid(
-            words, size, _DIRECTIONS[planned.difficulty], context, planned
-        )
+        directions = _DIRECTIONS[planned.difficulty]
+        grid, placements = self._build_grid(words, size, directions, context, planned)
         placed = [placement["word"] for placement in placements]
 
+        instructions_key = (
+            "word_search.instructions_diagonal"
+            if _has_diagonal(directions)
+            else "word_search.instructions_straight"
+        )
         return self.draft(
             title=self.text(context, "word_search.title", destination=context.display_destination),
             instructions=self.text(
                 context,
-                "word_search.instructions",
+                instructions_key,
                 count=len(placed),
                 words=self.strings(context).join([word.title() for word in placed]),
             ),
             planned=planned,
-            image_brief=ImageBrief(
-                subject="a decorative border for a word search page",
-                scene=(
-                    f"A thin decorative border of {context.destination} motifs framing an "
-                    "otherwise completely empty page."
-                ),
-                elements=tuple(self.pick(context, "plants", 2))
-                + tuple(self.pick(context, "wildlife", 1)),
-                render_mode=RenderMode.FRAME,
-                composition=(
-                    "Border only, no more than 15 mm wide. The entire centre of the page "
-                    "is left blank white — the puzzle grid is typeset there, not drawn."
-                ),
-                extra_constraints=(
-                    "Do not draw a grid, squares, letters or any puzzle content.",
-                    "This border is optional decoration; the page is complete without it.",
-                ),
-            ),
             metadata={
                 "grid": grid,
                 "grid_size": size,
                 "words": placed,
                 "placements": placements,
                 "word_count": len(placed),
-                "illustration": "decorative",
                 "needs_illustration": False,
             },
         )
@@ -130,10 +122,11 @@ class WordSearchActivity(ActivityGenerator):
             if placement:
                 placements.append(placement)
 
+        alphabet = self.strings(context).alphabet
         for row in range(size):
             for column in range(size):
                 if (row, column) not in cells:
-                    cells[(row, column)] = _ALPHABET[rng.randrange(len(_ALPHABET))]
+                    cells[(row, column)] = alphabet[rng.randrange(len(alphabet))]
 
         grid = ["".join(cells[(row, column)] for column in range(size)) for row in range(size)]
         placements.sort(key=lambda placement: placement["word"])

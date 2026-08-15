@@ -31,12 +31,11 @@ class CoverActivity(ActivityGenerator):
         names = self.strings(context).join(context.child_names)
         if names:
             title = self.text(context, "cover.title_with_names", names=names, destination=context.display_destination)
-            instructions = self.text(
-                context, "cover.instructions_with_names", names=names, destination=context.display_destination
-            )
         else:
             title = self.text(context, "cover.title_plain", destination=context.display_destination)
-            instructions = self.text(context, "cover.instructions_plain", destination=context.display_destination)
+        # Fixed, not templated on the destination — it already fills the
+        # title just above; repeating it here read as redundant.
+        instructions = self.text(context, "cover.subtitle")
 
         landmarks = self.pick(context, "landmarks", 2)
         wildlife = self.pick(context, "wildlife", 1)

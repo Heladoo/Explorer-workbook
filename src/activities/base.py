@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Iterable, Type
 
 from src.models.context import WorkbookContext
-from src.models.page import ActivityDraft, ImageBrief, RenderMode
+from src.models.page import ActivityDraft, ImageBrief, RenderMode, SymbolBrief
 from src.models.plan import PlannedPage
 from src.strings import Strings, strings_for
 
@@ -45,10 +45,17 @@ class ActivityGenerator(ABC):
     #: Planner hints. ``weight`` biases selection, ``max_per_workbook`` caps
     #: repeats, ``pinned`` places the page at a fixed position (1 = first,
     #: -1 = last), and ``energy`` lets the planner alternate quiet/active pages.
+    #: ``enabled`` is a hard gate: ``False`` removes the activity from the
+    #: planner's default catalogue entirely (it never fills a body slot, even
+    #: as a last-resort repeat) while leaving it registered and generatable —
+    #: a paused activity, not a deleted one. A caller that explicitly injects
+    #: an activity list into ``WorkbookPlanner`` bypasses this gate, since
+    #: that's an explicit request for exactly those activities.
     weight: int = 10
     max_per_workbook: int = 1
     pinned: int | None = None
     energy: str = "calm"
+    enabled: bool = True
     #: Knowledge categories the activity needs; used by :meth:`supports`.
     required_knowledge: tuple[str, ...] = ()
 
@@ -73,12 +80,18 @@ class ActivityGenerator(ABC):
         *,
         title: str,
         instructions: str,
-        image_brief: ImageBrief,
         planned: PlannedPage,
+        image_brief: ImageBrief | None = None,
         metadata: dict[str, Any] | None = None,
         educational_goal: str | None = None,
+        symbols: tuple[SymbolBrief, ...] = (),
     ) -> ActivityDraft:
-        """Assemble a draft, filling in the boilerplate fields consistently."""
+        """Assemble a draft, filling in the boilerplate fields consistently.
+
+        ``symbols`` is for pages whose working area is a *table of pictures*:
+        each one is drawn from its own small prompt and placed by the layout,
+        rather than asking a single prompt to draw the whole grid.
+        """
         page_metadata: dict[str, Any] = {
             "difficulty": planned.difficulty,
             "focus": planned.focus,
@@ -94,6 +107,7 @@ class ActivityGenerator(ABC):
             educational_goal=educational_goal or self.educational_goal,
             estimated_age=self.estimated_age(planned),
             metadata=page_metadata,
+            symbols=tuple(symbols),
         )
 
     def estimated_age(self, planned: PlannedPage) -> str:
@@ -186,6 +200,7 @@ __all__ = [
     "ImageBrief",
     "PlannedPage",
     "RenderMode",
+    "SymbolBrief",
     "available_activities",
     "get_generator",
     "register_activity",

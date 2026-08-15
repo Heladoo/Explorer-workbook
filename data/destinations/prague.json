@@ -2,6 +2,12 @@
   "destination": "Prague",
   "aliases": ["Praha", "Prague, Czech Republic"],
   "region": "Bohemia, Czech Republic",
+  "country": "CZ",
+  "profile": {
+    "regions": ["europe"],
+    "environments": ["city", "water"],
+    "climate": ["cold", "temperate"]
+  },
   "landmarks": [
     "Charles Bridge",
     "Prague Castle",

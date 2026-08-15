@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "cs",
+  "script": "latin_ext",
+  "direction": "ltr",
+  "entries": {
+    "yes": { "native": "ano", "pronunciation": { "en": "AH-no", "he": "אָנוֹ" } },
+    "no": { "native": "ne", "pronunciation": { "en": "neh", "he": "נֶה" } },
+    "please": { "native": "prosím", "pronunciation": { "en": "PRO-seem", "he": "פְּרוֹסִים" } },
+    "thank_you": { "native": "děkuji", "pronunciation": { "en": "DYEH-koo-yi", "he": "דְייֶקוּיִי" } },
+    "sorry": { "native": "promiňte", "pronunciation": { "en": "PRO-min-teh", "he": "פְּרוֹמִינְטֶה" } },
+    "good_morning": { "native": "dobré ráno", "pronunciation": { "en": "DOB-reh RAH-no", "he": "דוֹבְּרֶה רָאנוֹ" } },
+    "good_night": { "native": "dobrou noc", "pronunciation": { "en": "DOB-roh nots", "he": "דוֹבְּרוֹ נוֹץ" } },
+    "water": { "native": "voda", "pronunciation": { "en": "VO-dah", "he": "ווֹדָה" } },
+    "bathroom": { "native": "záchod", "pronunciation": { "en": "ZAH-khod", "he": "זָאחוֹד" } },
+    "family": { "native": "rodina", "pronunciation": { "en": "RO-dyi-nah", "he": "רוֹדִינָה" } }
+  }
+}

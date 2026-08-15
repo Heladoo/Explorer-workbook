@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from src.activities.base import (
     ActivityGenerator,
-    ImageBrief,
     PlannedPage,
-    RenderMode,
     register_activity,
 )
 from src.models.context import WorkbookContext
@@ -41,35 +39,15 @@ class ReflectionActivity(ActivityGenerator):
         stars = context.trip.effective_duration_days or 5
         stars = max(3, min(stars, 10))
 
-        motifs = [*self.pick(context, "landmarks", 1), *self.pick(context, "wildlife", 1)]
-
         return self.draft(
             title=self.text(context, "reflection.title", destination=context.display_destination),
             instructions=self.text(context, "reflection.instructions"),
             planned=planned,
-            image_brief=ImageBrief(
-                subject="a keepsake page with an empty memory frame and blank writing lines",
-                scene=(
-                    f"A calm, warm closing page for a trip to {context.destination}: a large "
-                    "empty frame for a drawing, blank ruled lines beneath it, and a row of "
-                    "outlined stars along the bottom."
-                ),
-                elements=tuple(motifs),
-                render_mode=RenderMode.FRAME,
-                composition=(
-                    "Top half: one large empty frame. Middle: "
-                    f"{prompt_count} groups of two blank ruled lines each. Bottom: a row of "
-                    f"{stars} evenly spaced star outlines. Small motifs only in the margins."
-                ),
-                extra_constraints=(
-                    "Frame interior and all ruled lines must be completely empty.",
-                    "Stars must be plain outlines, unfilled and unnumbered.",
-                ),
-            ),
             metadata={
                 "prompts": prompts,
                 "writing_lines": prompt_count * 2,
                 "stars": stars,
                 "closing_page": True,
+                "needs_illustration": False,
             },
         )

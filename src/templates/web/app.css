@@ -33,6 +33,7 @@ body {
 main { max-width: 46rem; margin: 0 auto; }
 
 .masthead { margin-bottom: 1.75rem; }
+.masthead .logo { display: block; height: 3.25rem; width: auto; margin-bottom: .9rem; }
 .masthead h1 {
   font-size: 1.9rem;
   line-height: 1.15;
@@ -167,6 +168,24 @@ button, .button {
   display: inline-block;
 }
 button:hover, .button:hover { filter: brightness(1.08); }
+button[disabled] { cursor: wait; opacity: .85; }
+
+.btn-spinner {
+  display: none;
+  width: .95em;
+  height: .95em;
+  margin-inline-start: .55em;
+  vertical-align: -0.15em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin .6s linear infinite;
+}
+button.is-loading .btn-spinner { display: inline-block; }
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
 
 .notice {
   border: 1px solid var(--line);

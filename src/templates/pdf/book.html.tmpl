@@ -4,11 +4,230 @@
 <meta charset="utf-8">
 <title>$title</title>
 <style>
+$fonts
 $css
 </style>
 </head>
-<body>
+<body class="$body_class">
 $contents
 $pages
+<script>
+(function () {
+  "use strict";
+
+  var fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "image/*";
+  fileInput.style.display = "none";
+  document.body.appendChild(fileInput);
+
+  var activeSlot = null;
+  var activeTextEl = null;
+  var dirty = false;
+  var fileHandle = null;
+
+  function findSlot(target) {
+    return target.closest(".art, .spotting-art");
+  }
+
+  document.addEventListener("click", function (event) {
+    // A photo slot (.art) can contain editable text boxes (.art-label,
+    // .art-note) — let those handle their own click first, or every click
+    // placing a text cursor would also pop the file picker.
+    if (event.target.closest(".t-edit, .t-edit-btn")) return;
+    var slot = findSlot(event.target);
+    if (!slot) return;
+    event.preventDefault();
+    activeSlot = slot;
+    fileInput.value = "";
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", function () {
+    var file = fileInput.files && fileInput.files[0];
+    if (!file || !activeSlot) return;
+    var slot = activeSlot;
+    var reader = new FileReader();
+    reader.onload = function () {
+      var labelNode = slot.querySelector(".art-label, .spotting-label");
+      // .art-label carries its own pencil button as a child by now; read the
+      // wrapped .t-edit-text span so the button's glyph doesn't leak into alt.
+      var altSource = labelNode && (labelNode.querySelector(":scope > .t-edit-text") || labelNode);
+      var alt = altSource ? altSource.textContent.trim() : "Illustration";
+      slot.innerHTML = "";
+      slot.classList.add("filled");
+      var img = document.createElement("img");
+      img.src = String(reader.result);
+      img.alt = alt;
+      slot.appendChild(img);
+      markDirty();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  var saveBar = document.createElement("div");
+  saveBar.className = "editor-savebar";
+  var saveText = document.createElement("span");
+  saveText.textContent = "Unsaved changes";
+  var saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = "editor-save-btn";
+  saveButton.textContent = "Save workbook";
+  var pdfButton = document.createElement("button");
+  pdfButton.type = "button";
+  pdfButton.className = "editor-pdf-btn";
+  pdfButton.textContent = "Save as PDF";
+  saveBar.appendChild(saveText);
+  saveBar.appendChild(saveButton);
+  saveBar.appendChild(pdfButton);
+  document.body.appendChild(saveBar);
+  saveButton.addEventListener("click", save);
+  pdfButton.addEventListener("click", function () {
+    stopEditing(activeTextEl);
+    window.print();
+  });
+
+  function markDirty() {
+    dirty = true;
+    saveBar.classList.add("visible");
+  }
+
+  function suggestedName() {
+    var path = window.location.pathname || "";
+    var base = decodeURIComponent(path.substring(path.lastIndexOf("/") + 1));
+    return base && /\.html?$$/i.test(base) ? base : "workbook.html";
+  }
+
+  function serializedDocument() {
+    // Save a clone, not the live document: strip the pencil buttons and any
+    // in-progress editing state first so the file on disk is clean markup,
+    // not a snapshot of the editor's own scaffolding.
+    var clone = document.documentElement.cloneNode(true);
+    Array.prototype.forEach.call(clone.querySelectorAll(".t-edit-btn"), function (btn) {
+      btn.remove();
+    });
+    Array.prototype.forEach.call(clone.querySelectorAll(".t-edit"), function (el) {
+      el.classList.remove("editing");
+    });
+    Array.prototype.forEach.call(clone.querySelectorAll(".t-edit-text"), function (el) {
+      el.removeAttribute("contenteditable");
+    });
+    var bar = clone.querySelector(".editor-savebar");
+    if (bar) bar.remove();
+    return "<!DOCTYPE html>\n" + clone.outerHTML;
+  }
+
+  async function save() {
+    var blob = new Blob([serializedDocument()], { type: "text/html" });
+
+    if (window.showSaveFilePicker) {
+      try {
+        if (!fileHandle) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: suggestedName(),
+            types: [{ description: "HTML", accept: { "text/html": [".html"] } }],
+          });
+        }
+        var writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        dirty = false;
+        saveBar.classList.remove("visible");
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+        fileHandle = null;
+        // Fall through to the download fallback below.
+      }
+    }
+
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = suggestedName();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    dirty = false;
+    saveBar.classList.remove("visible");
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".art, .spotting-art"), function (slot) {
+    slot.title = slot.classList.contains("filled")
+      ? "Click to replace this photo"
+      : "Click to add a photo";
+  });
+
+  // -- in-browser text editing ---------------------------------------------
+  // Every reader-facing text box was rendered with a .t-edit class. Wrap its
+  // text in an inner .t-edit-text span (so the pencil button, appended as a
+  // sibling, never itself becomes part of the editable content or the saved
+  // text) and give it a pencil button that turns editing on for that one box.
+
+  function stopEditing(el) {
+    if (!el) return;
+    var text = el.querySelector(":scope > .t-edit-text");
+    if (text) text.removeAttribute("contenteditable");
+    el.classList.remove("editing");
+    if (activeTextEl === el) activeTextEl = null;
+  }
+
+  function startEditing(el) {
+    if (activeTextEl && activeTextEl !== el) stopEditing(activeTextEl);
+    var text = el.querySelector(":scope > .t-edit-text");
+    if (!text) return;
+    text.dataset.orig = text.textContent;
+    text.setAttribute("contenteditable", "true");
+    el.classList.add("editing");
+    activeTextEl = el;
+    text.focus();
+    var range = document.createRange();
+    range.selectNodeContents(text);
+    var selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".t-edit"), function (box) {
+    var text = box.querySelector(":scope > .t-edit-text");
+    if (!text) {
+      text = document.createElement("span");
+      text.className = "t-edit-text";
+      while (box.firstChild) text.appendChild(box.firstChild);
+      box.appendChild(text);
+    }
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "t-edit-btn";
+    btn.textContent = "✎";
+    btn.title = "Edit text";
+    btn.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      startEditing(box);
+    });
+    box.appendChild(btn);
+
+    text.addEventListener("input", markDirty);
+
+    text.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        text.blur();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        text.textContent = text.dataset.orig || "";
+        text.blur();
+      }
+    });
+
+    text.addEventListener("blur", function () {
+      stopEditing(box);
+    });
+  });
+})();
+</script>
 </body>
 </html>

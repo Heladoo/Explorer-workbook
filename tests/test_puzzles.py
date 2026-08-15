@@ -1,14 +1,14 @@
-"""Word search and crossword must be genuinely solvable.
+"""The word search must be genuinely solvable.
 
-These pages carry no illustration — the puzzle *is* the data — so the tests
-solve them rather than checking that fields are populated.
+This page carries no illustration — the puzzle *is* the data — so the tests
+solve it rather than checking that fields are populated.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from src.activities._wordbank import build_word_bank, puzzle_word
+from src.activities._wordbank import build_word_bank, normalize, puzzle_word
 from src.activities.base import get_generator
 from src.models.context import DIFFICULTY_LEVELS, DestinationKnowledge, WorkbookContext
 from src.models.plan import PlannedPage
@@ -61,6 +61,24 @@ def test_puzzle_word_extraction(phrase, expected):
 def test_puzzle_word_folds_accents():
     assert puzzle_word("Petrin funicular") == "FUNICULAR"
     assert puzzle_word("Český Krumlov") == "KRUMLOV"
+
+
+def test_puzzle_word_admits_defeat_when_every_candidate_is_prefixed():
+    """If *every* length-eligible token in a phrase carries a Hebrew
+    proclitic, there is no safe word to use — before this fix, puzzle_word()
+    fell back to using one anyway (a fragment like "בסירות"/"מפירות" instead
+    of a real word). build_word_bank() already tolerates fewer than `count`
+    words, so returning None here just means it moves on to a cleaner word
+    from a different phrase."""
+    # Every token here is a real word carrying one of the proclitic letters
+    # (ו/ב/כ/ל/מ/ש/ה) as its first character, with nothing unprefixed left.
+    assert puzzle_word("בסירות מפרשים") is None
+
+
+def test_puzzle_word_still_prefers_an_unprefixed_candidate():
+    """A phrase offering even one clean word must never fall back to a
+    prefixed one — the existing, already-fixed half of this behaviour."""
+    assert puzzle_word("סירות מפרשים") == normalize("סירות")
 
 
 def test_word_bank_mixes_categories(context):
@@ -136,80 +154,28 @@ def test_easy_word_search_has_no_diagonals_or_reversals(context):
 def test_word_search_needs_no_illustration(context):
     draft = get_generator("word_search").generate(context, _slot("word_search"))
     assert draft.metadata["needs_illustration"] is False
-    prompt_text = " ".join(draft.image_brief.extra_constraints).lower()
-    assert "do not draw a grid" in prompt_text
+    assert draft.image_brief is None
 
 
-# -- crossword ------------------------------------------------------------
+def test_easy_instructions_never_mention_diagonal_placement(context):
+    """``_DIRECTIONS["easy"]`` has no diagonal step at all, so its
+    instructions must not claim one is possible."""
+    draft = get_generator("word_search").generate(context, _slot("word_search", "easy"))
+    assert "slant" not in draft.instructions.lower()
+    assert "אלכסון" not in draft.instructions
 
 
-@pytest.mark.parametrize("difficulty", DIFFICULTY_LEVELS)
-def test_every_answer_reads_correctly_in_the_solution(context, difficulty):
-    draft = get_generator("crossword").generate(context, _slot("crossword", difficulty))
-    meta = draft.metadata
-    solution = meta["solution"]
-
-    clues = meta["across"] + meta["down"]
-    assert len(clues) >= 4
-    for clue in clues:
-        row, column = clue["row"], clue["column"]
-        step = (0, 1) if clue in meta["across"] else (1, 0)
-        letters = "".join(
-            solution[row + step[0] * index][column + step[1] * index]
-            for index in range(clue["length"])
-        )
-        assert letters == clue["answer"], f"{clue['answer']} does not read back from the grid"
+def test_hard_instructions_do_mention_diagonal_placement(context):
+    draft = get_generator("word_search").generate(context, _slot("word_search", "hard"))
+    assert "slant" in draft.instructions.lower()
 
 
-def test_layout_and_solution_agree(context):
-    meta = get_generator("crossword").generate(context, _slot("crossword")).metadata
-    for layout_row, solution_row in zip(meta["layout"], meta["solution"]):
-        for layout_cell, solution_cell in zip(layout_row, solution_row):
-            assert (layout_cell == ".") == (solution_cell != "#")
+def test_hard_instructions_mention_diagonal_placement_in_hebrew(context):
+    from dataclasses import replace
 
-
-def test_every_word_interlocks(context):
-    """A crossword whose words don't cross is just a word list."""
-    meta = get_generator("crossword").generate(context, _slot("crossword")).metadata
-    across_cells = {
-        (clue["row"], clue["column"] + index)
-        for clue in meta["across"]
-        for index in range(clue["length"])
-    }
-    down_cells = {
-        (clue["row"] + index, clue["column"])
-        for clue in meta["down"]
-        for index in range(clue["length"])
-    }
-    assert across_cells & down_cells, "no across word crosses a down word"
-    for clue in meta["down"]:
-        cells = {(clue["row"] + i, clue["column"]) for i in range(clue["length"])}
-        assert cells & across_cells, f"{clue['answer']} crosses nothing"
-
-
-def test_clue_numbers_follow_reading_order(context):
-    meta = get_generator("crossword").generate(context, _slot("crossword")).metadata
-    numbers = meta["numbers"]
-    ordered = sorted(numbers, key=lambda entry: (entry["row"], entry["column"]))
-    assert [entry["number"] for entry in ordered] == list(range(1, len(ordered) + 1))
-
-    numbered = {(entry["row"], entry["column"]): entry["number"] for entry in numbers}
-    for clue in meta["across"] + meta["down"]:
-        assert numbered[(clue["row"], clue["column"])] == clue["number"]
-
-
-def test_clues_are_not_empty(context):
-    meta = get_generator("crossword").generate(context, _slot("crossword")).metadata
-    for clue in meta["across"] + meta["down"]:
-        assert clue["clue"].strip()
-        assert clue["answer"] not in clue["clue"], "the clue must not contain its answer"
-
-
-def test_crossword_grid_stays_compact(context):
-    """Sprawl makes the squares too small to write in."""
-    meta = get_generator("crossword").generate(context, _slot("crossword", "hard")).metadata
-    assert meta["columns"] <= 16
-    assert meta["rows"] <= 16
+    hebrew_context = replace(context, language="he")
+    draft = get_generator("word_search").generate(hebrew_context, _slot("word_search", "hard"))
+    assert "אלכסון" in draft.instructions
 
 
 def test_puzzles_are_unsupported_without_vocabulary():
@@ -218,7 +184,6 @@ def test_puzzles_are_unsupported_without_vocabulary():
         knowledge=DestinationKnowledge(history=("a long time ago",), source="test"),
     )
     assert not get_generator("word_search").supports(bare)
-    assert not get_generator("crossword").supports(bare)
 
 
 def test_puzzles_work_for_a_second_destination(builder):

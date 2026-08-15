@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "en",
+  "script": "latin",
+  "direction": "ltr",
+  "entries": {
+    "yes": { "native": "Yes", "pronunciation": { "en": "yes", "he": "יֶס" } },
+    "no": { "native": "No", "pronunciation": { "en": "no", "he": "נוֹ" } },
+    "please": { "native": "Please", "pronunciation": { "en": "pleez", "he": "פְּלִיז" } },
+    "thank_you": { "native": "Thank you", "pronunciation": { "en": "thank you", "he": "ת'ֶנְק יוּ" } },
+    "sorry": { "native": "Sorry", "pronunciation": { "en": "sorry", "he": "סוֹרִי" } },
+    "good_morning": { "native": "Good morning", "pronunciation": { "en": "good morning", "he": "גוּד מוֹרְנִינְג" } },
+    "good_night": { "native": "Good night", "pronunciation": { "en": "good night", "he": "גוּד נַייט" } },
+    "water": { "native": "Water", "pronunciation": { "en": "waw-ter", "he": "ווֹטֶר" } },
+    "bathroom": { "native": "Bathroom", "pronunciation": { "en": "bath-room", "he": "בָּאתְרוּם" } },
+    "family": { "native": "Family", "pronunciation": { "en": "fam-i-ly", "he": "פָמִילִי" } }
+  }
+}

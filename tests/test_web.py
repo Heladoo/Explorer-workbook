@@ -187,7 +187,9 @@ def test_a_destination_alone_is_enough(site):
     assert (written / "workbook.json").exists()
     assert (written / "workbook.md").exists()
     assert (written / "workbook.html").exists()
-    assert len(list((written / "prompts").glob("*.md"))) == 12
+    illustrated = sum(1 for page in _book(site, "kfar-hanokdim")["pages"] if page["metadata"].get("image_brief"))
+    # One prompt file per illustrated page, plus the shared doodle/grid sheet.
+    assert len(list((written / "prompts").glob("*.md"))) == illustrated + 1
 
 
 def test_itinerary_is_taken_a_line_at_a_time(site):
@@ -253,7 +255,9 @@ def test_photos_change_every_image_prompt(site):
     )
     assert "Attach it when you make the artwork" in body, "singular reads naturally"
     data = _book(site, "prague")
-    for page in data["pages"]:
+    illustrated = [page for page in data["pages"] if page["metadata"].get("image_brief")]
+    assert illustrated
+    for page in illustrated:
         assert "reference photograph" in page["image_prompt"]
         assert "01-noa.png" in page["image_prompt"]
         assert "rather than tracing the photo" in page["image_prompt"]

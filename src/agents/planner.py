@@ -77,12 +77,14 @@ class WorkbookPlanner:
         ordered = [*opening, *body, *closing]
 
         focus_order = self._focus_order(context)
+        occurrence: dict[str, int] = {}
         pages: list[PlannedPage] = []
         for index, activity in enumerate(ordered):
             is_body = len(opening) <= index < len(opening) + len(body)
             body_index = index - len(opening)
             ratio = body_index / max(body_count - 1, 1) if is_body else 0.0
             difficulty = self._difficulty(context, ratio) if is_body else DIFFICULTY_LEVELS[0]
+            occurrence[activity.activity_type] = occurrence.get(activity.activity_type, 0) + 1
             pages.append(
                 PlannedPage(
                     number=index + 1,
@@ -94,6 +96,12 @@ class WorkbookPlanner:
                     if is_body
                     else None,
                     rationale=self._rationale(activity, difficulty, is_body, index, len(ordered)),
+                    # 1-based count of how many pages of this same activity
+                    # type came before this one (including this one) — lets
+                    # a repeat page vary itself so it doesn't look like a
+                    # duplicate of the first (see MazeActivity._goal and
+                    # MazeActivity._REPEAT_START_ICONS).
+                    metadata={"occurrence": occurrence[activity.activity_type]},
                 )
             )
         return tuple(pages)
@@ -103,7 +111,9 @@ class WorkbookPlanner:
     def _candidates(self) -> tuple[ActivityGenerator, ...]:
         if self._activities is not None:
             return self._activities
-        return tuple(cls() for _, cls in sorted(ACTIVITY_REGISTRY.items()))
+        return tuple(
+            cls() for _, cls in sorted(ACTIVITY_REGISTRY.items()) if cls.enabled
+        )
 
     def _select_body(
         self,
