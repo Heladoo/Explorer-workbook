@@ -43,6 +43,11 @@
   --size-lg: 16pt;
   --size-xl: 20pt;
   --size-display: 30pt;
+
+  /* The dictionary's tick-box (book.css's .dict-tick::before) — see
+     page-a5.css for why this is a per-format token rather than a literal
+     in book.css. A4's rows have always had room for the full 6mm. */
+  --dict-tick-size: 6mm;
 }
 
 @page {

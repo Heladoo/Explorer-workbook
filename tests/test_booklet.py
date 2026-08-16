@@ -353,6 +353,124 @@ def test_the_centre_spread_prints_whole_onto_one_sheet_side(tmp_path, builder):
     assert text.count(spread.title) == 1, "the spread must be placed once, not twice"
 
 
+# -- the quiz page's dictionary, at A5 -------------------------------------
+
+#: Pelion's dictionary is Greek, always present for an English or Hebrew
+#: book about it — the destination needed for every test below that expects
+#: a dictionary section to actually exist.
+_DICTIONARY_DESTINATION = "Pelion"
+
+
+def _quiz_page(builder, *, page_format="a5-booklet", destination=_DICTIONARY_DESTINATION, language="en"):
+    workbook = generate_workbook(
+        destination=destination,
+        language=language,
+        page_count=12,
+        page_format=page_format,
+        write=False,
+        builder=builder,
+    ).workbook
+    return next(page for page in workbook.pages if page.type == "quiz")
+
+
+def test_a5_quiz_with_a_dictionary_drops_to_two_questions(builder):
+    """Three question rows sharing an A5 sheet with a ten-row dictionary
+    clip their own content — measured in headless Chromium at A5's real
+    print width, every row needed 10-13px more height than its share of the
+    sheet (see QuizActivity._question_count and QUESTION_COUNT_WITH_
+    DICTIONARY_AT_A5). Two rows leave enough room."""
+    quiz = _quiz_page(builder)
+    assert quiz.metadata.get("dictionary"), "this test needs a book with a dictionary"
+    assert len(quiz.metadata["questions"]) == 2
+    assert quiz.metadata["question_count"] == 2
+    # The reader-facing count has to match what's actually on the page —
+    # "There are 3 questions" printed above only 2 would be its own bug.
+    assert "2" in quiz.instructions
+
+
+def test_a4_quiz_with_a_dictionary_keeps_three_questions(builder):
+    """A4's wider sheet has room for the original three; only A5 needs to
+    give one up."""
+    quiz = _quiz_page(builder, page_format="a4-portrait")
+    assert quiz.metadata.get("dictionary")
+    assert len(quiz.metadata["questions"]) == 3
+
+
+def test_a5_quiz_without_a_dictionary_keeps_three_questions(builder):
+    """.quiz alone fills the whole sheet when there is no dictionary sharing
+    it (see .quiz-sheet in book.css), so three questions fit fine — the
+    trade only exists because of what sits *below* the quiz, not the quiz
+    itself. Kfar Hanokdim in Hebrew has no dictionary: the destination's own
+    language is the workbook's own, so QuizActivity._dictionary_metadata
+    omits the section entirely."""
+    quiz = _quiz_page(builder, destination="Kfar Hanokdim", language="he")
+    assert not quiz.metadata.get("dictionary"), "this test needs a book with no dictionary"
+    assert len(quiz.metadata["questions"]) == 3
+
+
+@requires_chromium
+@pytest.mark.parametrize("page_format", ["a5-booklet", "a4-portrait"])
+def test_quiz_and_dictionary_rows_are_not_clipped(tmp_path, builder, page_format):
+    """The real rendered check, not just the question count.
+
+    `.page`'s own scrollHeight/clientHeight (test_no_page_overflows_its_sheet,
+    test_rendering.py) stays equal even when a *row inside it* silently
+    clips its own content: overflow:hidden is nested at the row level too
+    (.quiz-row, the .dictionary grid cells), so a page can report zero
+    overflow while a question's option text is quietly missing its bottom
+    few pixels. This measures the rows themselves.
+
+    Both formats, not just A5: A5 with 3 questions clipped every row by
+    10-13px (fixed by dropping to 2 — see QUESTION_COUNT_WITH_DICTIONARY_AT_A5);
+    separately, A4 clipped ~4px on whichever row's option text was long enough
+    to wrap to two lines regardless of format (fixed by shrinking
+    .quiz-option-text to --size-sm, which also fits the same option on one
+    line at A5, see book.css). Pelion's "cobblestone kalderimi paths" is the
+    known case that used to trip the A4 wrap; kept as the fixture destination
+    for exactly that reason, not swapped for a shorter-optioned one.
+
+    Screen media, not print: book.css's "on-screen page preview" section is
+    where .page gets pinned to its real var(--page-width)/var(--page-height)
+    — print-media emulation leaves .page unconstrained at the browser's
+    default (much wider) viewport, which hides exactly the wrapping-driven
+    clipping this page is prone to.
+    """
+    from playwright.sync_api import sync_playwright
+
+    from src.rendering.pdf_renderer import find_chromium
+
+    result = generate_workbook(
+        destination=_DICTIONARY_DESTINATION,
+        page_count=12,
+        page_format=page_format,
+        output_dir=tmp_path / "book",
+        html=True,
+        builder=builder,
+    )
+    quiz = next(page for page in result.workbook.pages if page.type == "quiz")
+    assert quiz.metadata.get("dictionary")
+    html = result.artifacts.workbook_html.read_text(encoding="utf-8")
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=find_chromium())
+        try:
+            page = browser.new_page()
+            page.set_content(html, wait_until="load")
+            clipped = page.eval_on_selector_all(
+                f"#page-{quiz.number} .quiz-row, #page-{quiz.number} .quiz-question, "
+                f"#page-{quiz.number} .quiz-option-text, #page-{quiz.number} .dict-row > span",
+                "els => els.map(el => [el.className, el.scrollHeight - el.clientHeight])"
+                # >1.5px: the screen-only click-to-edit pencil icon adds a
+                # steady, harmless 1px to every .quiz-option-text — real
+                # clipping from either bug measured 4-13px, nothing in between.
+                ".filter(([, over]) => over > 1.5)",
+            )
+        finally:
+            browser.close()
+
+    assert not clipped, f"{page_format}: quiz/dictionary row content clips itself: {clipped}"
+
+
 # -- helpers -------------------------------------------------------------
 
 
