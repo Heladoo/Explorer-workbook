@@ -1,8 +1,17 @@
-/* Print styles for the workbook. A4 portrait, one activity per sheet.
+/* Print styles for the workbook — every rule that is not page geometry.
    Brand color is used throughout (see the token layer below), but every
    color is a variable so a `.ink-saver` pass (see near the bottom) can
    flatten the whole book to grayscale for a home printer without touching
-   a single rule beyond the tokens themselves. */
+   a single rule beyond the tokens themselves.
+
+   Page size, margins, spacing and the type scale are *not* here: they come
+   from a format stylesheet (`page-a5.css` or `page-a4.css`) loaded ahead of
+   this file, and every rule below sizes itself against the tokens those
+   declare — --page-width/--page-height, --page-margin-*, --space-*,
+   --size-*. That is the whole mechanism by which one set of layouts prints
+   at two page sizes: nothing in this file restates a dimension, so a format
+   is a token block rather than a fork of 1500 lines of CSS. See
+   src/rendering/formats.py. */
 
 /* -- design tokens ----------------------------------------------------- */
 
@@ -32,15 +41,8 @@
   --rule-box: 1.5px solid var(--ink);
   --rule-heavy: 2.5px solid var(--ink);
 
-  /* radius & spacing */
-  --radius-sm: 1.5mm;
-  --radius-md: 3mm;
-  --space-1: 1mm;
-  --space-2: 2mm;
-  --space-3: 3mm;
-  --space-4: 4mm;
-  --space-5: 5mm;
-  --space-6: 6mm;
+  /* radius & spacing, and the --size-* type ladder, come from the format
+     stylesheet — see the header comment. */
 
   /* type: Baloo 2 / Nunito for Latin, Secular One / Assistant for Hebrew —
      see [dir="rtl"] below. The families are embedded as base64 @font-face
@@ -60,18 +62,6 @@
   --font-body: "Nunito", "Noto Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
   --font-native: "Noto Sans", "Nunito", "Segoe UI", sans-serif;
-
-  --size-xs: 8pt;
-  --size-sm: 9.5pt;
-  --size-base: 11.5pt;
-  --size-md: 13pt;
-  --size-lg: 16pt;
-  --size-xl: 20pt;
-  --size-display: 30pt;
-
-  /* Must mirror the @page margin below — see the note on .page height. */
-  --page-margin-top: 14mm;
-  --page-margin-bottom: 12mm;
 
   /* Group icons for the page chip — hand-drawn, generic pictograms (not
      traced from any icon set), each a self-contained SVG data URI so the
@@ -131,26 +121,10 @@ body.ink-saver {
   --group-label: "Look";
 }
 
-/* -- page geometry ------------------------------------------------------- */
+/* -- page geometry -------------------------------------------------------
 
-@page {
-  size: A4 portrait;
-  margin: 14mm 12mm 12mm 12mm;
-}
-
-/* Alternating gutter for a bound book: the recto/verso convention (`:right`
-   is always the odd, right-hand page of a spread) is a physical property of
-   the print run, so it applies the same way regardless of the workbook's
-   reading direction. */
-@page :left {
-  margin-left: 12mm;
-  margin-right: 16mm;
-}
-
-@page :right {
-  margin-left: 16mm;
-  margin-right: 12mm;
-}
+   The @page rules and the --page-* tokens they mirror live in the format
+   stylesheet loaded ahead of this one (page-a5.css / page-a4.css). */
 
 * {
   box-sizing: border-box;
@@ -176,11 +150,12 @@ body {
   break-after: page;
   display: flex;
   flex-direction: column;
-  /* A4 minus the @page margins above — kept as a calc against the same two
-     tokens rather than a bare "271mm" so the two can't silently drift apart.
-     (The @page rule itself has to restate the numbers: @page does not
-     reliably support custom properties across the engines this project's
-     PDF path may run on.) The extra 2mm is a deliberate safety margin, not
+  /* The page minus its @page margins — kept as a calc against the same
+     tokens the format stylesheet declares, rather than a bare "271mm", so
+     the two can't silently drift apart and so one rule is correct at both
+     page sizes. (The @page rule itself has to restate the numbers: @page
+     does not reliably support custom properties across the engines this
+     project's PDF path may run on.) The extra 2mm is a deliberate safety margin, not
      slop: a page-body child sized via flex:1 1 auto + min-height:0 (the
      scavenger hunt grid, the matching columns, ...) always expands to
      *exactly* fill whatever's left, down to sub-pixel rounding — measured
@@ -191,7 +166,7 @@ body {
      it (see the .page overflow:hidden note below for what that looked
      like). 2mm of headroom this box never actually uses is a cheap trade
      for that never happening. */
-  height: calc(297mm - var(--page-margin-top) - var(--page-margin-bottom) - 2mm);
+  height: calc(var(--page-height) - var(--page-margin-top) - var(--page-margin-bottom) - 2mm);
   /* Without this, content taller than the box above doesn't get clipped —
      the default `overflow: visible` lets it spill past .page's own bottom
      edge in normal document flow, and since .page forces a hard page break
@@ -356,6 +331,65 @@ body {
 .page-packing .art,
 .page-hidden_objects .art {
   flex: 0 0 52%;
+}
+
+/* -- the centre spread ---------------------------------------------------
+
+   A double-page spread is one landscape page (see @page spread in
+   page-a5.css) that the reader sees as the two facing pages at the middle of
+   the booklet. It needs almost no rules of its own: .page and .page-body are
+   already sized from --page-width/--page-height, which .page-spread
+   redeclares, so the whole layout follows the wider box automatically.
+
+   What does need saying is where the fold is. The illustration is *meant* to
+   cross it — that is the point of a spread — but text landing on the fold
+   lands in the staple, so the placeholder copy is pushed off centre and the
+   art's own padding is widened to keep a generated image's edges clear of
+   both the fold and the trimmed outer edges. */
+
+.page-spread .art {
+  padding: var(--space-4) var(--space-6);
+}
+
+/* The placeholder's own copy, moved off the fold and onto the left-hand page.
+   These three elements exist only on a page with no artwork yet — once a real
+   picture is dropped in, .art holds an <img> instead and none of this applies,
+   which is why the illustration is still free to cross the fold as a spread
+   should.
+
+   The mechanism is the margin, not the max-width: .art centres its children,
+   so a centred child sits *on* the fold no matter how narrow it is. A
+   margin-right of half the spread makes the child's outer box overhang to the
+   right, and centring that outer box lands the visible text at the quarter
+   point — the middle of the left page. The max-width then stops a long note
+   growing back across the fold from there. */
+.page-spread .art-label,
+.page-spread .art-ref,
+.page-spread .art-note {
+  margin-right: 50%;
+  max-width: calc(var(--page-width) / 2 - var(--space-6) * 4);
+}
+
+/* Screen-only fold guide. Never printed: this line is where the paper bends,
+   so a real rule here would be a visible crease-coloured stripe down the
+   finished book. It exists to make the fold obvious while reviewing the
+   spread in a browser, where there is no physical sheet to reveal it. The
+   imposition step marks the fold on the *sheet* instead, where a mark is
+   actually useful — see src/rendering/imposition.py. */
+@media screen {
+  .page-spread {
+    position: relative;
+  }
+
+  .page-spread::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 1px dashed rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
 }
 
 /* -- cover ------------------------------------------------------------ */
@@ -1294,14 +1328,19 @@ body {
   color: var(--ink-soft);
 }
 
-/* -- on-screen A4 page preview -------------------------------------------
+/* -- on-screen page preview ----------------------------------------------
 
-   @page above governs printing; a browser tab has no page box of its own,
-   so without this every .page stretches to the window width instead of
-   reading as a sheet of paper. Scoped to @media screen so it never reaches
-   the PDF pass — PdfRenderer prints via Playwright's page.pdf(), which
-   lays pages out from the @page rules only and never loads a screen
-   stylesheet. */
+   The format stylesheet's @page rules govern printing; a browser tab has no
+   page box of its own, so without this every .page stretches to the window
+   width instead of reading as a sheet of paper. Scoped to @media screen so
+   it never reaches the PDF pass — PdfRenderer prints via Playwright's
+   page.pdf(), which lays pages out from the @page rules only and never
+   loads a screen stylesheet.
+
+   Sized from the same --page-width/--page-height the print rules mirror, so
+   the preview follows the format automatically — including the centre
+   spread, which redeclares both tokens on itself and so previews at its own
+   landscape size without a rule of its own here. */
 @media screen {
   body {
     background: #d6d6d6;
@@ -1309,10 +1348,11 @@ body {
   }
 
   .page {
-    width: 210mm;
-    height: 297mm;
+    width: var(--page-width);
+    height: var(--page-height);
     margin: 0 auto 10mm;
-    padding: var(--page-margin-top) 12mm var(--page-margin-bottom) 12mm;
+    padding: var(--page-margin-top) var(--page-margin-outer)
+             var(--page-margin-bottom) var(--page-margin-outer);
     background: var(--paper);
     box-shadow: 0 1mm 5mm rgba(0, 0, 0, 0.3);
   }

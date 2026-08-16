@@ -146,6 +146,7 @@ class ActivityDraft:
         number: int,
         image_prompt: str,
         symbols: tuple[SymbolBrief, ...] | None = None,
+        span: int = 1,
     ) -> "Page":
         """Combine the draft with its page number and rendered prompts."""
         return Page(
@@ -159,6 +160,7 @@ class ActivityDraft:
             metadata=dict(self.metadata),
             image_brief=self.image_brief,
             symbols=tuple(symbols if symbols is not None else self.symbols),
+            span=span,
         )
 
 
@@ -177,6 +179,16 @@ class Page:
     image_brief: ImageBrief | None = None
     #: Per-cell pictures, each with its own prompt. Empty for most pages.
     symbols: tuple[SymbolBrief, ...] = ()
+    #: How many page slots this page occupies. ``2`` marks a double-page
+    #: centre spread — one physical sheet side, printed as one landscape PDF
+    #: page, that the reader sees as the two facing pages ``number`` and
+    #: ``number + 1``. Everything downstream counts slots rather than
+    #: ``len(pages)`` because of this; see ``Workbook.page_count``.
+    span: int = 1
+
+    @property
+    def is_spread(self) -> bool:
+        return self.span > 1
 
     @property
     def prompt_filename(self) -> str:
@@ -209,6 +221,8 @@ class Page:
             "prompt_file": f"prompts/{self.prompt_filename}",
             "metadata": metadata,
         }
+        if self.span != 1:
+            data["span"] = self.span
         if self.symbols:
             data["symbols"] = [symbol.to_dict() for symbol in self.symbols]
         return data

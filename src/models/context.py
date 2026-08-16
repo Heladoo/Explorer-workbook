@@ -269,6 +269,12 @@ class WorkbookContext:
     interests: tuple[str, ...] = ()
     family_photos: tuple[str, ...] = ()
     seed: int = 0
+    #: Which physical page format the book will be printed in — a key from
+    #: ``src.rendering.formats.FORMATS``. Normally a pure layout concern that
+    #: no generator should care about, and none does; the planner is the one
+    #: exception, because whether a *double-page centre spread slot exists at
+    #: all* is a fact about the folded object, not about the page's content.
+    page_format: str = "a5-booklet"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "children", tuple(self.children))
@@ -360,6 +366,7 @@ class WorkbookContext:
             "language": self.language,
             "theme": self.theme,
             "page_count": self.page_count,
+            "page_format": self.page_format,
             "difficulty": self.difficulty,
             "children": [child.to_dict() for child in self.children],
             "trip": self.trip.to_dict(),

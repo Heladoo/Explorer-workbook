@@ -13,6 +13,7 @@ from typing import Iterable, Sequence
 from src.activities.base import ACTIVITY_REGISTRY, ActivityGenerator
 from src.models.context import DIFFICULTY_LEVELS, KNOWLEDGE_FIELDS, WorkbookContext
 from src.models.plan import PlannedPage
+from src.rendering.formats import get_format
 
 logger = logging.getLogger(__name__)
 
@@ -69,25 +70,44 @@ class WorkbookPlanner:
         body_pool = [a for a in candidates if a.pinned is None]
 
         page_count = max(context.page_count, MIN_PAGES)
-        body_count = max(page_count - len(opening) - len(closing), 1)
+        centrefold = self._centrefold(context, body_pool, page_count, len(opening), len(closing))
+        if centrefold is not None:
+            body_pool = [a for a in body_pool if a is not centrefold]
+
+        # The spread eats two slots, so the body has two fewer pages to fill.
+        reserved = len(opening) + len(closing) + (2 if centrefold else 0)
+        body_count = max(page_count - reserved, 1)
         if not body_pool:
             raise RuntimeError("no unpinned activity available to fill the body of the workbook")
 
         body = self._select_body(context, body_pool, body_count)
-        ordered = [*opening, *body, *closing]
+        if centrefold is None:
+            ordered = [*opening, *body, *closing]
+        else:
+            # The spread has to *start* at slot page_count/2 so that its two
+            # halves are the centre pair — the two facing pages on one side of
+            # the innermost folded sheet. Everything before it is opening plus
+            # however many body pages that leaves room for.
+            before = page_count // 2 - 1 - len(opening)
+            ordered = [*opening, *body[:before], centrefold, *body[before:], *closing]
 
         focus_order = self._focus_order(context)
         occurrence: dict[str, int] = {}
         pages: list[PlannedPage] = []
+        # Slots, not list positions: a spread advances the page number by two,
+        # so from the centre onwards the two stop agreeing.
+        number = 1
         for index, activity in enumerate(ordered):
-            is_body = len(opening) <= index < len(opening) + len(body)
-            body_index = index - len(opening)
+            is_centrefold = activity is centrefold
+            is_body = activity not in opening and activity not in closing and not is_centrefold
+            body_index = self._body_index(ordered, index, opening, closing, centrefold)
             ratio = body_index / max(body_count - 1, 1) if is_body else 0.0
             difficulty = self._difficulty(context, ratio) if is_body else DIFFICULTY_LEVELS[0]
             occurrence[activity.activity_type] = occurrence.get(activity.activity_type, 0) + 1
+            span = 2 if is_centrefold else 1
             pages.append(
                 PlannedPage(
-                    number=index + 1,
+                    number=number,
                     activity_type=activity.activity_type,
                     difficulty=difficulty,
                     target_age=self._target_age(context, ratio),
@@ -95,15 +115,19 @@ class WorkbookPlanner:
                     itinerary_day=self._itinerary_day(context, body_index, body_count)
                     if is_body
                     else None,
-                    rationale=self._rationale(activity, difficulty, is_body, index, len(ordered)),
+                    rationale=self._rationale(
+                        activity, difficulty, is_body, index, len(ordered), is_centrefold
+                    ),
                     # 1-based count of how many pages of this same activity
                     # type came before this one (including this one) — lets
                     # a repeat page vary itself so it doesn't look like a
                     # duplicate of the first (see MazeActivity._goal and
                     # MazeActivity._REPEAT_START_ICONS).
                     metadata={"occurrence": occurrence[activity.activity_type]},
+                    span=span,
                 )
             )
+            number += span
         return tuple(pages)
 
     # -- internals -------------------------------------------------------
@@ -114,6 +138,68 @@ class WorkbookPlanner:
         return tuple(
             cls() for _, cls in sorted(ACTIVITY_REGISTRY.items()) if cls.enabled
         )
+
+    def _centrefold(
+        self,
+        context: WorkbookContext,
+        pool: Sequence[ActivityGenerator],
+        page_count: int,
+        opening: int,
+        closing: int,
+    ) -> ActivityGenerator | None:
+        """The activity that gets the double-page centre spread, if any.
+
+        Every condition here has to hold, and each one is about the physical
+        object rather than about taste:
+
+        * the format must be one that folds (A4-per-sheet has no centre), and
+        * the book must be a multiple of 4 — that is what makes it foldable at
+          all, and without it ``page_count // 2`` is not a sheet boundary, and
+        * the two spread slots plus the pinned covers must actually leave body
+          pages on *both* sides of the centre, or the "spread" is really just a
+          differently-shaped first or last page.
+
+        When any of them fails there is simply no spread, and a ``spread=True``
+        activity goes back to competing for an ordinary body slot — which is
+        why the flag is a request rather than a requirement (see
+        ``ActivityGenerator.spread``).
+        """
+        if not get_format(context.page_format).allows_spread:
+            return None
+        if page_count % 4:
+            logger.debug("no centre spread: %d pages is not a multiple of 4", page_count)
+            return None
+        before = page_count // 2 - 1 - opening
+        after = page_count - (page_count // 2 + 1) - closing
+        if before < 1 or after < 1:
+            logger.debug("no centre spread: %d pages leaves no body around it", page_count)
+            return None
+        wanted = sorted(
+            (a for a in pool if a.spread), key=lambda a: (-a.weight, a.activity_type)
+        )
+        return wanted[0] if wanted else None
+
+    @staticmethod
+    def _body_index(
+        ordered: Sequence[ActivityGenerator],
+        index: int,
+        opening: Sequence[ActivityGenerator],
+        closing: Sequence[ActivityGenerator],
+        centrefold: ActivityGenerator | None,
+    ) -> int:
+        """How many body pages precede ``index`` — the difficulty ramp's clock.
+
+        Counts body pages rather than slots so the ramp is unaffected by where
+        the spread sits, and so a book with a spread ramps the same way as one
+        without.
+        """
+        count = 0
+        for position in range(index):
+            activity = ordered[position]
+            if activity in opening or activity in closing or activity is centrefold:
+                continue
+            count += 1
+        return count
 
     def _select_body(
         self,
@@ -216,7 +302,13 @@ class WorkbookPlanner:
         is_body: bool,
         index: int,
         total: int,
+        is_centrefold: bool = False,
     ) -> str:
+        if is_centrefold:
+            return (
+                "Fills the centre spread — the two facing pages on one side of "
+                "the middle sheet, so it prints as one uninterrupted landscape area."
+            )
         if not is_body:
             return "Opens the book." if index == 0 else "Closes the book and looks back."
         return (

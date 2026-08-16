@@ -25,6 +25,19 @@ class Workbook:
 
     @property
     def page_count(self) -> int:
+        """How many page slots the book has, which is what the reader counts.
+
+        Not ``len(self.pages)``: a double-page centre spread is one :class:`Page`
+        occupying two slots (see ``Page.span``), so a 12-page book containing a
+        spread holds 11 ``Page`` objects. ``page_count`` is the number that has
+        to stay a multiple of 4 for the booklet to fold, so it is the one that
+        counts slots.
+        """
+        return sum(page.span for page in self.pages)
+
+    @property
+    def sheet_count(self) -> int:
+        """Physical pages in the rendered PDF — one per :class:`Page`."""
         return len(self.pages)
 
     @property

@@ -17,6 +17,13 @@ from src.image_backends.openrouter import DEFAULT_MODEL, OpenRouterImageBackend
 from src.image_backends.runner import generate_images, generate_symbol_images
 from src.image_backends.sources import DEFAULT_SOURCES_DIR, write_readme, write_symbol_prompts
 from src.output_writer import write_bundle
+from src.rendering.formats import (
+    DEFAULT_FORMAT,
+    DEFAULT_PAGE_COUNT,
+    FORMATS,
+    PAGE_COUNT_CHOICES,
+    get_format,
+)
 from src.strings import available_languages
 
 
@@ -38,7 +45,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Comma-separated ages, in the same order as --children.",
     )
     parser.add_argument("--language", "-l", default="en", help="Workbook language (default: en).")
-    parser.add_argument("--pages", "-p", type=int, default=12, help="How many pages (default: 12).")
+    parser.add_argument(
+        "--pages",
+        "-p",
+        type=int,
+        default=DEFAULT_PAGE_COUNT,
+        choices=PAGE_COUNT_CHOICES,
+        help=f"How many pages (default: {DEFAULT_PAGE_COUNT}). Every choice is a "
+        "multiple of 4 because one folded A4 sheet carries exactly four A5 pages.",
+    )
     parser.add_argument(
         "--difficulty",
         choices=("easy", "medium", "hard"),
@@ -74,14 +89,33 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data-dir", help="Directory of curated destination packs.")
     parser.add_argument("--out", help="Output directory (default: output/<destination-slug>).")
     parser.add_argument(
+        "--format",
+        "-f",
+        dest="page_format",
+        default=DEFAULT_FORMAT.key,
+        choices=tuple(FORMATS),
+        help="Physical page format. "
+        + "; ".join(f"{fmt.key}: {fmt.label}" for fmt in FORMATS.values())
+        + f" (default: {DEFAULT_FORMAT.key}).",
+    )
+    parser.add_argument(
         "--html",
         action="store_true",
-        help="Also lay the workbook out as a printable A4 HTML document.",
+        help="Also lay the workbook out as a printable HTML document.",
     )
     parser.add_argument(
         "--pdf",
         action="store_true",
-        help="Also print the workbook to A4 PDF (implies --html; needs playwright).",
+        help="Also print the workbook to PDF (implies --html; needs playwright). "
+        "For a booklet format this writes two files: workbook.pdf, the book in "
+        "reading order, and workbook-booklet.pdf, the same pages imposed onto A4 "
+        "sheets to print duplex, fold once and staple through the fold.",
+    )
+    parser.add_argument(
+        "--no-booklet",
+        action="store_false",
+        dest="booklet",
+        help="Skip the imposed fold-and-staple sheets; write only the page-per-page PDF.",
     )
     parser.add_argument(
         "--ink-saver",
@@ -160,6 +194,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             ages=ages,
             language=args.language,
             page_count=args.pages,
+            page_format=args.page_format,
             difficulty=args.difficulty,
             theme=args.theme,
             interests=_split(args.interests),
@@ -173,6 +208,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=args.out,
             html=args.html,
             pdf=args.pdf,
+            booklet=args.booklet,
             ink_saver=args.ink_saver,
         )
     except (ValueError, RuntimeError) as exc:
@@ -201,6 +237,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ink_saver=args.ink_saver,
                 images=images,
                 symbol_images=symbol_images,
+                page_format=args.page_format,
+                booklet=args.booklet,
             )
         print(f"  images      : {len(images)}/{workbook.page_count} pages")
         if symbol_images:
@@ -210,9 +248,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"  destination : {workbook.destination}")
     print(f"  language    : {workbook.language}")
     print(f"  knowledge   : {workbook.metadata.get('knowledge_source')}")
+    fmt = get_format(args.page_format)
     print(f"  pages       : {workbook.page_count}")
+    print(f"  format      : {fmt.label}")
     for page in workbook.pages:
-        print(f"    {page.number:>2}. {page.type:<16} {page.title}")
+        label = (
+            f"{page.number}-{page.number + page.span - 1}" if page.is_spread else str(page.number)
+        )
+        spread = "  (centre spread)" if page.is_spread else ""
+        print(f"    {label:>5}. {page.type:<16} {page.title}{spread}")
     print(f"  written to  : {artifacts.output_dir}")
     written = [
         artifacts.workbook_json.name,
@@ -223,7 +267,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         written.append(artifacts.workbook_html.name)
     if artifacts.workbook_pdf:
         written.append(artifacts.workbook_pdf.name)
+    if artifacts.workbook_booklet_pdf:
+        written.append(artifacts.workbook_booklet_pdf.name)
     print(f"    {', '.join(written)}")
+    if artifacts.workbook_booklet_pdf:
+        sheets = workbook.page_count // 4
+        print(
+            f"  to print    : {artifacts.workbook_booklet_pdf.name} — {sheets} A4 sheet(s), "
+            "duplex, flip on the short edge, then fold once and staple through the fold."
+        )
     if workbook.metadata.get("language_fallback"):
         print(f"  note        : {workbook.metadata['language_fallback']}")
         print(f"                available: {', '.join(available_languages())}")

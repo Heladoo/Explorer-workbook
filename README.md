@@ -11,7 +11,8 @@ itinerary and interests) and it produces:
 | `prompts/NN_<activity>.md` | One file per page containing **only** the image prompt, ready to paste into GPT Image, DALL·E, Midjourney or Flux. |
 | `prompts/symbols/<slug>.md` | One file per small picture on a table-style page (the scavenger hunt grid). Each asks for a single object, and is identical in every book — so a drawing of a stop sign is generated once and reused forever. |
 | `images/` | Optional: the generated artwork, when you ask for it. |
-| `workbook.html` / `workbook.pdf` | Optional: the book laid out for print on A4, from HTML/CSS page templates. |
+| `workbook.html` / `workbook.pdf` | Optional: the book laid out for print, from HTML/CSS page templates. A5 pages by default. |
+| `workbook-booklet.pdf` | Optional: the same pages imposed onto A4 sheets — print duplex, fold once, staple the fold. |
 
 Artwork is opt-in (`--generate-images`, via OpenRouter). Without it every page
 prints a labelled placeholder naming its prompt file, so the whole book is
@@ -45,11 +46,14 @@ The CLI still exposes the full set of options.
 **Or the CLI:**
 
 ```bash
+# --pages takes 8, 12 or 16 — every one a multiple of 4, because one folded
+# A4 sheet carries exactly four A5 pages.
 python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pages 12
 # → output/kfar-hanokdim/{workbook.json, workbook.md, prompts/*.md}
 
 python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pdf
-# → the same, plus workbook.html and a printable A4 workbook.pdf
+# → the same, plus workbook.html, an A5 workbook.pdf, and workbook-booklet.pdf:
+#   3 A4 sheets to print duplex, fold in half and staple through the fold.
 ```
 
 From Python:
@@ -80,7 +84,9 @@ Useful flags:
 --seed 42                  # reproducible output
 --list-destinations        # which places have a curated data pack
 --html                     # lay the book out for print, no browser needed
---pdf                      # print it to A4 PDF (implies --html)
+--pdf                      # print it to PDF (implies --html)
+--format a5-booklet|a4-portrait   # A5 folded booklet (default), or one page per A4 sheet
+--no-booklet               # A5 pages only; skip the imposed fold-and-staple sheets
 --generate-images          # draw the artwork (needs OPENROUTER_API_KEY)
 --image-model <slug>       # which model draws it (default: openai/gpt-image-1)
 --symbol-cache <dir>       # shared symbol drawings (default: sources/symbols/images)
@@ -258,8 +264,23 @@ everywhere is what makes the drawing reusable.
 ## Print layout
 
 `--html` and `--pdf` run the layout stage: `HtmlRenderer` turns `workbook.json` into a
-print-styled A4 document, and `PdfRenderer` prints it with headless Chromium. The
+print-styled document, and `PdfRenderer` prints it with headless Chromium. The
 layout adds no content — it arranges what the activities already recorded.
+
+Two formats. **`a5-booklet`** is the default: A5 pages, printed two-up on A4, folded
+once and stapled through the fold — so `--pdf` writes both `workbook.pdf` (the pages
+in reading order) and `workbook-booklet.pdf` (the same pages on sheets, ready to
+print duplex). **`--format a4-portrait`** keeps the original one-page-per-sheet
+layout, which needs no folding, no stapler and no duplex printer.
+
+The A5 pages are laid out natively at A5, not shrunk from A4 — booklet-printing an A4
+layout scales it to 70.7%, which takes body copy to 8.1pt and the writing lines with
+it, below what a five-year-old can write on. The type scale is re-tuned instead.
+
+One page can be a **double-page centre spread** — the route map, when the trip has a
+real itinerary to draw. That is the only place a spread can go: for an `N`-page
+saddle-stitched book the innermost sheet's back side is exactly pages `N/2` and
+`N/2+1`, the only pair that shares one side of one sheet.
 
 That is why activities keep text **out** of the illustrations: the page metadata
 becomes real page furniture. Packing checkboxes and item names, quiz questions with
@@ -354,7 +375,7 @@ sign, a bridge, a police car, a dog on a lead), and a few come from the
 destination so the page still belongs to this trip. An easy hunt is entirely
 everyday things; harder ones lean more on the real place.
 
-The grid is fixed at **4×4 = 16 items**, every difficulty, sized to fill an A4
+The grid is fixed at **4×4 = 16 items**, every difficulty, sized to fill a
 page without spilling onto a second one. Rows are sized explicitly in the print
 CSS, not left to grow with content, so a full sheet always ends exactly at the
 bottom of the page.

@@ -1,0 +1,102 @@
+/* Page geometry and type scale for the A5 booklet format — the default.
+   Loaded ahead of book.css, which carries every other rule and sizes itself
+   entirely against the tokens below. See src/rendering/formats.py.
+
+   A5 pages are laid out natively here, not as an A4 book scaled down. That
+   distinction is the whole reason this file exists: printing the A4 layout
+   two-up on a sheet scales everything to 70.7%, which takes body copy from
+   11.5pt to 8.1pt and the reflection page's writing lines with it — below
+   what a five-year-old can write on. So the ladder below is re-tuned rather
+   than multiplied: body copy barely moves (11.5pt -> 10pt, since it has to
+   stay writable and readable at arm's length), and the display sizes absorb
+   nearly all of the difference (30pt -> 22pt), because those were sized in
+   proportion to the page and the page is what changed. */
+
+:root {
+  /* Finished page size. book.css computes .page's height and the on-screen
+     sheet preview from these, so the two formats never restate a dimension.
+     The @page rules below have to repeat the numbers as literals: @page does
+     not reliably support custom properties across the engines this project's
+     PDF path may run on. */
+  --page-width: 148mm;
+  --page-height: 210mm;
+
+  --page-margin-top: 10mm;
+  --page-margin-bottom: 9mm;
+  /* Outer = the trimmed/handled edge, inner = the folded and stapled edge.
+     The inner margin is the larger of the two because a saddle-stitched
+     booklet's innermost pages curve into the fold; 12mm keeps the working
+     area clear of it without eating the 127mm column alive. */
+  --page-margin-outer: 9mm;
+  --page-margin-inner: 12mm;
+
+  /* Spacing and radius live with the geometry rather than in book.css: both
+     are absolute mm, so A4's 6mm gutter against a 186mm column becomes
+     proportionally much heavier against A5's 127mm one. Scaled ~0.75. */
+  --radius-sm: 1.25mm;
+  --radius-md: 2.5mm;
+  --space-1: 1mm;
+  --space-2: 1.5mm;
+  --space-3: 2.5mm;
+  --space-4: 3mm;
+  --space-5: 4mm;
+  --space-6: 4.5mm;
+
+  /* Type scale, tuned for a 127mm-wide content column. */
+  --size-xs: 7pt;
+  --size-sm: 8.5pt;
+  --size-base: 10pt;
+  --size-md: 11pt;
+  --size-lg: 13pt;
+  --size-xl: 16pt;
+  --size-display: 22pt;
+}
+
+@page {
+  size: A5 portrait;
+  margin: 10mm 9mm 9mm 9mm;
+}
+
+/* Alternating gutter for a bound book. `:right` is the odd, right-hand page
+   of a spread in a left-bound (LTR) book; a right-bound (Hebrew) book mirrors
+   this, which @page cannot express on its own because it has no access to the
+   document's direction — HtmlRenderer re-emits these two rules flipped for an
+   RTL book instead. See HtmlRenderer._binding_css. */
+@page :left {
+  margin-left: 9mm;
+  margin-right: 12mm;
+}
+
+@page :right {
+  margin-left: 12mm;
+  margin-right: 9mm;
+}
+
+/* -- the centre spread ---------------------------------------------------
+
+   One page in the book can be a double-page spread: the two facing pages at
+   the exact centre of the booklet, which land on one side of one folded
+   sheet and are therefore a single uninterrupted landscape area with a fold
+   down the middle. See src/agents/planner.py for why the centre is the only
+   place a spread can go.
+
+   Chromium honours a named @page's own size inside a single document, so the
+   spread is a real 297x210mm PDF page sitting between A5 ones — no splitting
+   and re-joining, and the imposition step places it as one piece. (Verified
+   against the Chromium the PDF path actually prints through; a test pins the
+   rendered page size so a future engine regressing this can't go unnoticed.)
+
+   Two A5 portraits side by side measure 296mm; the sheet is A4 landscape at
+   297mm. The spread claims the full 297 rather than 296 so the extra
+   millimetre of A-series rounding ends up inside the printed area instead of
+   as a hairline gap down the fold. */
+@page spread {
+  size: 297mm 210mm;
+  margin: 10mm 9mm 9mm 9mm;
+}
+
+.page-spread {
+  page: spread;
+  --page-width: 297mm;
+  --page-height: 210mm;
+}

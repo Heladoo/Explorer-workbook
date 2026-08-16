@@ -1,0 +1,66 @@
+/* Page geometry and type scale for the A4 portrait format — one activity per
+   sheet, nothing to fold. Loaded ahead of book.css, which carries every other
+   rule and sizes itself entirely against the tokens below. See
+   src/rendering/formats.py.
+
+   This file is the original layout's geometry, extracted unchanged: an A4
+   book printed from this stylesheet is byte-for-byte the book this project
+   produced before the A5 booklet format existed. */
+
+:root {
+  /* Finished page size. book.css computes .page's height and the on-screen
+     sheet preview from these, so the two formats never restate a dimension.
+     The @page rule below has to repeat the numbers as literals: @page does
+     not reliably support custom properties across the engines this project's
+     PDF path may run on. */
+  --page-width: 210mm;
+  --page-height: 297mm;
+
+  --page-margin-top: 14mm;
+  --page-margin-bottom: 12mm;
+  /* Outer = the trimmed/handled edge, inner = the bound edge. Equal here to
+     the @page :left/:right pair below. */
+  --page-margin-outer: 12mm;
+  --page-margin-inner: 16mm;
+
+  /* Spacing and radius live with the geometry rather than in book.css: both
+     are absolute mm, so 6mm of gutter reads very differently against a 186mm
+     column than against A5's 127mm one. */
+  --radius-sm: 1.5mm;
+  --radius-md: 3mm;
+  --space-1: 1mm;
+  --space-2: 2mm;
+  --space-3: 3mm;
+  --space-4: 4mm;
+  --space-5: 5mm;
+  --space-6: 6mm;
+
+  /* Type scale, tuned for a 186mm-wide content column. */
+  --size-xs: 8pt;
+  --size-sm: 9.5pt;
+  --size-base: 11.5pt;
+  --size-md: 13pt;
+  --size-lg: 16pt;
+  --size-xl: 20pt;
+  --size-display: 30pt;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm 12mm 12mm;
+}
+
+/* Alternating gutter for a bound book. `:right` is the odd, right-hand page
+   of a spread in a left-bound (LTR) book; a right-bound (Hebrew) book mirrors
+   this, which @page cannot express on its own because it has no access to the
+   document's direction — HtmlRenderer re-emits these two rules flipped for an
+   RTL book instead. See HtmlRenderer._binding_css. */
+@page :left {
+  margin-left: 12mm;
+  margin-right: 16mm;
+}
+
+@page :right {
+  margin-left: 16mm;
+  margin-right: 12mm;
+}

@@ -36,6 +36,7 @@ from src.api import generate_workbook
 from src.experiments import assignments
 from src.models.context import slugify
 from src.output_writer import DEFAULT_OUTPUT_ROOT
+from src.rendering.formats import DEFAULT_PAGE_COUNT
 from src.strings import available_languages
 from src.uploads import UploadError, parse_multipart, safe_stem
 
@@ -46,8 +47,10 @@ STATIC_DIR = TEMPLATE_DIR / "static"
 
 LANGUAGE_NAMES = {"en": "English", "he": "עברית"}
 
-#: Defaults for everything the lean form does not ask about.
-DEFAULT_PAGE_COUNT = 12
+#: Defaults for everything the lean form does not ask about. The page count
+#: comes from the shared menu rather than a literal here, so the web form can
+#: never offer a length the booklet arithmetic refuses (see
+#: src/rendering/formats.py).
 DEFAULT_PROVIDER = "auto"
 
 MAX_PHOTOS = 6
@@ -355,8 +358,22 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             )
 
         downloads = []
+        # The fold-and-staple sheets lead when they exist: that is the file
+        # you send to a printer to end up holding a book, and the page PDF
+        # beside it is the one to read on screen or hand to a print shop.
+        if artifacts.workbook_booklet_pdf:
+            downloads.append(
+                link(
+                    artifacts.workbook_booklet_pdf,
+                    "Print it",
+                    f"{workbook.page_count // 4} A4 sheet(s) — print both sides, "
+                    "fold in half, staple the fold",
+                )
+            )
         if artifacts.workbook_pdf:
-            downloads.append(link(artifacts.workbook_pdf, "Print it", "A4 PDF"))
+            label = "Read it" if artifacts.workbook_booklet_pdf else "Print it"
+            note = "A5 pages" if artifacts.workbook_booklet_pdf else "one page per sheet"
+            downloads.append(link(artifacts.workbook_pdf, label, note))
         if artifacts.workbook_html:
             downloads.append(link(artifacts.workbook_html, "Have a look", "in your browser"))
         downloads.append(link(artifacts.workbook_json, "workbook.json", "every page as data"))
