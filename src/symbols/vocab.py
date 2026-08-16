@@ -41,6 +41,7 @@ ENVIRONMENTS = (
     "road",
     "coast",
     "water",
+    "riverside",
     "mountain",
     "forest",
     "desert",

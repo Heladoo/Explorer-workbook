@@ -1,0 +1,43 @@
+{
+  "destination": "Munich",
+  "aliases": ["München", "מינכן", "Munich, Germany"],
+  "region": "Upper Bavaria, Germany",
+  "country": "DE",
+  "profile": {
+    "regions": [],
+    "environments": ["city", "water", "riverside", "forest"],
+    "climate": ["cold", "wet", "temperate"]
+  },
+  "landmarks": [
+    "Rathaus-Glockenspiel",
+    "Munich Marienplatz station",
+    "New Town Hall (Munich)",
+    "Marienplatz",
+    "Mariensäule",
+    "Altstadt (Munich)",
+    "Fischbrunnen",
+    "St. Peter's Church, Munich",
+    "Rindermarkt",
+    "Frauenkirche, Munich"
+  ],
+  "wildlife": [
+    "tits",
+    "rails",
+    "robins",
+    "seagulls",
+    "toads",
+    "grebes",
+    "lizards",
+    "small birds",
+    "falcons",
+    "nuthatches",
+    "frogs",
+    "true salamanders"
+  ],
+  "plants": [],
+  "activities": [],
+  "history": [],
+  "local_food": [],
+  "weather": [],
+  "interesting_facts": []
+}
