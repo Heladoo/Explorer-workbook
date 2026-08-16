@@ -132,6 +132,20 @@ def test_planner_needs_something_to_plan_with(context):
         WorkbookPlanner([get_generator("cover")]).plan(context)
 
 
+@pytest.mark.parametrize("page_count", [10, 12, 16, 20])
+def test_drawing_stays_a_few_pages_clear_of_the_closing_reflection(context, page_count):
+    """Both "drawing" and "reflection" are an open frame with no prompt — back
+    to back they'd read as the same page twice, so "drawing" should never land
+    in the last few body slots right before "reflection" closes the book."""
+    plan = WorkbookPlanner().plan(_with(context, page_count=page_count))
+    types = [page.activity_type for page in plan]
+    assert types[-1] == "reflection"
+    if "drawing" not in types:
+        pytest.skip("book too short for drawing to be selected at all")
+    gap = len(plan) - 1 - types.index("drawing")
+    assert gap >= 3, f"drawing landed only {gap} pages before reflection"
+
+
 def _longest_run(values: list[str]) -> int:
     longest = current = 1
     for previous, value in zip(values, values[1:]):

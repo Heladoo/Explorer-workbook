@@ -81,6 +81,7 @@ class WorkbookPlanner:
             raise RuntimeError("no unpinned activity available to fill the body of the workbook")
 
         body = self._select_body(context, body_pool, body_count)
+        body = self._space_out_drawing_from_reflection(body, closing)
         if centrefold is None:
             ordered = [*opening, *body, *closing]
         else:
@@ -238,6 +239,38 @@ class WorkbookPlanner:
             used[pick.activity_type] = used.get(pick.activity_type, 0) + 1
             last_energy = pick.energy
         return chosen
+
+    #: How many body slots "drawing" is kept clear of the tail when the book
+    #: closes on "reflection" — both are an open frame with no prompt to fill
+    #: it, and landing back-to-back reads as the same page twice rather than
+    #: two distinct activities.
+    _DRAWING_REFLECTION_GAP = 3
+
+    def _space_out_drawing_from_reflection(
+        self, body: list[ActivityGenerator], closing: Sequence[ActivityGenerator]
+    ) -> list[ActivityGenerator]:
+        """Move "drawing" earlier if `_select_body` left it near the tail.
+
+        Only matters when "reflection" is actually closing the book — its own
+        blank drawing box is what "drawing" would otherwise sit too close to.
+        A short book with fewer body slots than the gap just does its best:
+        the activity moves toward the front rather than the move being
+        skipped, since *some* separation still beats none.
+        """
+        if not any(a.activity_type == "reflection" for a in closing):
+            return body
+        gap = self._DRAWING_REFLECTION_GAP
+        tail_start = max(0, len(body) - gap)
+        drawing_index = next(
+            (i for i in range(tail_start, len(body)) if body[i].activity_type == "drawing"),
+            None,
+        )
+        if drawing_index is None:
+            return body
+        reordered = list(body)
+        drawing = reordered.pop(drawing_index)
+        reordered.insert(max(0, len(reordered) - gap), drawing)
+        return reordered
 
     def _score(self, context: WorkbookContext, activity: ActivityGenerator) -> int:
         score = activity.weight

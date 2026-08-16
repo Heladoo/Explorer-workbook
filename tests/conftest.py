@@ -6,6 +6,7 @@ step — the project is stdlib-only by design.
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -62,3 +63,21 @@ def builder() -> WorkbookBuilder:
         knowledge_agent=build_knowledge_agent("file", data_dir=DATA_DIR),
         clock=lambda: "2026-01-01T00:00:00+00:00",
     )
+
+
+#: Set WORKBOOK_TEST_PDF=1 to see the real Chromium/Playwright behaviour in the
+#: web-form tests, e.g. while writing a new test against actual PDF output.
+FORCE_REAL_PDF = os.environ.get("WORKBOOK_TEST_PDF") == "1"
+
+
+def patch_pdf_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Skip ``src.web``'s real Chromium probe for a test server, unless forced.
+
+    Playwright is installed in this environment, so ``src.web._pdf_available()``
+    is always ``True`` — every ``/generate`` call renders a full PDF (~4s) even
+    though almost none of the web-form tests ever look at it. Tests that
+    actually exercise PDF output (the ``/print`` tests in ``test_web.py``) undo
+    this patch themselves before the call that needs it real.
+    """
+    if not FORCE_REAL_PDF:
+        monkeypatch.setattr("src.web._pdf_available", lambda: False)
