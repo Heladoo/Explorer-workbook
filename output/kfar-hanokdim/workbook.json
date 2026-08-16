@@ -2,7 +2,7 @@
   "title": "Noa and Amit's Kfar Hanokdim Adventure Book",
   "destination": "Kfar Hanokdim",
   "language": "en",
-  "generated_at": "2026-08-16T05:39:56+00:00",
+  "generated_at": "2026-08-16T05:49:13+00:00",
   "page_count": 12,
   "pages": [
     {
@@ -561,13 +561,13 @@
         "ring_keys": [
           "woolly-hat",
           "sunscreen",
-          "pomegranate",
+          "honey",
           "umbrella",
           "gloves",
           "baseball-cap",
-          "souvlaki",
+          "ice-cream",
           "rain-coat",
-          "pasta"
+          "pomegranate"
         ],
         "pack_keys": [
           "baseball-cap",
@@ -578,9 +578,9 @@
           "woolly-hat"
         ],
         "distractor_keys": [
-          "pasta",
-          "pomegranate",
-          "souvlaki"
+          "honey",
+          "ice-cream",
+          "pomegranate"
         ],
         "items": [
           "a baseball cap",
@@ -591,9 +591,9 @@
           "a rain coat"
         ],
         "not_to_pack": [
-          "souvlaki",
-          "a pomegranate",
-          "a bowl of pasta"
+          "an ice cream",
+          "a jar of honey",
+          "a pomegranate"
         ],
         "blank_slots": 1,
         "matched_conditions": [
@@ -631,11 +631,12 @@
           "prompt_file": "sources/symbols/prompts/sunscreen.md"
         },
         {
-          "key": "pomegranate",
-          "label": "a pomegranate",
-          "subject": "a pomegranate cut open showing its ruby-red seed clusters, whole fruit beside it",
+          "key": "honey",
+          "label": "a jar of honey",
+          "subject": "a round jar of honey with a honey dipper resting on top",
           "prompt": "",
-          "universal": true
+          "universal": true,
+          "prompt_file": "sources/symbols/prompts/honey.md"
         },
         {
           "key": "umbrella",
@@ -662,11 +663,12 @@
           "prompt_file": "sources/symbols/prompts/baseball-cap.md"
         },
         {
-          "key": "souvlaki",
-          "label": "souvlaki",
-          "subject": "two souvlaki skewers with chunks of meat and vegetables, seen from the side",
+          "key": "ice-cream",
+          "label": "an ice cream",
+          "subject": "an ice cream cone with two round scoops on top",
           "prompt": "",
-          "universal": true
+          "universal": true,
+          "prompt_file": "sources/symbols/prompts/ice-cream.md"
         },
         {
           "key": "rain-coat",
@@ -677,9 +679,9 @@
           "prompt_file": "sources/symbols/prompts/rain-coat.md"
         },
         {
-          "key": "pasta",
-          "label": "a bowl of pasta",
-          "subject": "a bowl of pasta with a curl of steam rising, seen from the side",
+          "key": "pomegranate",
+          "label": "a pomegranate",
+          "subject": "a pomegranate cut open showing its ruby-red seed clusters, whole fruit beside it",
           "prompt": "",
           "universal": true
         }

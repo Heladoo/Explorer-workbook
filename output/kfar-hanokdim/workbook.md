@@ -11,7 +11,7 @@
 | Trip | — |
 | Special interests | — |
 | Knowledge source | file |
-| Generated | 2026-08-16T05:39:56+00:00 |
+| Generated | 2026-08-16T05:49:13+00:00 |
 
 
 ## How to use this document
@@ -611,13 +611,13 @@ _No illustration prompt for this page._
   "ring_keys": [
     "woolly-hat",
     "sunscreen",
-    "pomegranate",
+    "honey",
     "umbrella",
     "gloves",
     "baseball-cap",
-    "souvlaki",
+    "ice-cream",
     "rain-coat",
-    "pasta"
+    "pomegranate"
   ],
   "pack_keys": [
     "baseball-cap",
@@ -628,9 +628,9 @@ _No illustration prompt for this page._
     "woolly-hat"
   ],
   "distractor_keys": [
-    "pasta",
-    "pomegranate",
-    "souvlaki"
+    "honey",
+    "ice-cream",
+    "pomegranate"
   ],
   "items": [
     "a baseball cap",
@@ -641,9 +641,9 @@ _No illustration prompt for this page._
     "a rain coat"
   ],
   "not_to_pack": [
-    "souvlaki",
-    "a pomegranate",
-    "a bowl of pasta"
+    "an ice cream",
+    "a jar of honey",
+    "a pomegranate"
   ],
   "blank_slots": 1,
   "matched_conditions": [

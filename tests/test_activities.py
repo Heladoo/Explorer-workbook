@@ -10,6 +10,7 @@ from src.models.context import (
     DIFFICULTY_LEVELS,
     Child,
     DestinationKnowledge,
+    DestinationProfile,
     WorkbookContext,
 )
 from src.models.page import ActivityDraft, RenderMode
@@ -296,6 +297,37 @@ def test_packing_distractor_pool_is_adequate_when_climate_matches_both():
     slot = PlannedPage(number=6, activity_type="packing", difficulty="hard")
     draft = get_generator("packing").generate(desert_with_cold_nights, slot)
     assert len(draft.metadata["distractor_keys"]) == 3
+
+
+def test_packing_silly_distractors_respect_the_destinations_own_region():
+    """A live Kfar Hanokdim (Israel) book offered Greek souvlaki and a bowl
+    of pasta as things not to pack — both carry a ``regions`` tag
+    (``greece``; ``mediterranean``, ``europe``) that shares nothing with the
+    destination's own authored profile (``israel``, ``middle-east``), which
+    undermines the page's premise ("would you plausibly have considered
+    bringing this?") for a trip that never mentioned either. The pool should
+    prefer region-neutral food (ice-cream, honey) or food matching the
+    destination's own region (pomegranate: also "middle-east") over an
+    unrelated region's food, whenever there's enough to fill the count
+    without it.
+    """
+    desert_with_cold_nights = WorkbookContext(
+        destination="Kfar Hanokdim",
+        knowledge=DestinationKnowledge(
+            weather=("scorching hot by day", "freezing cold at night"),
+            activities=("a desert hike",),
+            source="test",
+            profile=DestinationProfile(
+                regions=("israel", "middle-east"), environments=("desert",), climate=("hot", "dry")
+            ),
+        ),
+    )
+    slot = PlannedPage(number=6, activity_type="packing", difficulty="hard")
+    draft = get_generator("packing").generate(desert_with_cold_nights, slot)
+    distractor_keys = set(draft.metadata["distractor_keys"])
+
+    assert len(distractor_keys) == 3
+    assert distractor_keys.isdisjoint({"souvlaki", "pasta"})
 
 
 def test_packing_offers_a_library_symbol_only_where_the_terrain_fits():
