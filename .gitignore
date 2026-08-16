@@ -4,7 +4,7 @@ __pycache__/
 .venv/
 venv/
 
-# Secrets / local config — never committed.
+# Secrets / local config (OPENROUTER_API_KEY, ANTHROPIC_API_KEY, ...) — never committed.
 .env
 .env.*
 
@@ -24,3 +24,8 @@ output/kfar-hanokdim/*
 !output/kfar-hanokdim/prompts
 output/kfar-hanokdim/prompts/*
 !output/kfar-hanokdim/prompts/*.md
+
+# tools/split_decor.py's scratch output: numbered, unnamed crops for a human
+# to review and hand-promote into sources/symbols/images/. Nothing under
+# src/ reads it, and it's fully regenerable — see the tool's own docstring.
+sources/Decor/*/split/

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -43,6 +44,31 @@ def test_success_criteria_produces_the_three_artifacts(tmp_path, builder):
         if page.image_brief is None:
             assert not (artifacts.output_dir / "prompts" / page.prompt_filename).exists()
     assert (artifacts.output_dir / "prompts" / "doodle_grid.md").exists()
+
+
+def test_symbol_prompt_file_links_are_never_broken(tmp_path, builder):
+    """A symbol's ``prompt_file`` must name a file that actually exists.
+
+    Regression test: ``SymbolBrief.to_dict()`` used to claim a per-book
+    ``prompts/symbols/<key>.md`` that nothing ever wrote, then — mid-fix —
+    would have claimed a repo-root ``sources/symbols/prompts/<key>.md`` that
+    only exists for the library's always-findable pool, not every ``ready``
+    symbol (a "regional"/"local" one got its art some other way and was never
+    machine-prompted). The field must be absent rather than dangling for those.
+    """
+    result = _generate(
+        tmp_path,
+        builder,
+        destination="Kfar Hanokdim",
+        children=["Noa", "Amit"],
+        ages=[5, 7],
+    )
+    symbols = [symbol for page in result.workbook.pages for symbol in page.symbols]
+    assert symbols, "this destination should produce at least one symbol-bearing page"
+    for symbol in symbols:
+        prompt_file = symbol.to_dict().get("prompt_file")
+        if prompt_file is not None:
+            assert Path(prompt_file).is_file(), f"{symbol.key}: {prompt_file}"
 
 
 def test_no_doodle_grid_prompt_once_the_destination_already_has_a_sheet(

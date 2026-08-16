@@ -91,6 +91,13 @@ class SymbolBrief:
     #: ``False`` marks a destination-specific sight, whose drawing is only
     #: reusable within books about the same place.
     universal: bool = True
+    #: Whether ``sources/symbols/prompts/<key>.md`` actually exists — only
+    #: the library's always-findable pool (``ubiquity`` "everywhere"/"common")
+    #: has one; a "regional"/"local" ``ready`` symbol got its art some other
+    #: way (hand-authored from a destination's doodle sheet, typically) and
+    #: was never machine-prompted. Set by the pipeline, which knows the whole
+    #: library — a bare ``SymbolBrief`` has no way to check this itself.
+    has_shared_prompt: bool = False
 
     @property
     def prompt_filename(self) -> str:
@@ -98,14 +105,22 @@ class SymbolBrief:
         return f"symbols/{self.key}.md"
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "key": self.key,
             "label": self.label,
             "subject": self.subject,
             "prompt": self.prompt,
-            "prompt_file": f"prompts/{self.prompt_filename}",
             "universal": self.universal,
         }
+        # This symbol has no per-book prompt file — see ``prompt`` above —
+        # so ``prompt_file`` must name the one place a real prompt actually
+        # lives, and only when it does. Claiming the per-book path here was
+        # always false (nothing ever writes prompts/symbols/*.md), and
+        # claiming the shared path unconditionally would be false for every
+        # "regional"/"local" symbol too — see ``has_shared_prompt`` above.
+        if self.has_shared_prompt:
+            data["prompt_file"] = f"sources/symbols/prompts/{self.key}.md"
+        return data
 
 
 @dataclass(frozen=True)

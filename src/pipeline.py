@@ -8,7 +8,7 @@ an edit.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Callable, Sequence
 
@@ -25,6 +25,7 @@ from src.models.plan import PlannedPage
 from src.models.workbook import Workbook
 from src.rendering.formats import get_format
 from src.strings import strings_for
+from src.symbols import library
 
 #: Bumped when the output shape changes, so downstream tools can adapt.
 SCHEMA_VERSION = "1.0"
@@ -142,6 +143,12 @@ class WorkbookBuilder:
         # use) are drawn from the shared, checked-in `sources/symbols/` cache
         # rather than a fresh prompt per book — see the doodle/grid prompt
         # below for how new ones get sourced.
+        # The only symbols with a real, checked-in prompt (as opposed to
+        # committed art with no machine prompt behind it — see
+        # ``SymbolBrief.has_shared_prompt``) are the library's always-findable
+        # pool. Computed once per book; ``library()`` itself is cached.
+        prompt_available_keys = frozenset(symbol.key for symbol in library().universal_pool())
+
         pages: list[Page] = []
         prompts: dict[str, str] = {}
         for planned in plan:
@@ -151,7 +158,11 @@ class WorkbookBuilder:
                 prompt = self.prompt_generator.render(draft.image_brief, context)
             else:
                 prompt = ""
-            page = draft.to_page(planned.number, prompt, span=planned.span)
+            symbols = tuple(
+                replace(symbol, has_shared_prompt=symbol.key in prompt_available_keys)
+                for symbol in draft.symbols
+            )
+            page = draft.to_page(planned.number, prompt, symbols=symbols, span=planned.span)
             pages.append(page)
             if draft.image_brief is not None:
                 prompts[page.prompt_filename] = self.prompt_generator.prompt_file(prompt)

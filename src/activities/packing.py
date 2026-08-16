@@ -105,7 +105,7 @@ class PackingActivity(ActivityGenerator):
 
         distractor_count = _DISTRACTOR_COUNT[planned.difficulty]
         distractor_symbols = self._distractor_symbols(
-            context, planned, climates, pack_keys
+            context, planned, climates, pack_keys, profile
         )[:distractor_count]
 
         ring = [*pack_symbols, *distractor_symbols]
@@ -213,6 +213,7 @@ class PackingActivity(ActivityGenerator):
         planned: PlannedPage,
         climates: set[str],
         pack_keys: set[str],
+        profile,
     ) -> tuple[Symbol, ...]:
         """A few things that would be a mistake to pack for *this* trip.
 
@@ -298,7 +299,30 @@ class PackingActivity(ActivityGenerator):
                 and symbol.facets.topic in ("food",)
                 and symbol.key not in excluded
             )
-            chosen.extend(_sample(context, silly, remaining, f"{key}:silly"))
+            # A "regional"/"local" food carries its own ``regions`` tag
+            # (souvlaki: greece; pomegranate: greece, mediterranean,
+            # middle-east) precisely so a book about somewhere else doesn't
+            # offer it — a live Kfar Hanokdim book handed a child Greek
+            # souvlaki and a bowl of pasta as things *not* to pack, which
+            # undermines the page's own premise ("would you plausibly have
+            # considered bringing this?") for a destination that never
+            # mentioned either. Prefer region-safe candidates — no regions
+            # tag at all (ice-cream, honey: findable anywhere) or a tag the
+            # destination's own profile shares (pomegranate matches Kfar
+            # Hanokdim's "middle-east") — and only fall through to the full,
+            # region-blind pool if that still can't fill the page, same as
+            # the ubiquity-restricted pool above once did.
+            region_safe = tuple(
+                symbol
+                for symbol in silly
+                if not symbol.facets.regions or set(symbol.facets.regions) & set(profile.regions)
+            )
+            chosen.extend(_sample(context, region_safe, remaining, f"{key}:silly"))
+            remaining = count - len(chosen)
+            if remaining > 0:
+                excluded |= {symbol.key for symbol in chosen}
+                leftover = tuple(symbol for symbol in silly if symbol.key not in excluded)
+                chosen.extend(_sample(context, leftover, remaining, f"{key}:silly:any-region"))
 
         return tuple(chosen)
 

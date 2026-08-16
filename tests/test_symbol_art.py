@@ -12,6 +12,7 @@ from src.symbol_art import (
     CUTOUTS,
     DEFAULT_SYMBOL_ROOT,
     IMAGES,
+    PROMPTS,
     SILHOUETTES,
     artwork_for,
     find_variant,
@@ -72,6 +73,21 @@ def test_every_symbol_with_artwork_on_disk_is_in_the_library():
     known = {symbol.key for symbol in library().all()}
     orphaned = sorted(on_disk - known)
     assert not orphaned, f"artwork with no library entry: {orphaned}"
+
+
+def test_only_the_universal_pool_has_a_prompt_file():
+    """``SymbolBrief.has_shared_prompt`` (``src/pipeline.py``) trusts that
+    ``sources/symbols/prompts/<key>.md`` exists for exactly the universal
+    pool and no other ``ready`` symbol — this is what keeps that trust
+    honest as the library changes. A "regional"/"local" ``ready`` symbol
+    (art committed some other way, never machine-prompted) must not gain a
+    prompt file by accident, and every universal symbol must keep one —
+    either drift would make a ``prompt_file`` link lie again."""
+    found = find_variant(_READY_KEYS, PROMPTS)
+    missing = sorted(set(UNIVERSAL_KEYS) - set(found))
+    assert not missing, f"universal symbol(s) with no prompt file: {missing}"
+    unexpected = sorted(set(found) - set(UNIVERSAL_KEYS))
+    assert not unexpected, f"non-universal symbol(s) with a prompt file: {unexpected}"
 
 
 def test_a_drawing_and_its_shadow_are_the_same_size():
