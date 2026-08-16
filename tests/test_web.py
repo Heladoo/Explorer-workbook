@@ -11,9 +11,9 @@ import urllib.request
 import pytest
 
 from src.uploads import MAX_FILE_BYTES, UploadError, parse_multipart, safe_stem
-from src.web import MAX_PHOTOS, WorkbookFormHandler, serve
+from src.web import MAX_PHOTOS, WorkbookFormHandler, _content_disposition, serve
 
-from tests.conftest import DATA_DIR
+from tests.conftest import DATA_DIR, patch_pdf_unavailable
 
 BOUNDARY = "----trip-book-test"
 
@@ -42,8 +42,9 @@ def _multipart(fields, files=()) -> tuple[bytes, str]:
 
 
 @pytest.fixture
-def site(tmp_path):
+def site(tmp_path, monkeypatch):
     """A running server on an ephemeral port, writing into a temp directory."""
+    patch_pdf_unavailable(monkeypatch)
     server = serve("127.0.0.1", 0, output_root=tmp_path / "books", data_dir=DATA_DIR)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}"
@@ -420,4 +421,113 @@ def test_defaults_are_sane(site):
     assert data["page_count"] == 12
     assert data["language"] == "en"
     assert data["metadata"]["knowledge_source"] == "file"
+
+
+# -- printing an edited document (/print) ----------------------------------
+#
+# The in-browser editor's "Save as PDF" button posts its edited document
+# here instead of calling window.print(), which only ever offers loose page
+# sizes and has no way to produce this book's real A5-booklet-on-A4 layout.
+# See src/rendering/print_metadata.py and book.html.tmpl's printPdf().
+
+from tests.test_rendering import requires_chromium  # noqa: E402
+
+
+def _post_html(site, path: str, body: str):
+    request = urllib.request.Request(
+        site.base + path,
+        data=body.encode("utf-8"),
+        headers={"Content-Type": "text/html; charset=utf-8"},
+        method="POST",
+    )
+    return urllib.request.urlopen(request)
+
+
+@requires_chromium
+def test_print_returns_the_imposed_booklet_for_the_default_format(site, monkeypatch):
+    import io
+
+    from pypdf import PdfReader
+
+    # /print has to actually run Chromium — undo the site fixture's speed patch.
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+
+    with _post_html(site, "/print", html) as response:
+        assert response.status == 200
+        assert response.headers["Content-Type"] == "application/pdf"
+        # Named after the book itself, not the generic "workbook.pdf" every
+        # download used to share — see _content_disposition in src/web.py.
+        disposition = response.headers["Content-Disposition"]
+        assert "workbook.pdf" not in disposition
+        assert "Prague" in disposition
+        assert "filename*=UTF-8''" in disposition
+        body = response.read()
+
+    assert body.startswith(b"%PDF-")
+    # 12 pages (the web form's default) fold onto 3 A4 sheets, 2 sides each —
+    # the same shape test_booklet.py pins for the normal --pdf pipeline.
+    assert len(PdfReader(io.BytesIO(body)).pages) == 6
+
+
+@requires_chromium
+def test_print_prints_the_posted_document_not_a_fresh_regeneration(site, monkeypatch):
+    """The whole point of /print: it must render exactly the bytes the editor
+    sent, edits included, never fall back to re-rendering from workbook.json."""
+    # /print has to actually run Chromium — undo the site fixture's speed patch.
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+    edited = html.replace("<body", '<body data-edited="1"', 1)
+    assert edited != html
+
+    with _post_html(site, "/print", edited) as response:
+        assert response.status == 200
+        body = response.read()
+
+    assert body.startswith(b"%PDF-")
+
+
+def test_print_rejects_a_document_with_no_print_metadata(site):
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _post_html(site, "/print", "<html><body>not a rendered book</body></html>")
+    assert error.value.code == 400
+
+
+def test_print_rejects_an_empty_body(site):
+    with pytest.raises(urllib.error.HTTPError) as error:
+        _post_html(site, "/print", "")
+    assert error.value.code == 400
     assert WorkbookFormHandler.output_root is not None
+
+
+# -- naming a /print download after the book (_content_disposition) --------
+
+
+def test_download_is_named_after_the_title():
+    header = _content_disposition("The Prague Explorer Workbook")
+    assert 'filename="The Prague Explorer Workbook.pdf"' in header
+    assert "filename*=UTF-8''The%20Prague%20Explorer%20Workbook.pdf" in header
+
+
+def test_a_non_ascii_title_keeps_a_plain_ascii_fallback():
+    """Hebrew/Greek titles are the common case here, not the exception — most
+    of this project's non-English support is Hebrew. filename* (RFC 6266)
+    carries the real title; filename stays ASCII for anything that only
+    understands the older form."""
+    header = _content_disposition("חוברת החוקרים של פליון")
+    assert "filename*=UTF-8''%D7%97%D7%95%D7%91%D7%A8%D7%AA" in header
+    ascii_part = header.split("filename=")[1].split(";")[0]
+    assert ascii_part.strip('"').encode("ascii")  # does not raise
+
+
+def test_filesystem_unsafe_characters_are_stripped():
+    header = _content_disposition('Prague: Kids/Family "Trip"?')
+    assert "/" not in header.split("filename*=")[0]
+    assert '"' not in header.split("filename=")[1].split(";")[0].strip('"')
+
+
+def test_an_empty_title_falls_back_to_workbook():
+    header = _content_disposition("")
+    assert 'filename="workbook.pdf"' in header

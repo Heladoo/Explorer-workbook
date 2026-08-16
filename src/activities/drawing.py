@@ -23,19 +23,11 @@ class DrawingActivity(ActivityGenerator):
     energy = "calm"
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
-        prompts = self.pick(context, self.visual_focus(planned, default="activities"), 1)
-        subject = prompts[0] if prompts else ""
-        if subject:
-            instructions = self.text(context, "drawing.instructions_prompted", subject=subject)
-        else:
-            instructions = self.text(context, "drawing.instructions")
-
         return self.draft(
             title=self.text(context, "drawing.title"),
-            instructions=instructions,
+            instructions=self.text(context, "drawing.instructions"),
             planned=planned,
             metadata={
-                "prompt_subject": subject,
                 "blank_page": True,
                 "needs_illustration": False,
             },

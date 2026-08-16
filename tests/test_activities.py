@@ -84,20 +84,24 @@ def test_generation_is_deterministic(context, activity, planned):
     assert first == second
 
 
-#: Pages built entirely from the universal symbol bank rather than from the
-#: destination's own knowledge. ``matching`` is a shape-recognition puzzle: the
-#: child matches a drawing to its silhouette, and the two have to be the same
-#: shape at the same size, which only holds when both are derived from one
-#: cached drawing (see ``src/activities/matching.py``). A destination sight
-#: that has never been drawn would print as a blank in the shadow column.
-UNIVERSAL_ACTIVITIES = {"matching"}
+#: Pages whose content is deliberately not drawn from the destination's own
+#: knowledge. ``matching`` is a shape-recognition puzzle: the child matches a
+#: drawing to its silhouette, and the two have to be the same shape at the
+#: same size, which only holds when both are derived from one cached drawing
+#: (see ``src/activities/matching.py``) — a destination sight that has never
+#: been drawn would print as a blank in the shadow column, so it draws from
+#: the universal symbol bank instead. ``drawing`` is a blank frame with one
+#: constant, general prompt in every book of a given language, by design
+#: (see ``src/activities/drawing.py``) — naming a specific destination sight
+#: would be exactly the "specific sub title" this page deliberately dropped.
+DESTINATION_AGNOSTIC_ACTIVITIES = {"matching", "drawing"}
 
 
 @pytest.mark.parametrize("activity", available_activities(), ids=lambda a: a.activity_type)
 def test_activities_are_destination_aware(context, activity):
     """Content must come from the knowledge, not from a fixed script."""
-    if activity.activity_type in UNIVERSAL_ACTIVITIES:
-        pytest.skip(f"{activity.activity_type} is built from the universal symbol bank")
+    if activity.activity_type in DESTINATION_AGNOSTIC_ACTIVITIES:
+        pytest.skip(f"{activity.activity_type} is deliberately destination-agnostic")
     slot = PlannedPage(number=2, activity_type=activity.activity_type, focus="wildlife")
     draft = activity.generate(context, slot)
     parts = [draft.title, draft.instructions]
@@ -151,6 +155,20 @@ def test_maze_records_start_and_goal(context):
     assert draft.metadata["needs_illustration"] is False
     assert draft.image_brief is None
     assert len(draft.symbols) == 2
+
+
+def test_drawing_instructions_are_constant_and_not_tied_to_a_specific_subject(context):
+    """No {subject} is picked from the destination's knowledge — the page is a
+    blank frame with one general prompt, the same in every book of a given
+    language (see src/locales/*.py: drawing.instructions)."""
+    first = get_generator("drawing").generate(
+        context, PlannedPage(number=8, activity_type="drawing", difficulty="medium")
+    )
+    second = get_generator("drawing").generate(
+        context, PlannedPage(number=10, activity_type="drawing", difficulty="hard")
+    )
+    assert first.instructions == second.instructions
+    assert "prompt_subject" not in first.metadata
 
 
 def test_quiz_answers_are_real_and_not_always_first(context):

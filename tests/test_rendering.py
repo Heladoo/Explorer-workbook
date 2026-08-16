@@ -62,6 +62,26 @@ def test_the_a4_format_is_still_available_and_prints_at_a4(builder):
     assert all(page.span == 1 for page in result.workbook.pages)
 
 
+def test_html_carries_its_own_print_metadata(rendered):
+    """<html> stamps the format/slot count it rendered with, so the
+    in-browser editor's "Save as PDF" can print correctly even after the
+    document has left this process — see src/rendering/print_metadata.py."""
+    result, html = rendered
+    assert 'data-page-format="a5-booklet"' in html
+    assert f'data-page-count="{result.workbook.page_count}"' in html
+
+
+def test_a4_html_carries_the_a4_format(builder):
+    result = generate_workbook(
+        destination="Kfar Hanokdim", page_format="a4-portrait", write=False, builder=builder
+    )
+    html = HtmlRenderer(page_format="a4-portrait").render(
+        result.workbook, result.bundle.context
+    )
+    assert 'data-page-format="a4-portrait"' in html
+    assert f'data-page-count="{result.workbook.page_count}"' in html
+
+
 def test_contents_page_lists_every_page(rendered):
     result, html = rendered
     contents = html.split('<section class="page toc"')[1].split("</section>")[0]
@@ -433,10 +453,17 @@ def test_activity_groups_are_make_solve_look(rendered):
     assert "--icon-solve:" in css
     assert "--icon-look:" in css
     # plan/reflect (packing, reflection, cover) were merged into Look rather
-    # than kept as a fourth group.
-    match = re.search(r"([^{}]*\.page-cover[^{}]*)\{([^}]*)\}", css)
-    assert match, "no rule block found for .page-cover"
-    selector, body = match.groups()
+    # than kept as a fourth group. Found by direct substring search, not
+    # regex: an unanchored `[^{}]*` before the literal makes `re.search` retry
+    # from every position in this ~250KB stylesheet — quadratic, and ~22s in
+    # practice for what should be a microsecond lookup.
+    target = css.find(".page-cover")
+    assert target != -1, "no rule block found for .page-cover"
+    selector_start = css.rfind("}", 0, target) + 1
+    brace_open = css.index("{", target)
+    brace_close = css.index("}", brace_open)
+    selector = css[selector_start:brace_open]
+    body = css[brace_open + 1 : brace_close]
     assert ".page-scavenger_hunt" in selector
     assert ".page-packing" in selector
     assert ".page-reflection" in selector
@@ -789,6 +816,29 @@ def test_pdf_can_be_produced_without_leaving_html_behind(tmp_path, builder):
     )
     assert target.exists()
     assert not target.with_suffix(".html").exists()
+
+
+@requires_chromium
+def test_render_html_prints_an_already_rendered_document(tmp_path, builder):
+    """The in-browser editor's "Save as PDF" has finished markup, not a
+    Workbook — ``render_html`` must print that directly, byte-for-byte the
+    same document, and produce the same page count as ``render`` would from
+    the Workbook it came from."""
+    from src.rendering.pdf_renderer import PdfRenderer
+
+    result = generate_workbook(
+        destination="Prague", page_count=4, write=False, builder=builder
+    )
+    html = HtmlRenderer(include_contents=False).render(
+        result.workbook, result.bundle.context
+    )
+    target = tmp_path / "edited.pdf"
+    PdfRenderer(keep_html=False).render_html(html, target)
+
+    assert target.exists()
+    raw = target.read_bytes()
+    assert raw.startswith(b"%PDF-")
+    assert raw.count(b"/Type /Page\n") == result.workbook.page_count
 
 
 def _esc(value: str) -> str:

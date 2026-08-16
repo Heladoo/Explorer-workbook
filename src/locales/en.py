@@ -264,12 +264,8 @@ STRINGS: dict[str, object] = {
     # -- drawing ----------------------------------------------------------
     "drawing.title": "Draw What You Saw",
     "drawing.instructions": (
-        "Draw the most interesting thing you saw today inside the frame. Add "
-        "as many small details as you can remember."
-    ),
-    "drawing.instructions_prompted": (
-        "Draw what you remember about {subject} inside the frame — the way *you* "
-        "saw it. Add as many small details as you can."
+        "Draw a detailed scene from your memory. Add as many small details as "
+        "you can remember."
     ),
     # -- reflection --------------------------------------------------------
     "reflection.title": "My {destination} Memories",

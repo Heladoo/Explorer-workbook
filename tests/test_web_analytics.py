@@ -14,7 +14,7 @@ import pytest
 from src.analytics import Analytics, JsonlSink, NullSink, build_analytics
 from src.web import serve
 
-from tests.conftest import DATA_DIR
+from tests.conftest import DATA_DIR, patch_pdf_unavailable
 
 
 def _cookie(jar: http.cookiejar.CookieJar, name: str) -> str | None:
@@ -25,8 +25,9 @@ def _cookie(jar: http.cookiejar.CookieJar, name: str) -> str | None:
 
 
 @pytest.fixture
-def site(tmp_path):
+def site(tmp_path, monkeypatch):
     """A running server with a real, inspectable analytics sink."""
+    patch_pdf_unavailable(monkeypatch)
     analytics = Analytics(JsonlSink(tmp_path / "events.jsonl"))
     server = serve(
         "127.0.0.1", 0, output_root=tmp_path / "books", data_dir=DATA_DIR, analytics=analytics
