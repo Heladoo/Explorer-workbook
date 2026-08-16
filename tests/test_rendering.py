@@ -597,6 +597,21 @@ def test_no_page_overflows_its_sheet(destination, language, builder):
     other PDF test in this module — a shared browser fixture held open
     across tests collided with those other tests' own ``sync_playwright()``
     calls ("using Playwright Sync API inside the asyncio loop").
+
+    No ``emulate_media("print")``: that disables book.css's ``@media
+    screen`` block, which is the *only* place ``.page`` gets an explicit
+    width — under print emulation ``.page`` falls back to 100% of the
+    browser's default viewport (~1280px), far wider than any real page
+    (A5's 148mm is ~559px), so far less text wraps and this test was
+    measuring overflow at a width the book never actually prints at. The
+    height constraint (``.page``'s ``height: calc(...)`` in the base rules)
+    is not screen-scoped, so it was correct even under print emulation —
+    only the width was silently wrong, which is exactly the dimension that
+    decides how much a quiz option or a dictionary word wraps. Screen media
+    is what the on-screen page preview exists for: it pins ``.page`` to
+    ``var(--page-width)``/``var(--page-height)``, the same values the real
+    ``@page`` rule prints at, so this now reflows content at the width the
+    book actually ships with.
     """
     from playwright.sync_api import sync_playwright
     from src.image_backends.sources import DEFAULT_SOURCES_DIR
@@ -635,7 +650,6 @@ def test_no_page_overflows_its_sheet(destination, language, builder):
         try:
             page = browser.new_page()
             page.set_content(html, wait_until="load")
-            page.emulate_media(media="print")
             overflowing = page.eval_on_selector_all(
                 "section.page",
                 "els => els.map(el => [el.id, el.scrollHeight - el.clientHeight])"

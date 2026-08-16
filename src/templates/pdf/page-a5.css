@@ -50,6 +50,14 @@
   --size-lg: 13pt;
   --size-xl: 16pt;
   --size-display: 22pt;
+
+  /* The dictionary's tick-box (book.css's .dict-tick::before). A5's ten
+     dictionary rows share a shorter table than A4's, and the box's own
+     padding (--space-2 above) doesn't leave room for A4's 6mm square —
+     measured in headless Chromium, a 6mm box clips its own bottom edge by
+     ~4-6px against a ~29px row here. 4.5mm is the largest size that clears
+     it with margin to spare. */
+  --dict-tick-size: 4.5mm;
 }
 
 @page {

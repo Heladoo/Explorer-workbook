@@ -12,11 +12,16 @@ Two families of question:
   currency — resolved from ``data/countries.json`` via ``src.countries``, and
   only available when the destination's pack names a ``country``. Distractors
   are real facts about *other* countries, so a wrong answer is never make-believe.
-- **Knowledge facts** — wildlife and local food the destination genuinely has
-  (with landmarks and activities as a demoted fallback), exactly as before.
+- **Knowledge facts** — local food the destination genuinely has (with
+  landmarks and activities as a demoted fallback), exactly as before.
   Distractors are a deliberately silly locale-defined pool
   (``quiz.distractor_*``), guarded so nothing in it can accidentally match
-  something true here.
+  something true here. ``wildlife`` is deliberately excluded: an animal
+  worth asking about there is filtered for local distinctiveness (see
+  ``tools/fetch_destination.py``), which a quiz's real-vs-silly distractor
+  format has no way to reflect — a pigeon and a polar bear read as equally
+  "a wrong answer" either way, so the one thing that actually matters about
+  the entry is invisible on this page.
 
 A destination with no curated country falls straight through to the
 knowledge questions and still gets a full quiz — the country facts are a
@@ -52,12 +57,24 @@ logger = logging.getLogger(__name__)
 
 QUESTION_COUNT = 3
 
+#: When this page also carries a dictionary (see ``_dictionary_metadata``),
+#: the A5 booklet format doesn't have room for three question rows next to
+#: ten dictionary rows: measured in headless Chromium at A5's real print
+#: width, every quiz row's question+options needs 10-13px more height than
+#: its share of the sheet, and the row's own ``overflow: hidden`` silently
+#: clips the bottom of the wrapped text. Two rows leave enough room (down to
+#: the same ~1px of slack A4 always had). A4 keeps the full three — measured
+#: at only ~4px of clipping on the single longest-wrapping row, which is the
+#: same margin this page has always shipped with. See
+#: tests/test_booklet.py::test_a5_quiz_with_dictionary_drops_to_two_questions.
+QUESTION_COUNT_WITH_DICTIONARY_AT_A5 = 2
+
 #: (kind == knowledge category, question string key, distractor pool key).
-#: Wildlife and local food lead; landmarks and activities are demoted —
-#: kept only as fallback fuel for a destination with a thin knowledge set
-#: and no curated country, so a book still reaches QUESTION_COUNT.
+#: Local food leads; landmarks and activities are demoted — kept only as
+#: fallback fuel for a destination with a thin knowledge set and no curated
+#: country, so a book still reaches QUESTION_COUNT. ``wildlife`` is not a
+#: source here — see the class docstring.
 _KNOWLEDGE_SOURCES: tuple[tuple[str, str, str], ...] = (
-    ("wildlife", "quiz.q_wildlife", "quiz.distractor_wildlife"),
     ("local_food", "quiz.q_food", "quiz.distractor_food"),
     ("landmarks", "quiz.q_landmark", "quiz.distractor_landmark"),
     ("activities", "quiz.q_activity", "quiz.distractor_activity"),
@@ -99,15 +116,21 @@ class QuizActivity(ActivityGenerator):
             return False
         strings = self.strings(context)
         facts = country_for(context.knowledge.country)
+        dictionary = self._dictionary_metadata(context, strings, facts)
         available = sum(
             1 for draft in self._all_drafts(context, strings, facts, limit=None) if draft
         )
-        return available >= QUESTION_COUNT
+        return available >= self._question_count(context, has_dictionary=bool(dictionary))
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
         strings = self.strings(context)
         facts = country_for(context.knowledge.country)
-        questions_raw = self._all_drafts(context, strings, facts, limit=QUESTION_COUNT)
+        # Computed before the questions themselves: whether the page will
+        # carry a dictionary decides how many questions fit next to it (see
+        # QUESTION_COUNT_WITH_DICTIONARY_AT_A5), so this has to run first.
+        dictionary = self._dictionary_metadata(context, strings, facts)
+        question_count = self._question_count(context, has_dictionary=bool(dictionary))
+        questions_raw = self._all_drafts(context, strings, facts, limit=question_count)
 
         questions: list[dict[str, Any]] = []
         for index, draft in enumerate(questions_raw):
@@ -131,9 +154,22 @@ class QuizActivity(ActivityGenerator):
                 "questions": questions,
                 "question_count": len(questions),
                 "needs_illustration": False,
-                **self._dictionary_metadata(context, strings, facts),
+                **dictionary,
             },
         )
+
+    def _question_count(self, context: WorkbookContext, *, has_dictionary: bool) -> int:
+        """How many questions this book's quiz page gets.
+
+        Only the A5 booklet with a dictionary present is short on room — see
+        QUESTION_COUNT_WITH_DICTIONARY_AT_A5. Every other combination
+        (A5 with no dictionary, since ``.quiz`` alone then fills the whole
+        sheet rather than sharing 38% of it; A4 either way) keeps the full
+        QUESTION_COUNT.
+        """
+        if has_dictionary and context.page_format == "a5-booklet":
+            return QUESTION_COUNT_WITH_DICTIONARY_AT_A5
+        return QUESTION_COUNT
 
     # -- the local-language dictionary --------------------------------------
 
