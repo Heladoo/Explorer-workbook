@@ -1,16 +1,19 @@
-Create a black-and-white activity page with a large empty drawing area for a children's travel activity book.
+Create a black-and-white coloring page for a children's travel activity book.
 
 Scene:
-A thin decorative border of Kfar Hanokdim motifs framing an otherwise completely empty page.
+desert wildflowers after rain at Kfar Hanokdim, seen from a child's eye level, with plenty of large open areas to color.
 
 Include:
-• Kfar Hanokdim
+• desert wildflowers after rain
+• date palms
+• hoopoe birds
+• donkeys
 
 Layout:
-Border only, no more than 15 mm wide. The entire centre of the page is left blank white — the questions and their options are typeset there as text, not drawn.
+Single full-page scene, medium-sized shapes with some background detail.
 
 Style:
-• Delicate black line art confined to the border, with the working area left completely blank white
+• Bold, clean, uniform black outlines on white with large open areas to color — no shading, no hatching, no grey fills, no solid black areas
 • Friendly modern children's picture-book line art: rounded shapes, even line weight, simple expressive faces
 • Clean, uncluttered composition — every element clearly separated and easy to recognise
 • Age-appropriate for a 5-7 year old: gentle and welcoming, nothing frightening, no weapons, no injuries
@@ -22,4 +25,3 @@ Constraints:
 • Pure white background, generous margins, nothing important within 12 mm of the page edge
 • No text, letters, numbers, captions, speech bubbles, watermarks or logos anywhere in the image
 • Prints cleanly in black and white on a home printer
-• This border is optional decoration; the page is complete without it.

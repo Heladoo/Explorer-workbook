@@ -39,6 +39,11 @@ DEFAULT_SYMBOL_ROOT = Path(__file__).resolve().parents[1] / "sources" / "symbols
 IMAGES = "images"
 CUTOUTS = "cutouts"
 SILHOUETTES = "silhouettes"
+#: Not a drawing variant — the rendered prompt behind ``images/<key>.*``.
+#: Only ever written for the library's universal pool (see
+#: ``Library.universal_pool()``); a "regional"/"local" symbol has art with
+#: no prompt file behind it, typically hand-authored rather than prompted.
+PROMPTS = "prompts"
 
 
 @dataclass(frozen=True)
@@ -111,6 +116,7 @@ __all__ = [
     "CUTOUTS",
     "DEFAULT_SYMBOL_ROOT",
     "IMAGES",
+    "PROMPTS",
     "SILHOUETTES",
     "SymbolArt",
     "artwork_for",
