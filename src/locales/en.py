@@ -21,9 +21,7 @@ STRINGS: dict[str, object] = {
     "pdf.name_label": "This book belongs to:",
     "pdf.illustration": "Illustration goes here",
     "pdf.art_note": "Generate this picture from the prompt file, then drop it in.",
-    "pdf.draw_here": "Your drawing goes here",
     "pdf.your_own": "one thing of your own",
-    "pdf.match_gutter": "draw your lines across here",
     "pdf.panel_top": "Picture 1",
     "pdf.panel_bottom": "Picture 2",
     "toc.column_number": "#",
@@ -124,7 +122,6 @@ STRINGS: dict[str, object] = {
         "Circle the answer you think is right. There are {count} questions — "
         "ask a grown-up if you get stuck."
     ),
-    "quiz.q_wildlife": "Which animal can you meet at {destination}?",
     "quiz.q_landmark": "Which of these can you visit at {destination}?",
     "quiz.q_food": "Which of these is a local food at {destination}?",
     "quiz.q_activity": "Which of these can you do at {destination}?",
@@ -133,7 +130,6 @@ STRINGS: dict[str, object] = {
     "quiz.q_language": "What language do people speak in {country}?",
     "quiz.q_continent": "Which continent is {country} in?",
     "quiz.q_currency": "What money do people use in {country}?",
-    "quiz.distractor_wildlife": ["penguin", "polar bear", "kangaroo", "toucan", "walrus"],
     "quiz.distractor_landmark": [
         "an ice castle",
         "a rocket launch pad",

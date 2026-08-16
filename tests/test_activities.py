@@ -387,3 +387,73 @@ def test_matching_answer_key_is_consistent(context):
     assert sorted(left) == sorted(right)
     for subject, position in draft.metadata["answer_key"].items():
         assert right[position - 1] == subject
+
+
+def test_matching_symbol_fit_vetoes_on_the_facet_it_actually_declares():
+    """Unit-level check of the veto rule itself (src/activities/matching.py),
+    same shape as the one src/activities/packing.py already applies to its
+    own pool. An empty environments/climate facet is "findable/relevant
+    anywhere" (see SymbolFacets) and always passes."""
+    from src.activities.matching import _fits
+
+    woolly_hat = library()["woolly-hat"]
+    boat = library()["boat"]
+
+    hot = DestinationProfile(environments=("mountain", "village"), climate=("hot",))
+    cold = DestinationProfile(environments=("mountain",), climate=("cold",))
+    landlocked = DestinationProfile(environments=("mountain", "forest"), climate=())
+    coastal = DestinationProfile(environments=("coast", "water"), climate=())
+
+    assert not _fits(woolly_hat, hot), "a cold-only symbol must not fit a hot-only profile"
+    assert _fits(woolly_hat, cold)
+    assert not _fits(boat, landlocked), "a water-only symbol must not fit a landlocked profile"
+    assert _fits(boat, coastal)
+
+
+def test_matching_never_offers_a_climate_mismatched_symbol():
+    """Integration-level check: a warm-climate destination's matching page
+    must never draw a woolly hat or gloves, across every difficulty and a
+    wide spread of page numbers (context.sample's RNG key) — not just true
+    on average. This is a hard guarantee, not a probabilistic one: Pelion's
+    real profile leaves comfortably more than six climate-fitting universal
+    symbols, so _choose's fitting pool never has to fall back to the
+    unfiltered bank (see _choose's docstring)."""
+    warm = WorkbookContext(
+        destination="Sunland",
+        knowledge=DestinationKnowledge(
+            weather=("hot and sunny all summer",),
+            activities=("a swim",),
+            source="test",
+            profile=DestinationProfile(
+                environments=("mountain", "village", "coast"), climate=("hot", "temperate")
+            ),
+        ),
+    )
+    matching = get_generator("matching")
+    for number in range(2, 30):
+        for difficulty in DIFFICULTY_LEVELS:
+            draft = matching.generate(
+                warm, PlannedPage(number=number, activity_type="matching", difficulty=difficulty)
+            )
+            keys = draft.metadata["symbol_keys"]
+            assert "woolly-hat" not in keys
+            assert "gloves" not in keys
+
+
+def test_matching_still_fills_every_pair_when_the_profile_is_sparse():
+    """The fit filter must never leave the page short of pairs. A destination
+    with no knowledge text derives an empty profile, which vetoes every
+    climate/environment-tagged symbol in the pool — the 24 fully
+    unconstrained symbols left are comfortably more than the largest pair
+    count, so this doesn't even need _choose's unfiltered-bank fallback to
+    pass; it is the fallback existing as a defensive floor beneath that, for
+    whatever destination someday has an even thinner pool to draw from."""
+    bare = WorkbookContext(
+        destination="Nowhereland", knowledge=DestinationKnowledge(source="test")
+    )
+    for difficulty in DIFFICULTY_LEVELS:
+        draft = get_generator("matching").generate(
+            bare, PlannedPage(number=9, activity_type="matching", difficulty=difficulty)
+        )
+        assert len(draft.symbols) == len(draft.metadata["symbol_keys"])
+        assert len(draft.metadata["symbol_keys"]) == len(set(draft.metadata["symbol_keys"]))

@@ -312,6 +312,13 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             had_itinerary=bool(itinerary),
             had_photos=bool(photos),
             seconds=elapsed,
+            # A possible English leak isn't shown on the result page (see
+            # _render_result) — it's recorded here instead, so a recurring
+            # pattern (a destination whose data pack needs translating, an
+            # activity that isn't running its text through the locale) shows
+            # up as data to triage rather than an in-the-moment scare for
+            # whoever is just trying to print a book.
+            language_qa_leaks=len(result.language_qa),
         )
         return self._render_result(result, photos, visitor)
 
@@ -422,13 +429,16 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
                 "The pages use general travel material rather than local facts. Adding a pack "
                 "under data/destinations/ fixes that.",
             )
-        if result.language_qa:
-            notice += self._notice(
-                "Some English may have slipped in",
-                f"{len(result.language_qa)} spot(s) in this "
-                f"{_escape(workbook.language)} workbook still show Latin-script words — often "
-                "because this destination has no translated data pack yet. Check workbook.md.",
-            )
+        # Deliberately not shown here: a possible English leak reads as "your
+        # book is broken" to a parent who has no way to act on it, and it is
+        # very often not a bug at all (an itinerary typed in English inside a
+        # Hebrew book legitimately shows those English stop names — see
+        # QuizActivity's docstring for the same principle elsewhere). The
+        # check still runs on every generation (language_qa above), still
+        # gates the test suite (tests/test_localization.py), and is now
+        # tracked in the book_created analytics event below instead, so a
+        # real pattern shows up in /stats without alarming whoever is just
+        # trying to print a book for their kid.
 
         return _template("result.html.tmpl").substitute(
             css=_css(),
@@ -512,6 +522,7 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             experiments=self._stats_experiments(report),
             feedback=self._stats_feedback(report),
             destinations=self._stats_destinations(report),
+            qa_leaks=self._stats_qa_leaks(report),
         )
 
     def _stats_window(self, report: Report) -> str:
@@ -613,6 +624,16 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             return "<p class='hint'>Nothing generated yet.</p>"
         return "<p class='hint'>" + " · ".join(
             f"{_escape(name)} ({count})" for name, count in report.destinations
+        ) + "</p>"
+
+    def _stats_qa_leaks(self, report: Report) -> str:
+        """Backlog view of possible English leaks — see src/qa.py and
+        _render_result's notice comment: this is where a leak goes instead
+        of the result page, so it needs somewhere a developer actually looks."""
+        if not report.qa_leaks:
+            return "<p class='hint'>None recorded.</p>"
+        return "<p class='hint'>" + " · ".join(
+            f"{_escape(name)} ({count})" for name, count in report.qa_leaks
         ) + "</p>"
 
     # -- serving generated files ------------------------------------------

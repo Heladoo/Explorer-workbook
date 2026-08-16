@@ -230,6 +230,13 @@ class Report:
     destinations: tuple[tuple[str, int], ...]
     languages: tuple[tuple[str, int], ...]
     failures: tuple[tuple[str, int], ...]
+    #: (destination, language) -> how many books had a possible English leak
+    #: (see src/qa.py). Not shown to whoever generated the book — see
+    #: _render_result in web.py — this is the backlog instead: a destination
+    #: showing up here repeatedly is missing a translated data pack or has an
+    #: activity not routing its text through the locale, either way something
+    #: to go fix, not something to alarm a parent about mid-print.
+    qa_leaks: tuple[tuple[str, int], ...]
     median_seconds: float | None
     first_seen: str = ""
     last_seen: str = ""
@@ -309,6 +316,7 @@ class Report:
         destinations = Counter()
         languages = Counter()
         failures = Counter()
+        qa_leaks = Counter()
         durations = []
         for event in events:
             properties = event.properties
@@ -328,6 +336,10 @@ class Report:
                     languages[str(properties["language"])] += 1
                 if isinstance(properties.get("seconds"), (int, float)):
                     durations.append(float(properties["seconds"]))
+                if properties.get("language_qa_leaks"):
+                    qa_leaks[
+                        f"{properties.get('destination', '?')} ({properties.get('language', '?')})"
+                    ] += 1
             elif event.name == "generate_failed":
                 failures[str(properties.get("reason", "unknown"))] += 1
 
@@ -342,6 +354,7 @@ class Report:
             destinations=tuple(destinations.most_common(8)),
             languages=tuple(languages.most_common()),
             failures=tuple(failures.most_common(5)),
+            qa_leaks=tuple(qa_leaks.most_common(8)),
             median_seconds=statistics.median(durations) if durations else None,
             first_seen=stamps[0] if stamps else "",
             last_seen=stamps[-1] if stamps else "",

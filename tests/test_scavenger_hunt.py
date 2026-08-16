@@ -379,6 +379,58 @@ def test_a_harder_hunt_still_belongs_to_the_destination():
     assert len(local) < len(draft.symbols), "but never only rare, hard-to-find ones"
 
 
+def test_a_hunt_never_shows_more_than_three_animals():
+    """The universal pool's animal topic is deep (16 of 45 entries) and
+    destination wildlife leans the same way — an unlucky draw could
+    otherwise fill most of a 16-cell sheet with animals. Checked at "hard"
+    (the largest sheet, and the difficulty most likely to draw enough
+    symbols to exceed the cap by chance) across a spread of page numbers,
+    since context.sample's RNG key is derived from planned.number."""
+    from src.symbols import library
+
+    lib = library()
+    knowledge = DestinationKnowledge(
+        wildlife=("dolphins in the bay", "owls in the pines", "eagles overhead"),
+        source="test",
+    )
+    ctx = WorkbookContext(destination="Somewhere", knowledge=knowledge)
+    scavenger_hunt = get_generator("scavenger_hunt")
+    for number in range(2, 20):
+        draft = scavenger_hunt.generate(
+            ctx, PlannedPage(number=number, activity_type="scavenger_hunt", difficulty="hard")
+        )
+        animals = sum(
+            1
+            for key in draft.metadata["symbol_keys"]
+            if key in lib and lib[key].facets and lib[key].facets.topic == "animals"
+        )
+        assert animals <= 3, f"page {number}: {animals} animals, keys={draft.metadata['symbol_keys']}"
+
+
+def test_capping_animals_prefers_to_trim_the_universal_pool_not_the_trip():
+    """The regression this guards: a destination whose *entire* local
+    wildlife pool is animals (a common case — wildlife almost always is)
+    must not lose those sights just because the universal side of the sheet
+    also happened to draw several animals. Only two local sights here, both
+    animals and both comfortably under the cap, so the fix (trim
+    universal-pool animals before ever touching a local one) must leave both
+    in every single run — not just on average."""
+    knowledge = DestinationKnowledge(
+        wildlife=("goats grazing the hillsides", "wild tortoises in the forest"),
+        source="test",
+    )
+    ctx = WorkbookContext(destination="Somewhere", knowledge=knowledge)
+    destination_keys = {symbol.key for symbol in destination_symbols(ctx)}
+    scavenger_hunt = get_generator("scavenger_hunt")
+
+    for number in range(2, 20):
+        draft = scavenger_hunt.generate(
+            ctx, PlannedPage(number=number, activity_type="scavenger_hunt", difficulty="hard")
+        )
+        local = set(draft.metadata["symbol_keys"]) & destination_keys
+        assert local, f"page {number}: lost every local sight to the animal cap"
+
+
 def test_a_destination_with_no_knowledge_still_gets_a_full_sheet():
     """The universal pool tops up whatever the destination cannot supply."""
     bare = WorkbookContext(destination="Nowhere", knowledge=DestinationKnowledge(source="test"))

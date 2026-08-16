@@ -19,6 +19,15 @@ not a geography one, and the universal pool is the part of the symbol cache
 that has artwork committed for it in every book — a destination sight that has
 never been drawn would print as a placeholder in the left column and, worse, as
 a *blank* in the shadow column.
+
+"Universal" is about artwork coverage, not about fitting every destination,
+though — a handful of the pool's ``pack``-adjacent items (a woolly hat, a
+rain coat) carry real ``environments``/``climate`` facets, and a woolly hat
+still reads as wrong for a warm-climate trip even though the *shape* puzzle
+itself has nothing to do with weather. ``_choose`` prefers symbols whose
+facets fit the destination's profile (the same veto ``packing.py`` already
+applies to its own pool) and only falls back to the unfiltered bank if too
+few fit — the page must never come up short of pairs over this.
 """
 
 from __future__ import annotations
@@ -29,8 +38,9 @@ from src.activities.base import (
     PlannedPage,
     register_activity,
 )
-from src.models.context import WorkbookContext
+from src.models.context import DestinationProfile, WorkbookContext
 from src.models.page import ActivityDraft, SymbolBrief
+from src.symbols.profile import profile_for
 
 #: Pairs per page. Kept to 5-6 regardless of difficulty: every pair is a
 #: full-height row in both columns, so fewer than five leaves the page looking
@@ -147,13 +157,42 @@ class MatchingActivity(ActivityGenerator):
         ``context.sample`` works on strings, so this samples keys and maps back,
         keeping every random choice on the seeded RNG the whole project relies
         on for reproducible output.
+
+        Prefers symbols that fit the destination's profile (see the module
+        docstring); the unfiltered bank is a fallback only reached when the
+        fitting pool alone can't fill ``count`` — most of the 38-symbol
+        universal pool carries no environment/climate facet at all, so this
+        should only bite for a destination whose profile itself is unusually
+        sparse.
         """
         by_key = {
             symbol.key: symbol
             for symbol in UNIVERSAL_SYMBOLS
             if symbol.key not in _SHADOW_UNSUITABLE
         }
+        profile = profile_for(context.knowledge)
+        fitting = tuple(key for key in by_key if _fits(by_key[key], profile))
+        pool_keys = fitting if len(fitting) >= count else tuple(by_key)
         picked = context.sample(
-            tuple(by_key), min(count, len(by_key)), key=f"matching:{planned.number}"
+            pool_keys, min(count, len(pool_keys)), key=f"matching:{planned.number}"
         )
         return tuple(by_key[key] for key in picked)
+
+
+def _fits(symbol: Symbol, profile: DestinationProfile) -> bool:
+    """Whether ``symbol``'s facets don't rule out this destination.
+
+    Only vetoes on a facet the symbol actually declares — an empty
+    ``environments``/``climate`` means "findable/relevant anywhere" (see
+    ``SymbolFacets``), so most of the pool always passes. A woolly hat
+    (``climate=("cold",)``) is vetoed for a destination profiled
+    ``("temperate", "hot")``, same principle as ``packing.py``'s own
+    environment veto for its ``pack``-role symbols.
+    """
+    environments = symbol.facets.environments
+    if environments and not set(environments) & set(profile.environments):
+        return False
+    climate = symbol.facets.climate
+    if climate and not set(climate) & set(profile.climate):
+        return False
+    return True
