@@ -33,15 +33,33 @@ def test_every_page_becomes_a_printed_page(rendered):
     result, html = rendered
     for page in result.workbook.pages:
         assert f'id="page-{page.number}"' in html
-    # One section per page, plus the contents page.
-    assert html.count('<section class="page') == result.workbook.page_count + 1
+    # One section per *rendered* page, plus the contents page. sheet_count,
+    # not page_count: a centre spread is one section covering two of the
+    # reader's page numbers.
+    assert html.count('<section class="page') == result.workbook.sheet_count + 1
 
 
-def test_the_document_is_a4_print_styled(rendered):
+def test_the_document_is_print_styled_for_the_default_a5_booklet(rendered):
     _, html = rendered
-    assert "size: A4 portrait" in html
+    assert "size: A5 portrait" in html
     assert "page-break-after: always" in html
     assert "<style>" in html, "the CSS must be inlined so the file stands alone"
+
+
+def test_the_a4_format_is_still_available_and_prints_at_a4(builder):
+    """The original one-page-per-sheet format is a flag away, not gone."""
+    result = generate_workbook(
+        destination="Kfar Hanokdim", page_format="a4-portrait", write=False, builder=builder
+    )
+    html = HtmlRenderer(page_format="a4-portrait").render(
+        result.workbook, result.bundle.context
+    )
+    assert "size: A4 portrait" in html
+    assert "size: A5 portrait" not in html
+    # No centre spread exists in a format that doesn't fold. Match the rule,
+    # not the string: book.css's prose mentions "@page spread" by name.
+    assert "@page spread {" not in html
+    assert all(page.span == 1 for page in result.workbook.pages)
 
 
 def test_contents_page_lists_every_page(rendered):

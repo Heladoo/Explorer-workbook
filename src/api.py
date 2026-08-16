@@ -19,6 +19,7 @@ from src.agents.destination_agent import build_knowledge_agent
 from src.output_writer import WrittenArtifacts, default_output_dir, write_bundle
 from src.pipeline import WorkbookBuilder, WorkbookBundle, WorkbookRequest
 from src.qa import LeakFinding, find_english_leaks
+from src.rendering.formats import get_format
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ def generate_workbook(
     *,
     language: str = "en",
     page_count: int = 12,
+    page_format: str | None = None,
     difficulty: str | None = None,
     theme: str | None = None,
     interests: Sequence[str] | None = None,
@@ -62,6 +64,7 @@ def generate_workbook(
     write: bool = True,
     html: bool = False,
     pdf: bool = False,
+    booklet: bool = True,
     ink_saver: bool = False,
     images: dict[int, Path] | None = None,
     symbol_images: dict[str, Path] | None = None,
@@ -77,6 +80,12 @@ def generate_workbook(
     flattens that print layout's brand colors to grayscale. ``images`` maps page
     numbers to illustration files when artwork exists, and ``symbol_images`` maps
     a symbol slug to its drawing for pages laid out as a table of pictures.
+
+    ``page_format`` chooses the physical format — ``"a5-booklet"`` (the default:
+    A5 pages, two per A4 sheet, folded and stapled) or ``"a4-portrait"`` (one
+    page per sheet, nothing to fold). With ``pdf`` and a booklet format,
+    ``booklet`` also writes the imposed fold-and-staple sheets next to the
+    page-per-page PDF. See :mod:`src.rendering.formats`.
     """
     request = WorkbookRequest(
         destination=destination,
@@ -84,6 +93,7 @@ def generate_workbook(
         ages=tuple(ages or ()),
         language=language,
         page_count=page_count,
+        page_format=get_format(page_format).key,
         difficulty=difficulty,
         theme=theme,
         interests=tuple(interests or ()),
@@ -116,6 +126,7 @@ def generate_workbook(
             ink_saver=ink_saver,
             images=images,
             symbol_images=symbol_images,
+            booklet=booklet,
         ),
         language_qa=language_qa,
     )

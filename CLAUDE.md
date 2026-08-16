@@ -14,7 +14,13 @@ and opt-in (`--generate-images`, via OpenRouter); without them every page prints
 labelled placeholder, so the book is reviewable before any artwork exists.
 
 Python 3.11+, stdlib only for the core generator, web form and image backend. The
-one opt-in dependency is `playwright` (+ a Chromium build), needed only for `--pdf`.
+opt-in dependencies are `playwright` (+ a Chromium build) and `pypdf`, both needed
+only for `--pdf` — the former prints the pages, the latter imposes them onto
+fold-and-staple sheets.
+
+The default output is an **A5 booklet**: A5 pages printed two-up on A4, folded once
+and stapled through the fold. `--format a4-portrait` keeps the original
+one-page-per-sheet layout. See "Page formats" below.
 
 ## Commands
 
@@ -26,9 +32,12 @@ python -m pytest
 python -m pytest tests/test_planner.py
 python -m pytest tests/test_puzzles.py::test_every_word_is_findable
 
-# CLI generation
+# CLI generation. --pages accepts 8, 12 or 16 only — every one a multiple of
+# 4, because one folded A4 sheet carries exactly four A5 pages.
 python -m src.cli --destination "Kfar Hanokdim" --children Noa,Amit --ages 5,7 --pages 12
-python -m src.cli --destination "Prague" --pdf          # also emits workbook.html/.pdf
+python -m src.cli --destination "Prague" --pdf          # workbook.html/.pdf + workbook-booklet.pdf
+python -m src.cli --destination "Prague" --pdf --format a4-portrait   # the old one-page-per-sheet layout
+python -m src.cli --destination "Prague" --pdf --no-booklet           # A5 pages, skip the imposed sheets
 python -m src.cli --list-destinations
 
 # Real artwork (needs OPENROUTER_API_KEY). --symbol-cache defaults to
@@ -79,6 +88,8 @@ Agent 5  MarkdownGenerator          → workbook.md          JSON writer → wor
 Images   ImageBackend               → images/*.png, images/symbols/*.png       (optional)
         ↓
 Layout   HtmlRenderer → PdfRenderer → workbook.html, workbook.pdf              (optional)
+        ↓
+Sheets   impose_booklet             → workbook-booklet.pdf                     (A5 booklet only)
 ```
 
 The key design decision: activities return a **structured `ImageBrief`**, never a
@@ -93,8 +104,8 @@ so the whole book's visual style can change in one place without touching any ac
 | `src/activities/` | One module per activity, auto-discovered — see below |
 | `src/locales/` | User-facing copy, one module per language (`en.py`, `he.py`) |
 | `src/templates/` | Style guide and markdown templates (`string.Template`, no Jinja) |
-| `src/templates/pdf/` | Print page templates and `book.css` |
-| `src/rendering/` | Layout stage: workbook → printable HTML (`html_renderer.py`) → PDF (`pdf_renderer.py`) |
+| `src/templates/pdf/` | Print page templates, `book.css` (every rule that is *not* page geometry), and one geometry stylesheet per page format (`page-a5.css`, `page-a4.css`) |
+| `src/rendering/` | Layout stage: workbook → printable HTML (`html_renderer.py`) → PDF (`pdf_renderer.py`) → foldable sheets (`imposition.py`); `formats.py` defines the two page formats and the offered page lengths |
 | `src/web.py` | Local web form + analytics/A-B/feedback endpoints |
 | `src/uploads.py` | From-scratch multipart parser (stdlib `cgi.FieldStorage` is gone in 3.13); file type is sniffed from binary signature, not filename |
 | `src/templates/web/` | Form, result page, stats page, and their CSS |
@@ -264,7 +275,7 @@ facts — a code with no `data/countries.json` entry is dropped after the fact.
 
 ### Print layout (`src/rendering/`)
 
-`HtmlRenderer` turns `workbook.json` into print-styled A4 HTML; `PdfRenderer` prints it
+`HtmlRenderer` turns `workbook.json` into print-styled HTML; `PdfRenderer` prints it
 with headless Chromium via Playwright. The layout adds no content — it typesets what
 activities already recorded in page metadata (checkboxes, quiz options, maze grids,
 word search cells, etc.), which is why activities keep text **out** of illustrations.
@@ -273,6 +284,75 @@ A bespoke per-activity-type page layout is a `@layout("your_type")` function in
 back to a full-page illustration frame automatically. The PDF renders without a
 table of contents (`HtmlRenderer(include_contents=False)` in `output_writer.py`);
 standalone HTML output keeps it.
+
+### Page formats, and why `book.css` restates no dimension (`src/rendering/formats.py`)
+
+Two formats: **`a5-booklet`** (the default — A5 pages, two per A4 sheet, folded once
+and stapled through the fold) and **`a4-portrait`** (the original one-activity-per-sheet
+layout, which needs no folding, no stapler and no duplex printer).
+
+The A5 pages are laid out *natively at A5*, not as the A4 book scaled down. That is the
+whole reason a second format exists rather than a print-dialog setting: booklet-printing
+the A4 layout scales everything to 70.7%, taking 11.5pt body copy to 8.1pt and the
+reflection page's writing lines with it — below what the children this book is for can
+write on. `page-a5.css` therefore *re-tunes* the ladder rather than multiplying it (body
+11.5→10pt, display 30→22pt: the display sizes were proportional to the page, and the page
+is what changed).
+
+Mechanically, a format is a token block, not a fork of the stylesheet. `book.css` carries
+every rule and **restates no dimension** — it sizes everything against `--page-width`,
+`--page-height`, `--page-margin-*`, `--space-*` and `--size-*`, which the format
+stylesheet declares and `HtmlRenderer` emits ahead of it. Adding a format is a new
+`PageFormat` plus a new token file. (`@page` itself must repeat the numbers as literals:
+it does not reliably read custom properties across engines.)
+
+Two things `@page` cannot express, both handled in `HtmlRenderer`:
+
+- **Which edge is the binding edge.** `@page :left`/`:right` mean the even/odd sheets of
+  the print run, and Chromium assigns them from page order alone with no regard for the
+  document's `dir`. Which of the two carries the *gutter* depends on the binding edge,
+  and a Hebrew book is a mirror image bound on the right — its page 1 is the left-hand
+  page of the first spread. `_binding_css` appends a flipped pair for an RTL book.
+  (The old comment in `book.css` asserted the opposite; it was wrong.)
+- **Page size per page.** The centre spread is a named `@page spread` rule, attached by
+  the `page-spread` class — so that class is load-bearing geometry, not a styling hook,
+  and is only emitted for a format that declares the rule.
+
+### The centre spread
+
+One page may be a **double-page spread**: a single 297×210mm landscape PDF page that the
+reader sees as the two facing pages at the exact middle of the booklet. `map` is the one
+activity that asks for it (`spread = True`), because it is the page that is *about*
+extent — a whole journey end to end — and the only one with no grid to re-tune.
+
+The centre is the only place a spread can go, and that is arithmetic rather than taste:
+for an `N`-page saddle-stitched book the innermost sheet's back side works out to exactly
+`[N/2, N/2+1]`, so those two pages are the **only pair that shares one side of one
+sheet**. `WorkbookPlanner._centrefold` therefore requires a folding format, `N % 4 == 0`,
+and body pages left on both sides; failing any of them there is simply no spread and the
+activity competes for an ordinary body slot. `spread = True` is a request, not a
+requirement — an activity marked that way must still work as a single page.
+
+The cost of a spread is that **`page_count` and `len(pages)` stop agreeing**. A spread is
+one `Page` with `span = 2`, so a 12-page book holds 11 `Page` objects. `Workbook.page_count`
+sums spans (it is the number that must stay a multiple of 4); `Workbook.sheet_count` is
+`len(pages)`. Anything counting *printed* pages wants `sheet_count`.
+
+### Imposition (`src/rendering/imposition.py`)
+
+`--pdf` on a booklet format writes two files, never one instead of the other:
+`workbook.pdf` (A5 pages in reading order — to read on screen or hand to a print shop) and
+`workbook-booklet.pdf` (the same pages on A4 sheets, to print duplex and fold). Imposition
+is a post-pass over the finished PDF via `pypdf`, so it cannot affect the readable book;
+an unfoldable length or a missing `pypdf` costs the second file and logs a warning rather
+than failing the run.
+
+Sheets are true A4 (297mm), deliberately not `page_width × 2` (296mm) — handing a printer
+a sheet a millimetre off its actual paper makes it scale or offset the whole job. Pages
+are registered **against the fold**, so the millimetre of A-series slack lands on the
+trimmed outer edges where it costs nothing, never in the staple. Spreads are found by
+measuring page widths in the PDF rather than by being told where they are, and placed
+whole.
 
 ### Localization (`src/locales/`)
 

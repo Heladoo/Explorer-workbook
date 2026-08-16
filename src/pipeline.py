@@ -23,6 +23,7 @@ from src.models.context import Child, Trip, WorkbookContext
 from src.models.page import Page
 from src.models.plan import PlannedPage
 from src.models.workbook import Workbook
+from src.rendering.formats import get_format
 from src.strings import strings_for
 
 #: Bumped when the output shape changes, so downstream tools can adapt.
@@ -46,6 +47,8 @@ class WorkbookRequest:
     start_date: str | None = None
     family_photos: Sequence[str] = ()
     seed: int = 0
+    #: See ``WorkbookContext.page_format``.
+    page_format: str = "a5-booklet"
 
     def to_context(self) -> WorkbookContext:
         """Build the shared context, pairing each child with their age by position."""
@@ -76,6 +79,10 @@ class WorkbookRequest:
             interests=tuple(self.interests),
             family_photos=tuple(self.family_photos),
             seed=self.seed,
+            # Validated here rather than at the CLI alone, so the API and the
+            # web form get the same error instead of an unknown key silently
+            # meaning "no centre spread" three layers down.
+            page_format=get_format(self.page_format).key,
         )
 
 
@@ -144,7 +151,7 @@ class WorkbookBuilder:
                 prompt = self.prompt_generator.render(draft.image_brief, context)
             else:
                 prompt = ""
-            page = draft.to_page(planned.number, prompt)
+            page = draft.to_page(planned.number, prompt, span=planned.span)
             pages.append(page)
             if draft.image_brief is not None:
                 prompts[page.prompt_filename] = self.prompt_generator.prompt_file(prompt)

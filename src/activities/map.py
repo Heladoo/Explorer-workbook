@@ -47,6 +47,12 @@ class MapActivity(ActivityGenerator):
     max_age = 12
     weight = 10
     energy = "calm"
+    #: The map is the one page in the book that is *about* extent — a whole
+    #: journey laid end to end — so it is the page that most repays being
+    #: twice as wide. It also happens to be the safest activity to widen:
+    #: there is no grid to re-tune and no working area to overflow, just one
+    #: illustration that gets a landscape frame instead of a portrait one.
+    spread = True
 
     def supports(self, context: WorkbookContext) -> bool:
         if not super().supports(context):
@@ -76,13 +82,33 @@ class MapActivity(ActivityGenerator):
                 ),
                 elements=tuple(itinerary),
                 render_mode=RenderMode.ILLUSTRATION,
-                composition=(
-                    "A single full-page map view, every stop labelled in order along one "
-                    "continuous path, simple and easy for a child to trace with a finger."
-                ),
+                composition=self._composition(planned),
             ),
             metadata={
                 "itinerary": list(itinerary),
                 "stop_count": len(itinerary),
             },
+        )
+
+    def _composition(self, planned: PlannedPage) -> str:
+        """Portrait page or landscape centre spread — the prompt must know.
+
+        Not cosmetic: an image model given no aspect guidance draws a squarish
+        composition, which letterboxes badly into a 2:1 spread and wastes
+        exactly the extra width the spread exists to provide. The instruction
+        to keep the route clear of the vertical centre is the same concern in
+        physical form — that line is the fold, and a stop label printed across
+        it lands in the staple.
+        """
+        if not planned.is_spread:
+            return (
+                "A single full-page map view, every stop labelled in order along one "
+                "continuous path, simple and easy for a child to trace with a finger."
+            )
+        return (
+            "A wide landscape double-page map, twice as wide as it is tall, filling "
+            "the full spread. Every stop labelled in order along one continuous path "
+            "running left to right, simple and easy for a child to trace with a "
+            "finger. Keep the path's stops and labels away from the exact vertical "
+            "centre, which is the fold of the booklet."
         )

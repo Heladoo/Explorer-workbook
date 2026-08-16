@@ -14,6 +14,7 @@ from pathlib import Path
 from src import fonts
 from src.models.context import WorkbookContext
 from src.models.workbook import Workbook
+from src.rendering.formats import PageFormat, get_format
 from src.rendering.layouts import LayoutContext, build_body
 from src.rendering.templates import TemplateSet
 from src.strings import strings_for
@@ -44,7 +45,13 @@ def _data_uri(path: Path | str) -> str:
 
 
 class HtmlRenderer:
-    """Workbook + context → one self-contained HTML file, print styled for A4."""
+    """Workbook + context → one self-contained HTML file, print styled.
+
+    The page format (A5 booklet by default, A4 portrait on request) selects a
+    small geometry stylesheet that is emitted *ahead* of ``book.css``; every
+    rule in ``book.css`` sizes itself against the tokens that file declares.
+    See :mod:`src.rendering.formats`.
+    """
 
     name = "html"
 
@@ -55,6 +62,7 @@ class HtmlRenderer:
         include_contents: bool = True,
         css_filename: str = "book.css",
         ink_saver: bool = False,
+        page_format: str | PageFormat | None = None,
     ) -> None:
         self.templates = TemplateSet(template_dir)
         self.include_contents = include_contents
@@ -62,6 +70,7 @@ class HtmlRenderer:
         #: Flattens the brand palette to grayscale for cheap home printing —
         #: see the ``.ink-saver`` token overrides in book.css.
         self.ink_saver = ink_saver
+        self.page_format = get_format(page_format)
 
     def render(
         self,
@@ -106,8 +115,9 @@ class HtmlRenderer:
         pages = "\n".join(
             self.templates.render(
                 "page",
-                page_class=f"page-{page.type}",
+                page_class=self._page_class(page),
                 number=page.number,
+                number_label=self._page_label(page),
                 title=page.title,
                 instructions=page.instructions,
                 instructions_edit_class="" if page.type in _INSTRUCTIONS_LOCKED else " t-edit",
@@ -130,10 +140,78 @@ class HtmlRenderer:
             direction=strings.direction,
             title=workbook.title,
             fonts=self.templates.font_faces(scripts=needed_scripts),
-            css=self.templates.read_asset(self.css_filename),
+            css=self._css(strings.direction),
             body_class="ink-saver" if self.ink_saver else "",
             contents=contents,
             pages=pages,
+        )
+
+    # -- internals -------------------------------------------------------
+
+    def _page_class(self, page) -> str:
+        """``page-<type>``, plus ``page-spread`` for the centre spread.
+
+        ``page-spread`` is what attaches the named ``@page spread`` rule (see
+        page-a5.css), so this class is load-bearing geometry rather than a
+        styling hook — which is also why it is only emitted for a format that
+        declares that rule. Marking a page as a spread in a stylesheet that
+        has no ``@page spread`` would leave ``page: spread`` dangling and the
+        page would silently print at the normal size with a layout built for
+        twice the width.
+        """
+        classes = [f"page-{page.type}"]
+        if page.is_spread and self.page_format.allows_spread:
+            classes.append("page-spread")
+        return " ".join(classes)
+
+    @staticmethod
+    def _page_label(page) -> str:
+        """What the page-number chip prints: ``6`` — or ``6-7`` for a spread.
+
+        A spread really is two of the reader's pages, and the numbers on
+        either side of it jump accordingly, so printing only the first would
+        make the book look like it skips a page.
+        """
+        if not page.is_spread:
+            return str(page.number)
+        return f"{page.number}-{page.number + page.span - 1}"
+
+    def _css(self, direction: str) -> str:
+        """Format geometry, then every other rule, then the binding override."""
+        return "\n".join(
+            part
+            for part in (
+                self.templates.read_asset(self.page_format.css_filename),
+                self.templates.read_asset(self.css_filename),
+                self._binding_css(direction),
+            )
+            if part
+        )
+
+    def _binding_css(self, direction: str) -> str:
+        """Flip the inner/outer margins for a right-bound (RTL) book.
+
+        ``@page :left`` and ``:right`` mean the even and odd sheets of the
+        print run — a physical property, and Chromium assigns them from page
+        order alone with no regard for the document's ``dir``. Which of those
+        two carries the *gutter*, though, is not physical: it depends on which
+        edge the book is bound on, and a Hebrew book is bound on the right. It
+        is a mirror image of a Latin one, so page 1 is the left-hand page of
+        the first spread and its inner margin is on its right.
+
+        The format stylesheets are written for a left-bound book, so an RTL
+        book gets these two rules appended to swap them back. Without it a
+        Hebrew booklet puts its wider margin on the trimmed outer edge and its
+        narrow one into the staple.
+        """
+        if direction != "rtl":
+            return ""
+        outer = f"{self.page_format.margin_outer_mm:g}mm"
+        inner = f"{self.page_format.margin_inner_mm:g}mm"
+        return (
+            "/* Right-bound (RTL) book: the gutter changes sides. */\n"
+            f"@page :left {{ margin-left: {inner}; margin-right: {outer}; }}\n"
+            f"@page :right {{ margin-left: {outer}; margin-right: {inner}; }}\n"
         )
 
     def _contents(self, workbook: Workbook, strings) -> str:

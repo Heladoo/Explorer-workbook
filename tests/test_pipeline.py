@@ -69,7 +69,11 @@ def test_workbook_json_has_the_documented_shape(tmp_path, builder):
     assert data["destination"] == "Kfar Hanokdim"
     assert data["metadata"]["schema_version"] == SCHEMA_VERSION
     assert data["metadata"]["knowledge_source"] == "file"
+    # Kfar Hanokdim has no itinerary, so no route map and therefore no centre
+    # spread: every page is one slot and the two counts coincide. A book with
+    # a spread is covered in test_booklet.py, where they deliberately don't.
     assert data["page_count"] == len(data["pages"])
+    assert all(page.get("span", 1) == 1 for page in data["pages"])
 
     for index, page in enumerate(data["pages"], start=1):
         assert page["number"] == index

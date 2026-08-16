@@ -12,7 +12,8 @@ dependencies = []
 
 [project.optional-dependencies]
 # Only needed for `--pdf`; `--html` and everything else is stdlib-only.
-pdf = ["playwright>=1.40,<2"]
+# playwright prints the pages; pypdf imposes them onto fold-and-staple sheets.
+pdf = ["playwright>=1.40,<2", "pypdf>=4,<7"]
 dev = ["pytest>=7,<10"]
 
 [tool.setuptools.packages.find]

@@ -56,6 +56,15 @@ class ActivityGenerator(ABC):
     pinned: int | None = None
     energy: str = "calm"
     enabled: bool = True
+    #: ``True`` asks for the double-page centre spread: one landscape page the
+    #: reader sees as the two facing pages at the exact middle of the booklet.
+    #:
+    #: A *request*, not a requirement. The centre spread only exists in a
+    #: folded format whose page count actually has a centre (see
+    #: ``PageFormat.allows_spread`` and the planner), so an activity marked
+    #: this way still has to work as an ordinary single page — in the A4
+    #: format it simply competes for a body slot like anything else.
+    spread: bool = False
     #: Knowledge categories the activity needs; used by :meth:`supports`.
     required_knowledge: tuple[str, ...] = ()
 
