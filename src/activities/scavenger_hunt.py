@@ -66,6 +66,29 @@ def _spot_eligible(symbol: Symbol) -> bool:
     return "pack" not in (symbol.facets.roles if symbol.facets else ())
 
 
+#: How many "animals" one sheet may show. The universal pool's animal topic
+#: is the deepest of any (16 of 45 entries), and destination wildlife sights
+#: lean the same way — left unchecked, an unlucky draw reads as a zoo
+#: checklist rather than the "mostly everyday things" hunt the module
+#: docstring describes.
+_MAX_ANIMALS = 3
+
+
+def _is_animal(symbol: Symbol) -> bool:
+    """Whether ``symbol`` counts against ``_MAX_ANIMALS``.
+
+    A symbol minted fresh from a destination phrase with no library match at
+    all (``facets is None``) is never counted here — every wildlife-sourced
+    local symbol across every curated destination pack resolves to a real
+    library entry today (spot-checked across Pelion, Kfar Hanokdim and
+    Prague), so this only misses a genuinely new wildlife phrase with
+    committed art but no library registration, which would simply not be
+    capped — a narrower gap than guessing "animal" from a bare English
+    phrase with no facets to check at all.
+    """
+    return symbol.facets is not None and symbol.facets.topic == "animals"
+
+
 @register_activity
 class ScavengerHuntActivity(ActivityGenerator):
     """A picture checklist of real things to find, mostly everyday ones."""
@@ -173,10 +196,97 @@ class ScavengerHuntActivity(ActivityGenerator):
             universal.extend(_sample(context, rest, remaining, f"{key}:universal:rest"))
 
         chosen = [*universal, *local]
+        chosen = self._cap_animals(context, key, chosen, local_keys, local_pool, findable)
         # Shuffle so the destination sights are scattered through the grid
         # rather than sitting in a block at the end.
         context.rng_for(f"{key}:order").shuffle(chosen)
         return tuple(chosen)
+
+    def _cap_animals(
+        self,
+        context: WorkbookContext,
+        key: str,
+        chosen: list[Symbol],
+        local_keys: set[str],
+        *fallback_pools: tuple[Symbol, ...],
+    ) -> list[Symbol]:
+        """Swap any animal past the third for a non-animal alternative.
+
+        Runs as a correction after the sheet is otherwise full, rather than
+        constraining the selection above from scratch — every guarantee that
+        selection already provides for a non-animal symbol (eligibility, no
+        duplicates) is exactly as true for its replacement, since
+        replacements are drawn from the very same pools.
+
+        Trims universal-pool animals first, local ones only if that alone
+        isn't enough: a local wildlife sight is the scarce, trip-specific
+        ingredient the class docstring calls out ("a few come from the
+        destination so the page still belongs to this trip"), while the
+        universal pool's animal topic is deep (16 of 45 entries) and always
+        has a same-tier non-animal alternative to swap in instead. Capping
+        the *count* without this bias risks trimming exactly the sights that
+        make the sheet belong to this destination in the first place — a
+        real case: a two-sight, both-animals wildlife pool losing both to a
+        larger crop of universal animals it happened to be sampled next to.
+
+        Falls back to keeping an extra animal rather than shrinking the
+        sheet if the non-animal pools ever come up short — "the sheet is
+        always full" is the harder guarantee (see
+        ``test_the_sheet_is_always_full``); in practice the universal pool
+        alone has ~29 non-animal entries, far more than any sheet needs, so
+        this should never bite.
+        """
+        animal_count = sum(1 for symbol in chosen if _is_animal(symbol))
+        if animal_count <= _MAX_ANIMALS:
+            return chosen
+
+        universal_animals = [
+            symbol for symbol in chosen if _is_animal(symbol) and symbol.key not in local_keys
+        ]
+        local_animals = [
+            symbol for symbol in chosen if _is_animal(symbol) and symbol.key in local_keys
+        ]
+
+        to_drop = animal_count - _MAX_ANIMALS
+        drop_universal = min(to_drop, len(universal_animals))
+        drop_keys = set(
+            context.sample(
+                tuple(symbol.key for symbol in universal_animals),
+                drop_universal,
+                key=f"{key}:animal_cap:universal",
+            )
+        )
+
+        still_to_drop = to_drop - drop_universal
+        if still_to_drop > 0:
+            drop_keys |= set(
+                context.sample(
+                    tuple(symbol.key for symbol in local_animals),
+                    still_to_drop,
+                    key=f"{key}:animal_cap:local",
+                )
+            )
+
+        kept = [symbol for symbol in chosen if symbol.key not in drop_keys]
+
+        used_keys = {symbol.key for symbol in kept}
+        by_key: dict[str, Symbol] = {}
+        for pool in fallback_pools:
+            for symbol in pool:
+                if not _is_animal(symbol) and symbol.key not in used_keys:
+                    by_key.setdefault(symbol.key, symbol)
+        replacements = _sample(
+            context, tuple(by_key.values()), len(drop_keys), f"{key}:animal_cap:replace"
+        )
+
+        if len(replacements) < len(drop_keys):
+            dropped = [symbol for symbol in chosen if symbol.key in drop_keys]
+            have = {symbol.key for symbol in replacements}
+            replacements += [s for s in dropped if s.key not in have][
+                : len(drop_keys) - len(replacements)
+            ]
+
+        return kept + replacements
 
 
 def _sample(

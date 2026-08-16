@@ -75,9 +75,7 @@ STRINGS: dict[str, object] = {
     "pdf.name_label": "החוברת הזאת שייכת ל:",
     "pdf.illustration": "כאן יבוא האיור",
     "pdf.art_note": "צרו את התמונה לפי קובץ ההנחיות, ואז שימו אותה כאן.",
-    "pdf.draw_here": "כאן מציירים",
     "pdf.your_own": "משהו משלכם",
-    "pdf.match_gutter": "מתחו קווים כאן",
     "pdf.panel_top": "תמונה 1",
     "pdf.panel_bottom": "תמונה 2",
     "toc.column_number": "#",
@@ -181,7 +179,6 @@ STRINGS: dict[str, object] = {
         "הקיפו את התשובה שנראית לכם נכונה. יש {count} שאלות — אם נתקעתם, שאלו "
         "מבוגר."
     ),
-    "quiz.q_wildlife": "איזו חיה אפשר לפגוש ב{destination}?",
     "quiz.q_landmark": "מה מהדברים האלה אפשר לבקר ב{destination}?",
     "quiz.q_food": "מה מהדברים האלה הוא אוכל מקומי ב{destination}?",
     "quiz.q_activity": "מה מהדברים האלה אפשר לעשות ב{destination}?",
@@ -190,7 +187,6 @@ STRINGS: dict[str, object] = {
     "quiz.q_language": "באיזו שפה מדברים ב{country}?",
     "quiz.q_continent": "באיזו יבשת נמצאת {country}?",
     "quiz.q_currency": "באיזה כסף משתמשים ב{country}?",
-    "quiz.distractor_wildlife": ["פינגווין", "דוב קוטב", "קנגורו", "טוקן", "ולרוס"],
     "quiz.distractor_landmark": [
         "טירת קרח",
         "מסלול שיגור לחלל",

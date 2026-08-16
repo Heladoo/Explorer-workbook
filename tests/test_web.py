@@ -236,6 +236,42 @@ def test_an_unknown_destination_says_so_kindly(site):
     assert "know this place well yet" in body  # apostrophes arrive escaped
 
 
+def test_a_possible_english_leak_is_not_shown_to_the_parent(site):
+    """An English itinerary inside a Hebrew book legitimately shows those
+    English stop names on the map page (src/qa.py has no way to translate
+    free text someone typed) — that reads as "your book is broken" to a
+    parent with no way to act on it, so the result page must not say so.
+    The check still runs (see the analytics assertion below), it just isn't
+    surfaced here. See _render_result in src/web.py."""
+    _, body = site.submit(
+        [
+            ("destination", "Pelion"),
+            ("language", "he"),
+            ("itinerary", "Volos\nMakrinitsa\nMilies\nTsagarada"),
+        ]
+    )
+    assert "English" not in body
+    assert "slipped in" not in body
+
+
+def test_a_possible_english_leak_is_tracked_for_later_triage(site):
+    """Not shown on the result page (see the test above), but not thrown
+    away either — recorded on the book_created event so a recurring pattern
+    (this destination, this language) is something a developer can actually
+    find and fix. See Report.qa_leaks in src/analytics.py."""
+    site.submit(
+        [
+            ("destination", "Pelion"),
+            ("language", "he"),
+            ("itinerary", "Volos\nMakrinitsa\nMilies\nTsagarada"),
+        ]
+    )
+    events_path = site.root / ".analytics" / "events.jsonl"
+    events = [json.loads(line) for line in events_path.read_text(encoding="utf-8").splitlines()]
+    created = next(event for event in events if event["name"] == "book_created")
+    assert created["properties"]["language_qa_leaks"] > 0
+
+
 # -- photos ---------------------------------------------------------------
 
 

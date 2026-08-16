@@ -91,6 +91,18 @@ class LayoutContext:
             note=note or self.strings.text("pdf.art_note"),
         )
 
+    def blank_art(self) -> str:
+        """An empty frame, no label or note.
+
+        For a working area the *child* fills in by hand — a drawing page —
+        rather than one waiting on generated artwork. ``art()``'s label and
+        note both talk about a prompt file that page never had one of
+        (``drawing`` carries no ``image_brief``, so its reference line was
+        always empty too); the copy read as instructions in the middle of
+        what is supposed to be a blank page.
+        """
+        return self.templates.render("art_blank")
+
     def text(self, key: str, **kwargs: str) -> str:
         return self.strings.text(key, **kwargs)
 
@@ -125,10 +137,9 @@ def _cover(layout_context: LayoutContext, page: Page) -> str:
 
 @layout("drawing")
 def _drawing(layout_context: LayoutContext, page: Page) -> str:
-    return layout_context.templates.render(
-        "body_default",
-        art=layout_context.art(page, label=layout_context.text("pdf.draw_here")),
-    )
+    """A blank frame for the child to draw in — no generated artwork, no
+    placeholder copy explaining how to make one (see ``blank_art``)."""
+    return layout_context.templates.render("body_default", art=layout_context.blank_art())
 
 
 @layout("maze")
@@ -389,7 +400,11 @@ def _matching(layout_context: LayoutContext, page: Page) -> str:
     animals and their silhouettes" never gets right.
 
     The page carries no words inside the working area at all: a pre-reader can
-    do it, and it needs no translation.
+    do it, and it needs no translation. (The gutter between the columns used
+    to carry a small "draw your lines across here" note — dropped as
+    unnecessary instruction-in-the-middle-of-the-page; the empty gutter
+    itself is still exactly the space a child draws a connecting line across,
+    self-explanatory the same way the drawing page's blank frame is.)
     """
     by_key = {symbol.key: symbol for symbol in page.symbols}
     shadow_order = [
@@ -412,7 +427,6 @@ def _matching(layout_context: LayoutContext, page: Page) -> str:
         # gets no such fallback — the original *is* the answer.
         left=cells(page.symbols, layout_context.symbol_cutouts, layout_context.symbol_images),
         right=cells(shadow_order, layout_context.symbol_shadows),
-        gutter_note=layout_context.text("pdf.match_gutter"),
     )
 
 
