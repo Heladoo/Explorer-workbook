@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -32,9 +33,59 @@ def test_success_criteria_produces_the_three_artifacts(tmp_path, builder):
 
     assert artifacts.workbook_json.exists()
     assert artifacts.workbook_md.exists()
-    assert len(artifacts.prompt_files) == result.workbook.page_count
-    for page in result.workbook.pages:
+    # Only cover and coloring pages get their own prompt file — every other
+    # page carries no illustration of its own (see src/pipeline.py) — plus
+    # one shared doodle/grid sheet per book.
+    illustrated = [page for page in result.workbook.pages if page.image_brief is not None]
+    assert illustrated
+    for page in illustrated:
         assert (artifacts.output_dir / "prompts" / page.prompt_filename).exists()
+    for page in result.workbook.pages:
+        if page.image_brief is None:
+            assert not (artifacts.output_dir / "prompts" / page.prompt_filename).exists()
+    assert (artifacts.output_dir / "prompts" / "doodle_grid.md").exists()
+
+
+def test_symbol_prompt_file_links_are_never_broken(tmp_path, builder):
+    """A symbol's ``prompt_file`` must name a file that actually exists.
+
+    Regression test: ``SymbolBrief.to_dict()`` used to claim a per-book
+    ``prompts/symbols/<key>.md`` that nothing ever wrote, then — mid-fix —
+    would have claimed a repo-root ``sources/symbols/prompts/<key>.md`` that
+    only exists for the library's always-findable pool, not every ``ready``
+    symbol (a "regional"/"local" one got its art some other way and was never
+    machine-prompted). The field must be absent rather than dangling for those.
+    """
+    result = _generate(
+        tmp_path,
+        builder,
+        destination="Kfar Hanokdim",
+        children=["Noa", "Amit"],
+        ages=[5, 7],
+    )
+    symbols = [symbol for page in result.workbook.pages for symbol in page.symbols]
+    assert symbols, "this destination should produce at least one symbol-bearing page"
+    for symbol in symbols:
+        prompt_file = symbol.to_dict().get("prompt_file")
+        if prompt_file is not None:
+            assert Path(prompt_file).is_file(), f"{symbol.key}: {prompt_file}"
+
+
+def test_no_doodle_grid_prompt_once_the_destination_already_has_a_sheet(
+    tmp_path, builder, monkeypatch
+):
+    """A destination's doodle sheet is a one-time, hand-reviewed source for
+    its symbols (see src/decor.py) — once it exists, books stop re-asking."""
+    from src import decor
+
+    decor_dir = tmp_path / "decor" / "Kfar Hanokdim"
+    decor_dir.mkdir(parents=True)
+    (decor_dir / "doodle kfar-hanokdim.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+    monkeypatch.setattr(decor, "DEFAULT_DECOR_ROOT", tmp_path / "decor")
+
+    result = _generate(tmp_path, builder, destination="Kfar Hanokdim")
+    assert "doodle_grid.md" not in result.bundle.prompts
+    assert not (result.artifacts.output_dir / "prompts" / "doodle_grid.md").exists()
 
 
 def test_workbook_json_has_the_documented_shape(tmp_path, builder):
@@ -48,23 +99,23 @@ def test_workbook_json_has_the_documented_shape(tmp_path, builder):
 
     for index, page in enumerate(data["pages"], start=1):
         assert page["number"] == index
-        for field in (
-            "type",
-            "title",
-            "instructions",
-            "image_prompt",
-            "educational_goal",
-            "estimated_age",
-            "prompt_file",
-        ):
+        for field in ("type", "title", "instructions", "educational_goal", "estimated_age", "prompt_file"):
             assert page[field], f"page {index} has an empty {field}"
         assert page["prompt_file"] == f"prompts/{index:02d}_{page['type']}.md"
-        assert page["metadata"]["image_brief"]["render_mode"]
+        # Only cover/coloring pages carry an illustration brief and prompt —
+        # every other type is text/puzzle-only now (see src/pipeline.py).
+        if page["metadata"].get("image_brief"):
+            assert page["image_prompt"]
+            assert page["metadata"]["image_brief"]["render_mode"]
+        else:
+            assert page["image_prompt"] == ""
 
 
 def test_prompt_files_match_the_prompts_in_the_json(tmp_path, builder):
     result = _generate(tmp_path, builder, destination="Prague", children=["Noa"], ages=[6])
     for page in result.workbook.pages:
+        if page.image_brief is None:
+            continue
         path = result.artifacts.output_dir / "prompts" / page.prompt_filename
         assert path.read_text(encoding="utf-8").strip() == page.image_prompt.strip()
 
@@ -80,7 +131,8 @@ def test_markdown_documents_every_required_field(tmp_path, builder):
         assert f"### Page {page.number} — {page.title}" in markdown
         assert page.educational_goal in markdown
         assert page.instructions.splitlines()[0] in markdown
-        assert f"prompts/{page.prompt_filename}" in markdown
+        if page.image_brief is not None:
+            assert f"prompts/{page.prompt_filename}" in markdown
         assert page.estimated_age in markdown
     assert "Destination knowledge used" in markdown
     assert "$" not in markdown, "an unsubstituted template placeholder leaked through"
@@ -123,7 +175,15 @@ def test_a_different_destination_produces_different_content(builder):
     city_text = city.bundle.json
     assert "camel" in desert_text.lower()
     assert "camel" not in city_text.lower()
-    assert "Charles Bridge" in city_text
+    prague_landmarks = (
+        "Charles Bridge",
+        "Prague Castle",
+        "the Astronomical Clock",
+        "Old Town Square",
+        "Petrin Tower",
+        "the Vltava river",
+    )
+    assert any(landmark in city_text for landmark in prague_landmarks)
 
 
 def test_an_unknown_destination_still_produces_a_workbook(builder):
@@ -190,7 +250,9 @@ def test_page_count_is_respected_end_to_end(builder):
         destination="Kfar Hanokdim", page_count=20, write=False, builder=builder
     )
     assert result.workbook.page_count == 20
-    assert len(result.bundle.prompts) == 20
+    illustrated = [page for page in result.workbook.pages if page.image_brief is not None]
+    page_prompts = [name for name in result.bundle.prompts if name != "doodle_grid.md"]
+    assert len(page_prompts) == len(illustrated)
 
 
 def test_request_builds_children_from_names_and_ages():
@@ -227,7 +289,10 @@ def test_cli_writes_the_artifacts(tmp_path, capsys):
 
     assert exit_code == 0
     assert (tmp_path / "cli" / "workbook.json").exists()
-    assert len(list((tmp_path / "cli" / "prompts").glob("*.md"))) == 8
+    data = json.loads((tmp_path / "cli" / "workbook.json").read_text(encoding="utf-8"))
+    illustrated = sum(1 for page in data["pages"] if page["metadata"].get("image_brief"))
+    # One prompt file per illustrated page, plus the shared doodle/grid sheet.
+    assert len(list((tmp_path / "cli" / "prompts").glob("*.md"))) == illustrated + 1
     assert "Kfar Hanokdim" in output
 
 

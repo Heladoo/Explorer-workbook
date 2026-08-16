@@ -14,9 +14,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from string import Template
+from typing import Sequence
 
 from src.models.context import WorkbookContext
-from src.models.page import ImageBrief, RenderMode
+from src.models.page import ImageBrief, RenderMode, SymbolBrief
 from src.strings import strings_for
 
 DEFAULT_TEMPLATE_DIR = Path(__file__).resolve().parents[1] / "templates"
@@ -83,6 +84,12 @@ class PromptGenerator:
         self._style_template = Template(
             (self.template_dir / "style_guide.tmpl").read_text(encoding="utf-8")
         )
+        self._symbol_template = Template(
+            (self.template_dir / "symbol_prompt.tmpl").read_text(encoding="utf-8")
+        )
+        self._doodle_grid_template = Template(
+            (self.template_dir / "doodle_grid_prompt.tmpl").read_text(encoding="utf-8")
+        )
 
     def render(self, brief: ImageBrief, context: WorkbookContext) -> str:
         """Return the full prompt for one page, always in English."""
@@ -107,6 +114,38 @@ class PromptGenerator:
         sections.append(self._style_block(brief, context, english))
 
         return "\n\n".join(section.strip() for section in sections) + "\n"
+
+    def render_symbol(self, symbol: SymbolBrief, context: WorkbookContext) -> str:
+        """Return the prompt for one small standalone icon.
+
+        Deliberately *not* the page style contract: a symbol carries no
+        destination, no recurring characters and no A4 page geometry. One
+        subject, one square picture, nothing else — which is both what an image
+        model reliably gets right and what makes a universal symbol's drawing
+        identical in every book, so it can be generated once and cached.
+        """
+        subject = self._englishize(symbol.subject, self._term_map(context))
+        return self._symbol_template.substitute(
+            subject=subject,
+            mode_style=self.style.mode_style(RenderMode.COLORING),
+            age_band=context.age_band,
+        ).rstrip() + "\n"
+
+    def render_doodle_grid(self, subjects: Sequence[str], context: WorkbookContext) -> str:
+        """Return the prompt for one sheet of many small local doodles.
+
+        Not page-bound and not per-symbol: one request per book for a whole
+        sheet, which can be split into individual symbol drawings later (see
+        the symbol-authoring skill) or printed as-is as a coloring page.
+        """
+        english = self._term_map(context)
+        listed = "\n".join(f"• {self._englishize(subject, english)}" for subject in subjects)
+        return self._doodle_grid_template.substitute(
+            destination=context.destination,
+            subject_list=listed,
+            mode_style=self.style.mode_style(RenderMode.COLORING),
+            age_band=context.age_band,
+        ).rstrip() + "\n"
 
     def prompt_file(self, prompt: str) -> str:
         """The body of ``prompts/NN_type.md`` — the prompt and nothing else."""

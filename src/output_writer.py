@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.pipeline import WorkbookBundle
+from src.symbol_art import artwork_for
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +41,17 @@ def write_bundle(
     html: bool = False,
     pdf: bool = False,
     images: dict[int, Path] | None = None,
+    symbol_images: dict[str, Path] | None = None,
+    ink_saver: bool = False,
 ) -> WrittenArtifacts:
     """Write ``workbook.json``, ``workbook.md`` and ``prompts/*.md``.
 
     ``html`` and ``pdf`` additionally lay the book out for print. ``images``
     maps page numbers to illustration files; pages without one get a
-    placeholder frame naming their prompt file.
+    placeholder frame naming their prompt file. ``symbol_images`` maps a symbol
+    slug to its drawing, for pages laid out as a table of pictures. ``ink_saver``
+    flattens the print layout's brand colors to grayscale, for cheap home
+    printing.
     """
     root = Path(output_dir)
     prompts_dir = root / "prompts"
@@ -59,7 +65,9 @@ def write_bundle(
 
     written: list[Path] = []
     for filename, content in sorted(bundle.prompts.items()):
+        # Symbol prompts live in ``prompts/symbols/``, so a name may be nested.
         path = prompts_dir / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
         written.append(path)
 
@@ -70,12 +78,26 @@ def write_bundle(
     if html or pdf:
         if bundle.context is None:
             raise ValueError("laying the book out for print needs the bundle's context")
+        # Symbol artwork is checked into the repo, not generated per book, so
+        # the print layout picks it up on every run — not only on the runs that
+        # passed ``--generate-images``. Anything the caller generated during
+        # *this* run is layered on top.
+        art = artwork_for(bundle.workbook, overrides=symbol_images)
         if pdf:
             # The PDF renderer writes the HTML it prints from, so one pass covers both.
+            from src.rendering.html_renderer import HtmlRenderer
             from src.rendering.pdf_renderer import PdfRenderer
 
-            pdf_path = PdfRenderer(keep_html=True).render(
-                bundle.workbook, bundle.context, images=images, output_path=root / "workbook.pdf"
+            pdf_path = PdfRenderer(
+                HtmlRenderer(ink_saver=ink_saver, include_contents=False), keep_html=True
+            ).render(
+                bundle.workbook,
+                bundle.context,
+                images=images,
+                symbol_images=art.images,
+                symbol_cutouts=art.cutouts,
+                symbol_shadows=art.silhouettes,
+                output_path=root / "workbook.pdf",
             )
             html_path = root / "workbook.html"
         else:
@@ -83,7 +105,14 @@ def write_bundle(
 
             html_path = root / "workbook.html"
             html_path.write_text(
-                HtmlRenderer().render(bundle.workbook, bundle.context, images=images),
+                HtmlRenderer(ink_saver=ink_saver).render(
+                    bundle.workbook,
+                    bundle.context,
+                    images=images,
+                    symbol_images=art.images,
+                    symbol_cutouts=art.cutouts,
+                    symbol_shadows=art.silhouettes,
+                ),
                 encoding="utf-8",
             )
 

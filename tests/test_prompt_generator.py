@@ -24,12 +24,20 @@ def generator() -> PromptGenerator:
 
 
 def _all_prompts(context, generator) -> list[tuple[str, str]]:
+    """One rendered prompt per activity that actually asks for an illustration.
+
+    Most activities carry no ``image_brief`` at all now — only cover and
+    coloring pages do (see ``src/pipeline.py``) — so activities with nothing
+    to render are skipped rather than exercised here.
+    """
     prompts = []
     for activity in available_activities():
         planned = PlannedPage(
             number=2, activity_type=activity.activity_type, difficulty="medium", focus="wildlife"
         )
         draft = activity.generate(context, planned)
+        if draft.image_brief is None:
+            continue
         prompts.append((activity.activity_type, generator.render(draft.image_brief, context)))
     return prompts
 
@@ -127,6 +135,20 @@ def test_a_different_style_guide_changes_every_prompt(generator, context):
     brief = ImageBrief(subject="a lighthouse")
     assert "woodcut prints throughout" in house_style.render(brief, context)
     assert "woodcut" not in generator.render(brief, context)
+
+
+def test_doodle_grid_lists_every_subject(generator, context):
+    prompt = generator.render_doodle_grid(["a camel", "a fig tree", "a market stall"], context)
+    for subject in ("a camel", "a fig tree", "a market stall"):
+        assert f"• {subject}" in prompt
+    assert "coloring page" in prompt
+    assert "cropped into its own individual symbol drawing" in prompt
+    assert "No grid lines" in prompt
+
+
+def test_doodle_grid_names_the_destination(generator, context):
+    prompt = generator.render_doodle_grid(["a camel"], context)
+    assert context.destination in prompt
 
 
 def test_prompt_file_contains_only_the_prompt(generator, context):

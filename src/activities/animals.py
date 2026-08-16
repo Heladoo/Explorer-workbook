@@ -30,6 +30,9 @@ class WildlifeFactsActivity(ActivityGenerator):
     weight = 14
     energy = "calm"
     required_knowledge = ("wildlife",)
+    # Paused in favour of more coloring pages while we gather experience with
+    # the book. Flip back to True to bring it back into rotation.
+    enabled = False
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
         count = _ANIMAL_COUNT[planned.difficulty]

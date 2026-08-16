@@ -22,9 +22,11 @@ import logging
 import os
 import urllib.error
 import urllib.request
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable, Iterable, Protocol, Sequence
 
+from src.countries import country_for
 from src.models.context import KNOWLEDGE_FIELDS, DestinationKnowledge, slugify
 
 logger = logging.getLogger(__name__)
@@ -54,9 +56,14 @@ class KnowledgeProvider(Protocol):
 class FileKnowledgeProvider:
     """Loads curated destination packs from a directory of JSON files.
 
-    A pack may be translated by adding ``<slug>.<language>.json`` beside it —
-    ``kfar-hanokdim.he.json``. The translated file is preferred when the
-    workbook language matches, and the base pack is the fallback.
+    A base pack (``pelion.json``) holds the full English structure. A
+    translation is a small overlay beside it — ``pelion.he.json`` — keyed by
+    the English phrase it translates rather than duplicating every category
+    array, so translating a pack means writing a handful of key/value pairs,
+    not retyping the whole thing. See ``_merge_translation()`` for the exact
+    shape. This mirrors how the symbol library (``data/symbols/library.json``)
+    keeps English content in one place and lets other languages be thin
+    overlays over it, joined by a shared key.
     """
 
     name = "file"
@@ -76,73 +83,108 @@ class FileKnowledgeProvider:
             return None
         return DestinationKnowledge.from_dict(pack, source=self.name)
 
-    def _find_pack(self, destination: str, language: str = "en") -> dict[str, Any] | None:
-        if not self.data_dir.is_dir():
-            return None
-        wanted = slugify(destination)
-        base = (language or "en").split("-")[0].lower()
-        matches: dict[str, dict[str, Any]] = {}
+    def _base_packs(self) -> Iterable[tuple[Path, dict[str, Any]]]:
+        """Every loadable base pack, paired with its path.
 
+        A base pack's filename has no extra dot before ``.json`` — a
+        translation fragment's does (``pelion.he.json``), which is what
+        distinguishes the two without reading either file's content.
+        """
+        if not self.data_dir.is_dir():
+            return
         for path in sorted(self.data_dir.glob("*.json")):
+            if "." in path.stem:
+                continue
             try:
-                data = json.loads(path.read_text(encoding="utf-8"))
+                yield path, json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
                 logger.warning("skipping unreadable destination pack %s: %s", path.name, exc)
-                continue
-            names = [data.get("destination", path.stem), *data.get("aliases", [])]
-            if not any(slugify(str(name)) == wanted for name in names if name):
-                continue
-            # "kfar-hanokdim.he" -> "he"; a bare "kfar-hanokdim" is the base pack.
-            suffix = path.stem.rsplit(".", 1)
-            pack_language = str(data.get("language", suffix[1] if len(suffix) > 1 else "en"))
-            matches.setdefault(pack_language.lower(), data)
 
-        if not matches:
+    def _find_base_pack(self, destination: str) -> tuple[Path, dict[str, Any]] | None:
+        wanted = slugify(destination)
+        for path, data in self._base_packs():
+            names = [data.get("destination", path.stem), *data.get("aliases", [])]
+            if any(slugify(str(name)) == wanted for name in names if name):
+                return path, data
+        return None
+
+    def _find_pack(self, destination: str, language: str = "en") -> dict[str, Any] | None:
+        found = self._find_base_pack(destination)
+        if found is None:
             return None
-        if base in matches:
-            return matches[base]
-        if base != "en":
+        path, data = found
+
+        base = (language or "en").split("-")[0].lower()
+        if base == "en":
+            return data
+
+        fragment_path = self.data_dir / f"{path.stem}.{base}.json"
+        if not fragment_path.is_file():
             logger.info(
-                "no %s pack for %r; using %s and localizing only the page copy",
-                base, destination, ", ".join(sorted(matches)),
+                "no %s pack for %r; using en and localizing only the page copy", base, destination
             )
-        return matches.get("en") or next(iter(matches.values()))
+            return data
+        try:
+            fragment = json.loads(fragment_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning("skipping unreadable translation %s: %s", fragment_path.name, exc)
+            return data
+        return _merge_translation(data, fragment)
 
     def known_destinations(self) -> tuple[str, ...]:
         """Destination names that have a curated pack, for CLI help and tests.
 
-        Translated packs name the same destination, so they are counted once.
+        Translation fragments name the same destination as their base pack —
+        ``_base_packs()`` never yields them, so they can't appear twice.
         """
-        if not self.data_dir.is_dir():
-            return ()
         names: dict[str, None] = {}
-        for path in sorted(self.data_dir.glob("*.json")):
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
+        for path, data in self._base_packs():
             names.setdefault(str(data.get("destination", path.stem)), None)
         return tuple(names)
 
     def languages_for(self, destination: str) -> tuple[str, ...]:
         """Which languages this destination has a curated pack in."""
-        if not self.data_dir.is_dir():
+        found = self._find_base_pack(destination)
+        if found is None:
             return ()
-        wanted = slugify(destination)
-        found: set[str] = set()
-        for path in sorted(self.data_dir.glob("*.json")):
-            try:
-                data = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            names = [data.get("destination", path.stem), *data.get("aliases", [])]
-            if not any(slugify(str(name)) == wanted for name in names if name):
-                continue
-            suffix = path.stem.rsplit(".", 1)
-            found.add(
-                str(data.get("language", suffix[1] if len(suffix) > 1 else "en")).lower()
-            )
-        return tuple(sorted(found))
+        path, _data = found
+        fragments = sorted(
+            fragment.stem.rsplit(".", 1)[1] for fragment in self.data_dir.glob(f"{path.stem}.*.json")
+        )
+        return ("en", *fragments)
+
+
+def _merge_translation(base: dict[str, Any], fragment: dict[str, Any]) -> dict[str, Any]:
+    """Overlay a translation fragment onto its base pack, producing a dict
+    shaped exactly like a single-language pack — the shape
+    ``DestinationKnowledge.from_dict`` already expects, so nothing downstream
+    of this function needs to know fragments exist at all.
+
+    ``translations`` maps an English phrase to its localized form; a phrase
+    with no entry falls back to itself, same as today's
+    ``english_terms.get(phrase, phrase)`` — a fragment translating only some
+    of a category is a partial pack, not an error. ``illustration_terms`` on
+    a ``DestinationKnowledge`` is keyed the *other* way (localized -> English,
+    matching what ``english_terms.get(some_localized_phrase)`` needs to look
+    up), so it is built here as the inverse of ``translations`` rather than
+    passed through as-is.
+
+    ``aliases`` is deliberately not part of a fragment's shape: it is only
+    ever read while *finding* a base pack (``_find_base_pack``), which
+    happens before a fragment is even looked up — ``DestinationKnowledge.
+    from_dict`` never reads ``aliases`` at all, so an alias on a fragment
+    would have no effect on anything. A destination's local-language name
+    belongs in the base pack's own ``aliases`` list.
+    """
+    translations: dict[str, str] = fragment.get("translations") or {}
+    merged = dict(base)
+    for category in KNOWLEDGE_FIELDS:
+        merged[category] = [translations.get(phrase, phrase) for phrase in base.get(category, ())]
+    merged["display_name"] = fragment.get("display_name", "")
+    merged["illustration_terms"] = {localized: english for english, localized in translations.items()}
+    # `profile` is structure, deliberately never duplicated into a fragment —
+    # `dict(base)` above already carried the base pack's own profile through.
+    return merged
 
 
 class HeuristicKnowledgeProvider:
@@ -297,9 +339,11 @@ class LLMKnowledgeProvider:
         "You are a travel researcher preparing material for a children's activity "
         "book about {destination}.\n"
         "Return ONLY a JSON object, no prose and no code fences, with exactly these "
-        "keys: {fields}.\n"
-        "Each value is an array of 4-8 short strings (2-6 words each), suitable for a "
-        "child aged 4-10 and safe to illustrate.\n"
+        "keys: {fields}, country.\n"
+        "Each of {fields} is an array of 4-8 short strings (2-6 words each), suitable "
+        "for a child aged 4-10 and safe to illustrate.\n"
+        "\"country\" is the ISO 3166-1 alpha-2 code of the country {destination} is in "
+        "(e.g. \"GR\"), or an empty string if you are not sure.\n"
         "Only include things that are genuinely true of {destination}. If you are not "
         "sure about a category, return an empty array for it rather than guessing.\n"
         "{interest_note}"
@@ -376,6 +420,18 @@ class LLMKnowledgeProvider:
         if knowledge.is_empty:
             logger.warning("LLM knowledge answer was empty; falling back.")
             return None
+        # The model may only *select* a country from the curated table, never
+        # supply its facts — country_for() is the checked-in source of truth
+        # for capital/flag/currency/language, so a code the model invented
+        # (or one this repo simply hasn't curated yet) is dropped rather than
+        # trusted. This is the hallucination guard: a wrong capital printed
+        # in a child's workbook is worse than the quiz question not appearing.
+        if knowledge.country and country_for(knowledge.country) is None:
+            logger.warning(
+                "LLM suggested country %r has no entry in data/countries.json; dropping it.",
+                knowledge.country,
+            )
+            knowledge = replace(knowledge, country="")
         return knowledge
 
     @staticmethod

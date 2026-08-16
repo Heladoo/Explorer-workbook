@@ -9,9 +9,13 @@ itinerary and interests) and it produces:
 | `workbook.json` | The full workbook structure: every page, its instructions, metadata and final image prompt. |
 | `workbook.md` | The human-readable build specification: page number, activity type, educational goal, instructions, required illustration, image prompt and estimated age. |
 | `prompts/NN_<activity>.md` | One file per page containing **only** the image prompt, ready to paste into GPT Image, DALL·E, Midjourney or Flux. |
+| `prompts/symbols/<slug>.md` | One file per small picture on a table-style page (the scavenger hunt grid). Each asks for a single object, and is identical in every book — so a drawing of a stop sign is generated once and reused forever. |
+| `images/` | Optional: the generated artwork, when you ask for it. |
 | `workbook.html` / `workbook.pdf` | Optional: the book laid out for print on A4, from HTML/CSS page templates. |
 
-No images are generated — that stage is still a seam, see [Extending it](#extending-it).
+Artwork is opt-in (`--generate-images`, via OpenRouter). Without it every page
+prints a labelled placeholder naming its prompt file, so the whole book is
+printable and reviewable before a single image exists.
 
 ## Quickstart
 
@@ -77,13 +81,16 @@ Useful flags:
 --list-destinations        # which places have a curated data pack
 --html                     # lay the book out for print, no browser needed
 --pdf                      # print it to A4 PDF (implies --html)
+--generate-images          # draw the artwork (needs OPENROUTER_API_KEY)
+--image-model <slug>       # which model draws it (default: openai/gpt-image-1)
+--symbol-cache <dir>       # shared symbol drawings (default: sources/symbols/images)
+--write-symbol-sources     # (re)write sources/symbols/prompts/*.md, then exit
 ```
 
 ## Languages
 
 `--language he` produces a Hebrew workbook: translated copy, a right-to-left
-printed page, and Hebrew puzzles (the word search grid is built from Hebrew
-letters). **Image prompts stay English** wherever the workbook goes, because that
+printed page, and a Hebrew word search grid. **Image prompts stay English** wherever the workbook goes, because that
 is what image models are trained on — a translated pack carries an
 `illustration_terms` map and the locale carries a `TERMS` map, and the prompt
 generator uses them to put the English noun back before rendering. The
@@ -139,6 +146,7 @@ touching a single activity.
 | `src/pipeline.py` | Wires the agents together (all injectable) |
 | `src/output_writer.py` | The only module that touches the filesystem |
 | `src/ports.py` | `ImageBackend` / `DocumentRenderer` — the seams for images and PDF |
+| `src/image_backends/` | Image generation via OpenRouter, and the runner that drives it |
 | `data/destinations/` | Curated destination packs |
 
 ### Where the facts come from
@@ -203,14 +211,49 @@ knowledge categories (see `kfar-hanokdim.json`).
 `src/rendering/layouts.py` plus a template; an activity with no registered layout
 prints as a full-page illustration frame, so new plugins work untouched.
 
-**Generate real images** — implement `ImageBackend` from `src/ports.py`. Every page's
-`image_prompt` is already final; a backend only has to call an image model and save
-the result. Pass the files to the renderer as `images={page_number: path}` and the
-placeholder frames become the artwork — nothing else changes. When reference photos
-were supplied, the prompts already ask for those children by filename, so a backend
-just attaches `context.family_photos` to the request.
+**Use a different image model** — `src/image_backends/openrouter.py` implements
+`ImageBackend` from `src/ports.py` against OpenRouter's unified Image API, so any
+model it serves is `--image-model <slug>`. A different provider entirely is a new
+class implementing the same Protocol; its `transport` is injected, so tests never
+touch the network.
 
 Neither requires changing an agent or an activity.
+
+## Images
+
+```bash
+export OPENROUTER_API_KEY=...
+python -m src.cli --destination "Prague" --pdf --generate-images
+```
+
+Every page's `image_prompt` is already final, so generation is a separate pass
+over finished data: one call per page, plus one per distinct symbol. A page that
+fails to render is logged and skipped — it keeps its placeholder frame, and the
+rest of the book still comes out.
+
+`--symbol-cache` is the interesting flag, and defaults to `sources/symbols/images/`.
+The small pictures on the scavenger hunt grid are drawn from prompts that mention
+no destination, no characters and no house style, which means **the same drawing
+is correct in every book**. Point every run at one directory (the default already
+does this) and each symbol is paid for once, ever; a Hebrew book and an English
+book share the same files, because the cache key is slugified from the English
+term while only the printed label is translated.
+
+```bash
+python -m src.cli --write-symbol-sources
+```
+
+writes every universal symbol's prompt to `sources/symbols/prompts/<key>.md` —
+checked into the repo, so a fresh clone already has them without generating a book
+first. Drop real artwork into `sources/symbols/images/` as `<key>.<ext>` (by hand,
+or let `--generate-images` fill it in) and every future book reuses it automatically.
+See [`sources/symbols/README.md`](sources/symbols/README.md).
+
+Reference photos flow through automatically: when they were supplied, the page
+prompts already ask for those children, and the backend attaches
+`context.family_photos` to the request. Symbol requests deliberately don't attach
+them — a stop sign has no people in it, and keeping the request identical
+everywhere is what makes the drawing reusable.
 
 ## Print layout
 
@@ -220,9 +263,11 @@ layout adds no content — it arranges what the activities already recorded.
 
 That is why activities keep text **out** of the illustrations: the page metadata
 becomes real page furniture. Packing checkboxes and item names, quiz questions with
-answer bubbles, matching columns in their planned order, reflection prompts with
-ruled lines and one star per trip day are all typeset by the layout, so the
-illustration stays a wordless picture that any image model can draw.
+lettered answer bubbles, matching columns in their planned order, reflection prompts
+with ruled lines and one star per trip day are all typeset by the layout, so the
+illustration stays a wordless picture that any image model can draw. A few pages —
+the maze, the quiz — carry no illustration at all beyond an optional decorative
+border, because their working area is entirely typeset text or generated geometry.
 
 Pages without artwork print a labelled placeholder frame naming their prompt file, so
 the book is printable and reviewable before a single image exists.
@@ -278,16 +323,41 @@ looks like a broken book.
 
 ## Activities
 
-`cover`, `coloring`, `maze`, `spot_difference`, `hidden_objects`, `packing`,
-`matching`, `wildlife_facts`, `quiz`, `word_search`, `crossword`, `drawing`,
+`cover`, `coloring`, `maze`, `spot_difference`, `hidden_objects`, `scavenger_hunt`,
+`packing`, `matching`, `wildlife_facts`, `quiz`, `word_search`, `drawing`,
 `reflection`.
 
-**`word_search` and `crossword` need no illustration at all.** The puzzle is
-generated here — a real letter grid with the words genuinely hidden in it, a real
-interlocking crossword with an answer key — and travels in the page metadata for
-the layout to typeset. Their image prompt is an optional decorative border, so
-they cost nothing to produce beyond the text. Clues come free: a knowledge phrase
-with its answer blanked out ("The big ___ hospitality tent") is a natural clue.
+**`word_search` needs no illustration at all.** The grid is generated here — every
+listed word genuinely findable, orthogonal at easy, diagonal and reversed at
+harder levels — and travels in the page metadata for the layout to typeset. Its
+image prompt is an optional decorative border, so it costs nothing to produce
+beyond the text.
+
+**`scavenger_hunt` sends the child looking at the real world, not a drawing of
+it.** Unlike `hidden_objects` (things tucked into an illustrated scene), this is
+a grid of pictures to tick off as the child genuinely spots each thing.
+
+Two things make it work, and both go against how the rest of the book is drawn:
+
+- **The table is typeset, not drawn.** The grid, the boxes and the words are
+  built by the print layout. A single prompt asking for "twelve labelled cells,
+  each with an empty checkbox" is asking an image model for exactly what it is
+  worst at — exact counts, one specific thing per cell, and no stray text.
+- **Each picture is its own prompt** (`prompts/symbols/<slug>.md`), asking for one
+  object on white. That is what image models are reliable at, and a cell that
+  comes out wrong costs one cheap retry instead of a ruined page.
+
+The items are mostly **ordinary**, too. A hunt built only from a destination's
+landmarks and wildlife is unfinishable — those things appear once, if at all. So
+most cells are everyday sights a child can find on the way to anywhere (a stop
+sign, a bridge, a police car, a dog on a lead), and a few come from the
+destination so the page still belongs to this trip. An easy hunt is entirely
+everyday things; harder ones lean more on the real place.
+
+The grid is fixed at **4×4 = 16 items**, every difficulty, sized to fill an A4
+page without spilling onto a second one. Rows are sized explicitly in the print
+CSS, not left to grow with content, so a full sheet always ends exactly at the
+bottom of the page.
 
 The planner opens with the cover, closes with the reflection page, ramps difficulty
 across the body, caps difficulty by the youngest child's age, alternates quiet and
@@ -302,11 +372,15 @@ pip install pytest
 python -m pytest
 ```
 
-326 tests covering the plugin contract (every activity, every difficulty), planner
+362 tests covering the plugin contract (every activity, every difficulty), planner
 rules, the style contract every prompt must satisfy, all three knowledge providers
-(the LLM one with an injected transport, never the network), the generated puzzles
-(the tests solve them — every listed word is searched for in the grid, every
-crossword answer is read back out of the solution), Hebrew end to end (translated
+(the LLM one with an injected transport, never the network), image generation
+(request shape, base64 decoding, per-symbol prompts, the reuse cache, and that one
+failure never costs the rest of the book — all through injected transports), the
+scavenger hunt end to end (an easy sheet is entirely everyday things, symbol keys
+stay identical across languages so one drawing serves every book, the grid is
+typeset rather than drawn), the generated puzzles
+(the tests solve them — every listed word is searched for in the grid), Hebrew end to end (translated
 copy with English prompts, RTL markup, Hebrew word-search grids), the web form
 (the four-field flow, photo uploads and how they reach the prompts, multipart
 parsing, bad input, escaping, path-traversal), the print layout

@@ -2,6 +2,12 @@
   "destination": "Kfar Hanokdim",
   "aliases": ["Kfar HaNokdim", "Nokdim Village", "כפר הנוקדים"],
   "region": "Judean Desert, Israel",
+  "country": "IL",
+  "profile": {
+    "regions": ["israel", "middle-east"],
+    "environments": ["desert"],
+    "climate": ["hot", "dry"]
+  },
   "landmarks": [
     "the big Bedouin hospitality tent",
     "the camel yard",

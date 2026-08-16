@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "he",
+  "script": "hebrew",
+  "direction": "rtl",
+  "entries": {
+    "yes": { "native": "כן", "pronunciation": { "en": "ken", "he": "כֵּן" } },
+    "no": { "native": "לא", "pronunciation": { "en": "lo", "he": "לֹא" } },
+    "please": { "native": "בבקשה", "pronunciation": { "en": "be-va-ka-SHA", "he": "בְּבַקָּשָׁה" } },
+    "thank_you": { "native": "תודה", "pronunciation": { "en": "to-DA", "he": "תּוֹדָה" } },
+    "sorry": { "native": "סליחה", "pronunciation": { "en": "sli-KHA", "he": "סְלִיחָה" } },
+    "good_morning": { "native": "בוקר טוב", "pronunciation": { "en": "BO-ker tov", "he": "בּוֹקֶר טוֹב" } },
+    "good_night": { "native": "לילה טוב", "pronunciation": { "en": "LAI-la tov", "he": "לַיְלָה טוֹב" } },
+    "water": { "native": "מים", "pronunciation": { "en": "MAI-im", "he": "מַיִם" } },
+    "bathroom": { "native": "שירותים", "pronunciation": { "en": "she-ru-TIM", "he": "שֵׁרוּתִים" } },
+    "family": { "native": "משפחה", "pronunciation": { "en": "mish-pa-KHA", "he": "מִשְׁפָּחָה" } }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "destination": "Pelion",
+  "aliases": ["Pelion, Greece", "Pilio", "Mount Pelion", "Pelion Peninsula", "פליון"],
+  "region": "Thessaly, Greece",
+  "country": "GR",
+  "profile": {
+    "regions": ["greece", "mediterranean", "europe"],
+    "environments": ["mountain", "forest", "coast", "water", "village"],
+    "climate": ["temperate", "hot"]
+  },
+  "landmarks": [
+    "the village of Makrinitsa",
+    "the village of Milies",
+    "the old Pelion steam train",
+    "the cobblestone kalderimi paths",
+    "Damouchari harbour",
+    "the Centaur statue at Portaria",
+    "the stone clock tower of Zagora",
+    "the Pagasetic Gulf coastline"
+  ],
+  "wildlife": [
+    "wild tortoises in the forest",
+    "swallows nesting under tiled roofs",
+    "goats grazing the hillsides",
+    "cicadas singing in the chestnut trees",
+    "dolphins off the Pagasetic Gulf",
+    "owls in the old plane trees"
+  ],
+  "plants": [
+    "chestnut forests",
+    "old plane trees over the village squares",
+    "apple orchards",
+    "wild oregano and sage on the hillsides",
+    "olive groves near the coast"
+  ],
+  "activities": [
+    "riding the little steam train through the forest",
+    "walking the old cobblestone mule paths between villages",
+    "swimming at a pebble cove below the mountain",
+    "eating spoon sweets on a shaded village square",
+    "picking chestnuts in autumn",
+    "watching fishing boats come into a tiny harbour"
+  ],
+  "history": [
+    "Greek myths say centaurs — half man, half horse — lived wild in Pelion's forests",
+    "the wise centaur Chiron, who taught the hero Achilles, is said to have lived on this mountain",
+    "villages here grew rich on silk and trade in the 1700s, which is why their mansions are so grand",
+    "the little steam train was built over a hundred years ago to link the mountain villages to the sea",
+    "stone paths called kalderimia once carried mules loaded with goods between every village"
+  ],
+  "local_food": [
+    "spoon sweets made from local fruit",
+    "chestnuts roasted in autumn",
+    "spetzofai sausage stew",
+    "apple pies",
+    "fresh fish from the Pagasetic Gulf",
+    "honey from mountain beehives"
+  ],
+  "weather": [
+    "cool and green in summer compared to the coast below",
+    "misty mornings in the forest",
+    "golden and crisp in autumn, chestnut season",
+    "sometimes snowy on the mountain top in winter"
+  ],
+  "interesting_facts": [
+    "Greek myth says this mountain was home to the centaurs, and to Chiron, the gentle centaur who taught heroes.",
+    "Pelion has two very different coastlines: calm pebble coves on one side, and open sea on the other.",
+    "The old steam train is nicknamed 'Moutzouris', which means 'the sooty one', because of its smoke.",
+    "Villages here have grand old mansions from a time when the silk trade made Pelion wealthy.",
+    "The stone paths connecting the villages are so old that they were once the only roads on the mountain."
+  ]
+}

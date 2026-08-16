@@ -11,6 +11,7 @@ $css
 <body>
 <main class="lean">
   <header class="masthead">
+    <img class="logo" src="/static/logo-color.png" alt="Adventure Kit" width="180" height="144">
     <h1>Let's make a trip book</h1>
     <p>Tell us where you're off to. We'll put together a printable activity book —
        puzzles, coloring pages, the works.</p>
@@ -43,7 +44,10 @@ $language_choices
     </div>
 
     <div class="actions">
-      <button type="submit">$cta_label</button>
+      <button type="submit" id="create-button">
+        <span class="btn-label">$cta_label</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
       <span class="hint">Give it a couple of seconds.</span>
     </div>
   </form>
@@ -53,5 +57,19 @@ $language_choices
     ready-to-paste prompt for each one.
   </footer>
 </main>
+<script>
+(function () {
+  var form = document.querySelector('form.card');
+  var button = document.getElementById('create-button');
+  if (!form || !button) return;
+  form.addEventListener('submit', function () {
+    if (button.disabled) return;
+    button.disabled = true;
+    button.classList.add('is-loading');
+    var label = button.querySelector('.btn-label');
+    if (label) label.textContent = 'Making your book…';
+  });
+})();
+</script>
 </body>
 </html>

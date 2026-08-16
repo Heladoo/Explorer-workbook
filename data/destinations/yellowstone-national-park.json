@@ -2,6 +2,12 @@
   "destination": "Yellowstone National Park",
   "aliases": ["Yellowstone"],
   "region": "Wyoming, Montana and Idaho, USA",
+  "country": "US",
+  "profile": {
+    "regions": ["usa", "north-america"],
+    "environments": ["mountain", "forest"],
+    "climate": ["cold", "temperate"]
+  },
   "landmarks": [
     "Old Faithful geyser",
     "the Grand Prismatic Spring",

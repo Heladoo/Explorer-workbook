@@ -1,21 +1,15 @@
-"""Drawing Page: an almost empty page with a decorated frame."""
+"""Drawing Page: an almost empty page with a blank frame to draw in."""
 
 from __future__ import annotations
 
-from src.activities.base import (
-    ActivityGenerator,
-    ImageBrief,
-    PlannedPage,
-    RenderMode,
-    register_activity,
-)
+from src.activities.base import ActivityGenerator, PlannedPage, register_activity
 from src.models.context import WorkbookContext
 from src.models.page import ActivityDraft
 
 
 @register_activity
 class DrawingActivity(ActivityGenerator):
-    """Open-ended observational drawing, framed by local motifs."""
+    """Open-ended observational drawing on an otherwise blank page."""
 
     activity_type = "drawing"
     display_name = "Drawing Page"
@@ -36,29 +30,13 @@ class DrawingActivity(ActivityGenerator):
         else:
             instructions = self.text(context, "drawing.instructions")
 
-        motifs = [*self.pick(context, "plants", 2), *self.pick(context, "wildlife", 2)]
-
         return self.draft(
             title=self.text(context, "drawing.title"),
             instructions=instructions,
             planned=planned,
-            image_brief=ImageBrief(
-                subject="an empty drawing frame decorated with local motifs",
-                scene=(
-                    f"A large empty rectangular frame with a decorative border of "
-                    f"{context.destination} motifs woven around its edges."
-                ),
-                elements=tuple(motifs),
-                render_mode=RenderMode.FRAME,
-                composition=(
-                    "The frame occupies about 80% of the page and its interior is completely "
-                    "blank white. Only the border carries decoration."
-                ),
-                extra_constraints=(
-                    "The inside of the frame must be pure white — no scenery, no guide lines, "
-                    "no faint shapes of any kind.",
-                    "Keep the border decoration thin so it never intrudes on the drawing area.",
-                ),
-            ),
-            metadata={"prompt_subject": subject, "border_motifs": motifs, "blank_page": True},
+            metadata={
+                "prompt_subject": subject,
+                "blank_page": True,
+                "needs_illustration": False,
+            },
         )

@@ -1,10 +1,155 @@
 /* Print styles for the workbook. A4 portrait, one activity per sheet.
-   Everything here is print-first: black on white, no background fills that
-   would drain a home printer's ink. */
+   Brand color is used throughout (see the token layer below), but every
+   color is a variable so a `.ink-saver` pass (see near the bottom) can
+   flatten the whole book to grayscale for a home printer without touching
+   a single rule beyond the tokens themselves. */
+
+/* -- design tokens ----------------------------------------------------- */
+
+:root {
+  /* ink & paper */
+  --ink: #1a1a1a;
+  --ink-soft: #5a5a5a;
+  --paper: #ffffff;
+  --line: #d8d3c8;
+
+  /* brand, sampled from the Adventure Kit mark (binoculars + open book) —
+     one color per activity group (Make / Solve / Look, see below). */
+  --brand-navy: #163a5f;
+  --brand-navy-tint: #e8edf3;
+  --brand-teal: #1f8f93;
+  --brand-teal-tint: #e2f2f2;
+  --brand-coral: #c1432f;
+  --brand-coral-tint: #fbe6e2;
+
+  /* active accent — reassigned per activity group further down, so every
+     page picks up its own identity from one pair of variables. */
+  --accent: var(--brand-navy);
+  --accent-tint: var(--brand-navy-tint);
+
+  /* rules */
+  --rule-hair: 1px solid var(--line);
+  --rule-box: 1.5px solid var(--ink);
+  --rule-heavy: 2.5px solid var(--ink);
+
+  /* radius & spacing */
+  --radius-sm: 1.5mm;
+  --radius-md: 3mm;
+  --space-1: 1mm;
+  --space-2: 2mm;
+  --space-3: 3mm;
+  --space-4: 4mm;
+  --space-5: 5mm;
+  --space-6: 6mm;
+
+  /* type: Baloo 2 / Nunito for Latin, Secular One / Assistant for Hebrew —
+     see [dir="rtl"] below. The families are embedded as base64 @font-face
+     rules (see TemplateSet.font_faces), so the PDF renders identically
+     wherever it's printed, with no dependence on whatever happens to be
+     installed on the machine that opens it.
+
+     "Noto Sans" is appended to every stack as the fallback for whatever
+     script the UI family itself doesn't cover — Greek, Cyrillic, and the
+     extended Latin a Czech word needs. It is embedded only when a book's
+     rendered text actually needs it (src/fonts.py::scripts_in), so a plain
+     English or Hebrew book never pays for it. --font-native is the
+     dictionary page's own column: content in an arbitrary destination
+     script has no "brand" family to begin with, so it goes straight to
+     Noto Sans rather than riding along on --font-body's Latin-first list. */
+  --font-display: "Baloo 2", "Noto Sans", "Trebuchet MS", sans-serif;
+  --font-body: "Nunito", "Noto Sans", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+  --font-native: "Noto Sans", "Nunito", "Segoe UI", sans-serif;
+
+  --size-xs: 8pt;
+  --size-sm: 9.5pt;
+  --size-base: 11.5pt;
+  --size-md: 13pt;
+  --size-lg: 16pt;
+  --size-xl: 20pt;
+  --size-display: 30pt;
+
+  /* Must mirror the @page margin below — see the note on .page height. */
+  --page-margin-top: 14mm;
+  --page-margin-bottom: 12mm;
+
+  /* Group icons for the page chip — hand-drawn, generic pictograms (not
+     traced from any icon set), each a self-contained SVG data URI so the
+     grouping stays a pure-CSS concern (see "activity identity" below): no
+     Python code decides which icon a page gets, only which `page-<type>`
+     class it carries. */
+  --icon-make: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHJlY3QgeD0nMTQnIHk9JzEnIHdpZHRoPSczLjInIGhlaWdodD0nMTMnIHJ4PScxLjYnIHRyYW5zZm9ybT0ncm90YXRlKDQ1IDE1LjYgNy41KScvPjxwYXRoIGQ9J00xMC4yIDEyLjMgMTMuNyAxNS44IDguOSAyMC42QzcuNSAyMiA1LjIgMjIgMy44IDIwLjYgMi40IDE5LjIgMi40IDE2LjkgMy44IDE1LjVaJy8+PC9zdmc+");
+  --icon-solve: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHBhdGggZD0nTTEyIDJhNyA3IDAgMCAwLTQuMiAxMi42Yy43LjUgMS4yIDEuMyAxLjIgMi4ydi4yaDZ2LS4yYzAtLjkuNS0xLjcgMS4yLTIuMkE3IDcgMCAwIDAgMTIgMlonLz48cmVjdCB4PSc5JyB5PScxOC4yJyB3aWR0aD0nNicgaGVpZ2h0PScxLjgnIHJ4PScwLjknLz48cmVjdCB4PScxMCcgeT0nMjAuNicgd2lkdGg9JzQnIGhlaWdodD0nMS44JyByeD0nMC45Jy8+PC9zdmc+");
+  --icon-look: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHJlY3QgeD0nMicgeT0nOScgd2lkdGg9JzgnIGhlaWdodD0nMTEnIHJ4PSczJy8+PHJlY3QgeD0nMTQnIHk9JzknIHdpZHRoPSc4JyBoZWlnaHQ9JzExJyByeD0nMycvPjxyZWN0IHg9JzknIHk9JzYnIHdpZHRoPSc2JyBoZWlnaHQ9JzQnIHJ4PScxLjUnLz48L3N2Zz4=");
+}
+
+[dir="rtl"] {
+  --font-display: "Secular One", "Noto Sans", "Trebuchet MS", sans-serif;
+  --font-body: "Assistant", "Noto Sans", "Segoe UI", sans-serif;
+}
+
+/* Ink-saver: flattens every brand color to grayscale. Nothing downstream
+   needs to know this happened — every rule below reads --accent/--accent-tint
+   (or a --brand-* directly), never a literal color. */
+body.ink-saver {
+  --brand-navy: #1a1a1a;
+  --brand-navy-tint: #f0f0f0;
+  --brand-teal: #1a1a1a;
+  --brand-teal-tint: #f0f0f0;
+  --brand-coral: #1a1a1a;
+  --brand-coral-tint: #f0f0f0;
+}
+
+/* -- activity identity --------------------------------------------------
+
+   Three groups only — Make, Solve, Look — each carrying a color and an
+   icon. Every page carries a `page-<type>` class (html_renderer.py);
+   grouping types here is the whole mechanism for both, so no Python change
+   is needed to retheme or regroup an activity. `--group-label` is a real
+   CSS string, used directly as `content:` on the chip (see .chip-label
+   below), so the label text is decided in the same place as its color. */
+
+.page-coloring, .page-drawing {
+  --accent: var(--brand-coral);
+  --accent-tint: var(--brand-coral-tint);
+  --group-icon: var(--icon-make);
+  --group-label: "Make";
+}
+
+.page-maze, .page-quiz, .page-matching, .page-spot_difference {
+  --accent: var(--brand-navy);
+  --accent-tint: var(--brand-navy-tint);
+  --group-icon: var(--icon-solve);
+  --group-label: "Solve";
+}
+
+.page-scavenger_hunt, .page-hidden_objects, .page-wildlife_facts, .page-word_search,
+.page-packing, .page-reflection, .page-cover, .page-map {
+  --accent: var(--brand-teal);
+  --accent-tint: var(--brand-teal-tint);
+  --group-icon: var(--icon-look);
+  --group-label: "Look";
+}
+
+/* -- page geometry ------------------------------------------------------- */
 
 @page {
   size: A4 portrait;
   margin: 14mm 12mm 12mm 12mm;
+}
+
+/* Alternating gutter for a bound book: the recto/verso convention (`:right`
+   is always the odd, right-hand page of a spread) is a physical property of
+   the print run, so it applies the same way regardless of the workbook's
+   reading direction. */
+@page :left {
+  margin-left: 12mm;
+  margin-right: 16mm;
+}
+
+@page :right {
+  margin-left: 16mm;
+  margin-right: 12mm;
 }
 
 * {
@@ -18,10 +163,10 @@ html {
 
 body {
   margin: 0;
-  font-family: "Comic Sans MS", "Trebuchet MS", "Verdana", sans-serif;
-  color: #111;
-  font-size: 11pt;
-  line-height: 1.4;
+  font-family: var(--font-body);
+  color: var(--ink);
+  font-size: var(--size-base);
+  line-height: 1.5;
 }
 
 /* -- page frame ------------------------------------------------------ */
@@ -31,8 +176,32 @@ body {
   break-after: page;
   display: flex;
   flex-direction: column;
-  /* A4 minus the @page margins. */
-  height: 271mm;
+  /* A4 minus the @page margins above — kept as a calc against the same two
+     tokens rather than a bare "271mm" so the two can't silently drift apart.
+     (The @page rule itself has to restate the numbers: @page does not
+     reliably support custom properties across the engines this project's
+     PDF path may run on.) The extra 2mm is a deliberate safety margin, not
+     slop: a page-body child sized via flex:1 1 auto + min-height:0 (the
+     scavenger hunt grid, the matching columns, ...) always expands to
+     *exactly* fill whatever's left, down to sub-pixel rounding — measured
+     on a real book, the last scavenger-hunt row ended 0.25px from this
+     box's bottom edge. That's fine for on-screen/live layout, but print
+     rasterization rounds independently and can tip a fit that tight into a
+     genuine overflow, which prints as the next page's content overlapping
+     it (see the .page overflow:hidden note below for what that looked
+     like). 2mm of headroom this box never actually uses is a cheap trade
+     for that never happening. */
+  height: calc(297mm - var(--page-margin-top) - var(--page-margin-bottom) - 2mm);
+  /* Without this, content taller than the box above doesn't get clipped —
+     the default `overflow: visible` lets it spill past .page's own bottom
+     edge in normal document flow, and since .page forces a hard page break
+     right after itself, that spillover prints as if it were the *next*
+     physical page's own content, overlapping whatever actually belongs
+     there. This also makes scrollHeight vs clientHeight a meaningful
+     measurement for catching overflow in tests — without it, .page never
+     becomes a scroll container, so scrollHeight silently equals
+     clientHeight even when content genuinely overflows. */
+  overflow: hidden;
 }
 
 .page:last-child {
@@ -41,22 +210,74 @@ body {
 }
 
 .page-head {
-  border-bottom: 2px solid #111;
-  padding-bottom: 3mm;
-  margin-bottom: 4mm;
   flex: 0 0 auto;
+  background: var(--accent-tint);
+  border-bottom: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.page-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.page-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5mm;
+  background: var(--accent);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--size-xs);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 1mm 3mm;
+  border-radius: 999px;
+}
+
+.chip-icon {
+  display: inline-block;
+  width: 3mm;
+  height: 3mm;
+  flex: 0 0 auto;
+  background-color: currentColor;
+  -webkit-mask-image: var(--group-icon);
+  mask-image: var(--group-icon);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.chip-label::before {
+  content: var(--group-label);
+}
+
+.page-number {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--size-lg);
+  color: var(--accent);
 }
 
 .page-title {
-  font-size: 20pt;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--size-xl);
   margin: 0;
   letter-spacing: -0.2px;
 }
 
 .page-instructions {
-  margin: 2mm 0 0;
-  font-size: 11.5pt;
+  margin: var(--space-2) 0 0;
+  font-size: var(--size-base);
 }
 
 .page-body {
@@ -64,7 +285,7 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 4mm;
+  gap: var(--space-4);
 }
 
 /* Nothing in a working area may push past the bottom of its sheet. */
@@ -72,31 +293,34 @@ body {
   min-height: 0;
 }
 
+/* Only the table of contents uses this now — the per-page version was
+   redundant with the page number already shown in .page-head-top and was
+   dropped. */
 .page-foot {
   flex: 0 0 auto;
-  padding-top: 3mm;
-  border-top: 1px solid #bbb;
+  padding-top: var(--space-3);
+  border-top: var(--rule-hair);
   display: flex;
   justify-content: space-between;
-  font-size: 8pt;
-  color: #666;
+  font-size: var(--size-xs);
+  color: var(--ink-soft);
 }
 
 /* -- illustration placeholders --------------------------------------- */
 
 .art {
-  border: 2px dashed #999;
-  border-radius: 3mm;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #777;
+  color: var(--ink-soft);
   flex: 1 1 auto;
   min-height: 0;
-  padding: 4mm;
-  gap: 2mm;
+  padding: var(--space-4);
+  gap: var(--space-2);
 }
 
 .art img {
@@ -106,21 +330,21 @@ body {
 }
 
 .art-label {
-  font-size: 10pt;
+  font-size: var(--size-sm);
   font-weight: 700;
-  color: #555;
+  color: var(--ink-soft);
 }
 
 .art-ref {
-  font-family: "DejaVu Sans Mono", monospace;
-  font-size: 8.5pt;
-  color: #888;
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--ink-soft);
 }
 
 .art-note {
-  font-size: 8.5pt;
+  font-size: var(--size-xs);
   max-width: 110mm;
-  color: #999;
+  color: var(--ink-soft);
 }
 
 .art.filled {
@@ -129,10 +353,6 @@ body {
 }
 
 /* Pages whose working area needs the room more than the picture does. */
-.page-reflection .art {
-  flex: 0 0 40%;
-}
-
 .page-packing .art,
 .page-hidden_objects .art {
   flex: 0 0 52%;
@@ -141,43 +361,70 @@ body {
 /* -- cover ------------------------------------------------------------ */
 
 .page-cover .page-head {
+  background: transparent;
   border-bottom: none;
+  border-radius: 0;
   text-align: center;
 }
 
+.page-cover .page-head-top {
+  display: none;
+}
+
 .page-cover .page-title {
-  font-size: 26pt;
+  font-size: var(--size-display);
   line-height: 1.2;
   overflow-wrap: break-word;
 }
 
-/* A cover carries no running foot. */
-.page-cover .page-foot {
-  display: none;
+.cover-footer {
+  flex: 0 0 auto;
+  margin-top: auto;
+  /* Was --paper (page white) with only the top border for color — on a
+     white page that read as a stray line, not a distinct area. The tint
+     is what actually makes this a "name area" rather than a rule. */
+  background: var(--accent-tint);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  /* This is the book's ownership moment for a 4-year-old — was --space-4
+     all round, which read as a caption strip rather than somewhere to
+     actually write. More top/bottom room lets the line below grow too. */
+  padding: var(--space-6) var(--space-5);
 }
 
 .name-line {
   flex: 0 0 auto;
-  margin-top: 5mm;
-  font-size: 13pt;
+  font-size: var(--size-lg);
   display: flex;
-  align-items: baseline;
-  gap: 3mm;
+  align-items: flex-end;
+  gap: var(--space-4);
 }
 
 .name-line .rule {
   flex: 1 1 auto;
-  border-bottom: 2px solid #111;
-  height: 1px;
+  border-bottom: 3px solid var(--ink);
+  /* The blank box above the line itself, not just the line — tall enough
+     for a child's own handwriting, not a thin rule immediately after the
+     label. */
+  height: var(--space-6);
 }
 
-/* -- checklist (packing, hidden objects) ------------------------------ */
+/* Top-of-cover mark, not the small footer badge it used to be — the cover
+   is the one page meant to say "this is an Adventure Kit book" at a glance. */
+.brand-logo {
+  display: block;
+  height: 84mm;
+  width: auto;
+  margin: 0 auto var(--space-4);
+}
+
+/* -- checklist (hidden objects) ----------------------------------------- */
 
 .checklist {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 3mm;
+  gap: var(--space-3);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -187,90 +434,344 @@ body {
   display: flex;
   align-items: center;
   gap: 2.5mm;
-  border: 1.5px solid #111;
-  border-radius: 2mm;
+  border: var(--rule-box);
+  border-color: var(--accent);
+  border-radius: var(--radius-sm);
   padding: 2.5mm;
-  font-size: 10pt;
+  font-size: var(--size-sm);
   min-height: 14mm;
+}
+
+.checklist li:nth-child(even) {
+  background: var(--accent-tint);
 }
 
 .checkbox {
   flex: 0 0 auto;
   width: 6mm;
   height: 6mm;
-  border: 1.5px solid #111;
+  border: 1.5px solid var(--ink);
   border-radius: 1mm;
+  background: var(--paper);
 }
 
 .checklist li.blank {
   border-style: dashed;
-  color: #888;
+  color: var(--ink-soft);
   font-style: italic;
 }
 
-/* -- quiz -------------------------------------------------------------- */
+/* -- spotting grid (scavenger hunt) ------------------------------------ */
 
-.quiz {
+/* A table of pictures rather than a list of words: each cell holds one
+   separately generated drawing, its checkbox and its name. The cells fill the
+   page so the pictures print big enough to recognise at arm's length. */
+.spotting {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  /* minmax(0, 1fr), not bare 1fr — a bare 1fr track is really
+     minmax(auto, 1fr), so a cell whose content (a wrapped label, say) needs
+     more than its equal share still gets it, growing the whole grid past
+     its allotted height instead of the page. minmax(0, ...) removes that
+     content-driven minimum: rows always sum to exactly the space available,
+     and any cell content taller than its row is clipped by .spotting-cell's
+     own overflow:hidden instead of pushing the sheet onto the next page. */
+  grid-template-columns: repeat(var(--spotting-columns, 4), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--spotting-rows, 4), minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.spotting-cell {
   display: flex;
   flex-direction: column;
-  gap: 4mm;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1mm;
+  background: var(--paper);
+  border: var(--rule-box);
+  border-color: var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) 1.5mm;
+  min-height: 0;
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.spotting-art {
   flex: 1 1 auto;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.spotting-art.filled {
+  border: none;
+}
+
+.spotting-art img {
+  max-width: 100%;
+  max-height: 100%;
+  /* A replaced element's automatic minimum size defaults to (roughly) its
+     own intrinsic size, not zero, even inside a flex box with max-width/
+     max-height set — max-width caps *preferred* size, not the content-based
+     minimum the flex algorithm still uses. Source drawings vary a lot in
+     native pixel size (a 1254px-square sheet vs. a small crop straight out
+     of a grid sheet), so without min-width/min-height:0 here that
+     per-image minimum bubbles up through .spotting-art and .spotting-cell
+     and made every cell's effective size — and the whole grid's required
+     height — depend on which symbols a given book happened to pick,
+     overflowing the scavenger hunt sheet onto the next printed page.
+     min-width/min-height:0 turns that off so every symbol scales down
+     uniformly to its cell, regardless of source size. */
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.spotting-ref {
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 1mm;
+  word-break: break-word;
+}
+
+.spotting-label {
+  font-size: var(--size-sm);
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* -- quiz ---------------------------------------------------------------
+
+   Text-only now: three written options per question, marked with a
+   lettered bubble, plus (when the destination has one) a local-language
+   dictionary sharing the same sheet. Unlike almost every other activity
+   page, the real risk here is *underfill*, not overflow — three short
+   questions and ten short dictionary rows are small enough to sit at the
+   top of the sheet and leave the bottom blank. The fix is the same
+   discipline .matching/.spotting use for the opposite problem: explicit
+   grid rows that share the sheet by construction (`minmax(0, 1fr)` per
+   row), rather than a flex column that only takes the height its content
+   asks for. */
+
+.quiz-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.quiz {
+  flex: 1 1 38%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: repeat(var(--quiz-rows, 3), minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .quiz-row {
-  border: 1.5px solid #111;
-  border-radius: 2mm;
-  padding: 3mm;
+  border: var(--rule-box);
+  border-color: var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: 2.5mm;
-  flex: 1 1 auto;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.quiz-row:nth-child(even) {
+  background: var(--accent-tint);
 }
 
 .quiz-question {
   font-weight: 700;
-  font-size: 11.5pt;
+  font-size: var(--size-base);
 }
 
 .quiz-options {
-  display: flex;
-  gap: 3mm;
-  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .quiz-option {
-  flex: 1 1 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1.5mm;
+  gap: var(--space-2);
+  min-width: 0;
+  border: var(--rule-box);
+  border-color: var(--line);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
 }
 
-.quiz-option .art {
-  width: 100%;
-}
-
-.bubble {
+.quiz-letter {
+  flex: 0 0 auto;
   width: 7mm;
   height: 7mm;
-  border: 1.5px solid #111;
   border-radius: 50%;
-  flex: 0 0 auto;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--size-sm);
 }
 
-.option-label {
-  font-size: 9pt;
-  text-align: center;
-  color: #555;
+.quiz-option-text {
+  min-width: 0;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+/* -- dictionary (the quiz page's local-language word list) --------------
+
+   .dictionary-section carries the 38%/62% split with .quiz above (see
+   .quiz-sheet); .dict-heading is auto-sized within it and .dictionary
+   takes whatever's left, so the heading never eats into the ten explicit
+   entry rows the way a third flex sibling of .quiz-sheet would have. Row
+   sizing inside the grid follows the .matching rule: a long word must
+   never be allowed to decide how much of the sheet its own row gets, or
+   the columns stop lining up. */
+
+.dictionary-section {
+  flex: 1 1 62%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dict-heading {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5mm;
+}
+
+.dict-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--size-md);
+}
+
+.dict-instructions {
+  font-size: var(--size-sm);
+  color: var(--ink-soft);
+}
+
+.dictionary {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 10mm;
+  grid-template-rows: auto repeat(var(--dict-rows, 10), minmax(0, 1fr));
+  column-gap: var(--space-3);
+  row-gap: 0;
+}
+
+.dict-head,
+.dict-row {
+  display: contents;
+}
+
+.dict-head > span {
+  font-weight: 700;
+  font-size: var(--size-sm);
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.dict-row > span {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  border-bottom: var(--rule-hair);
+  padding: var(--space-2);
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+.dict-head > span,
+.dict-row > span {
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+}
+
+.dict-native {
+  font-family: var(--font-native);
+  font-weight: 700;
+  font-size: var(--size-md);
+  /* The native word can be either script direction inside either page
+     direction (a Greek word in a Hebrew book, a Hebrew word in an English
+     book, ...) — isolate keeps it from dragging the surrounding row's
+     punctuation into its own reading order either way. dir="ltr"/"rtl" on
+     the element itself (set by the layout from the phrasebook pack's own
+     "direction") decides which way the word itself reads. */
+  unicode-bidi: isolate;
+}
+
+.dict-pron {
+  /* Was unset, so it inherited .dict-row > span's --size-sm (9.5pt) — the
+     smallest, greyest text in the row, despite being the only column a
+     Hebrew-reading child can actually sound out. Matched to .dict-native's
+     own size; italic and the soft ink color are unchanged on purpose. */
+  font-size: var(--size-md);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.dict-tick {
+  justify-content: center;
+}
+
+.dict-tick::before {
+  content: "";
+  width: 6mm;
+  height: 6mm;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-sm);
+}
+
+[dir="rtl"] .dict-head > span,
+[dir="rtl"] .dict-row > span {
+  text-align: right;
 }
 
 /* -- matching ---------------------------------------------------------- */
 
+/* Pictures on one side, their shadows on the other, and a wide empty gutter
+   to draw lines across. Both columns are laid out identically — equal-height
+   rows, picture scaled to fit — so a drawing and its shadow arrive at the same
+   size on the page. The cut-outs are transparent PNGs cropped to the ink, so
+   there is deliberately no box, no rule and no label around a cell: a frame
+   would give away nothing, but it would turn a pair of shapes into a table. */
 .matching {
   display: grid;
   grid-template-columns: 1fr 22mm 1fr;
   grid-template-rows: minmax(0, 1fr);
-  gap: 4mm;
+  gap: var(--space-4);
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -278,40 +779,155 @@ body {
 .matching-column {
   display: flex;
   flex-direction: column;
-  gap: 3mm;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 0;
+  height: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Equal, explicit rows rather than content-sized ones: a tall drawing must not
+   be given more of the page than a wide one, or the columns stop lining up. */
+.matching-cell {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 0;
+  break-inside: avoid;
+}
+
+.matching-art {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
   min-height: 0;
   height: 100%;
 }
 
-.matching-cell {
-  flex: 1 1 0;
-  border: 1.5px solid #111;
-  border-radius: 2mm;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1mm;
-  padding: 2mm;
-  text-align: center;
-  font-size: 9pt;
-  color: #555;
+.matching-art img {
+  max-width: 100%;
+  max-height: 100%;
+  /* Same fix as .spotting-art img, and more exposed here: .matching-cell has
+     no overflow:hidden to fall back on, so an oversized image's automatic
+     min-size could grow the whole matching grid past the sheet. */
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
 }
 
+/* The anchor the child draws from. It sits on the gutter side of each cell:
+   the left column ends with its dot, the right column starts with one. */
 .matching-cell .dot {
+  flex: 0 0 auto;
   width: 3mm;
   height: 3mm;
   border-radius: 50%;
-  background: #111;
+  background: var(--accent);
+}
+
+.matching-right .matching-cell {
+  flex-direction: row-reverse;
+}
+
+.matching-ref {
+  font-family: var(--font-mono);
+  font-size: var(--size-xs);
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 1mm;
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  word-break: break-word;
 }
 
 .matching-gutter {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #bbb;
-  font-size: 8.5pt;
+  color: var(--line);
+  font-size: var(--size-xs);
   text-align: center;
+}
+
+/* -- packing (connect the backpack) -------------------------------------- */
+
+/* A backpack at the centre, everything else in a ring around it, each item
+   drawn from its own cached symbol (reusing .spotting-art's filled/placeholder
+   toggle, so a not-yet-generated symbol prints the same honest dashed
+   placeholder it prints everywhere else). The child draws their own line
+   from each item straight to the backpack — nothing here is a checkbox or
+   a label, unlike the page this replaced.
+
+   Placement is the classic CSS "clock face" transform: rotate .packing-item
+   to its angle, translate it outward along that now-rotated axis, then
+   rotate it back so the art itself prints upright.
+
+   Every size below is in cqmin (1% of whichever of .packing-stage's own
+   width/height is smaller), the same container-query technique the word
+   search's .puzzle-grid uses and for the same reason: the ring can never
+   overflow its sheet, however much room the title and instructions above it
+   left, because every distance is relative to the box actually available. */
+.packing-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  position: relative;
+}
+
+.packing-wheel {
+  position: absolute;
+  inset: 0;
+}
+
+.packing-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30cqmin;
+  height: 30cqmin;
+  margin: -15cqmin 0 0 -15cqmin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Carries nothing of its own but the --angle custom property, so the dot and
+   the item art below share one source of truth for where they sit. */
+.packing-node {
+  position: absolute;
+  inset: 0;
+}
+
+.packing-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 17cqmin;
+  height: 17cqmin;
+  margin: -8.5cqmin 0 0 -8.5cqmin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(var(--angle)) translateY(-38cqmin) rotate(calc(-1 * var(--angle)));
+}
+
+/* The one node with no symbol at all — an organic dashed outline (not a
+   plain circle or square, so it visibly matches "draw something of your
+   own" rather than reading as an unfinished picture cell) for the child's
+   own idea of one more thing to pack. Sized up from the other nodes: it
+   carries no printed art to fill it, so it needs the extra room to not
+   read as an afterthought next to the real drawings around it. */
+.packing-item-blank {
+  width: 24cqmin;
+  height: 24cqmin;
+  margin: -12cqmin 0 0 -12cqmin;
+  border: 2px dashed var(--line);
+  border-radius: 44% 56% 52% 48% / 55% 45% 59% 41%;
 }
 
 /* -- fact cards -------------------------------------------------------- */
@@ -319,35 +935,42 @@ body {
 .cards {
   display: flex;
   flex-direction: column;
-  gap: 3mm;
+  gap: var(--space-3);
   flex: 1 1 auto;
 }
 
 .card {
   flex: 1 1 0;
-  border: 1.5px solid #111;
-  border-radius: 2mm;
+  border: var(--rule-box);
+  border-color: var(--accent);
+  border-radius: var(--radius-sm);
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 3mm;
-  padding: 3mm;
+  gap: var(--space-3);
+  padding: var(--space-3);
   min-height: 0;
+  break-inside: avoid;
+}
+
+.card:nth-child(even) {
+  background: var(--accent-tint);
 }
 
 .card-text {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2mm;
+  gap: var(--space-2);
 }
 
 .card-name {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12pt;
+  font-size: var(--size-md);
 }
 
 .card-caption {
-  font-size: 10pt;
+  font-size: var(--size-sm);
 }
 
 .star {
@@ -358,11 +981,11 @@ body {
     79% 91%, 50% 70%, 21% 91%, 32% 57%,
     2% 35%, 39% 35%
   );
-  background: #111;
+  background: var(--accent);
 }
 
 .star.outline {
-  background: #fff;
+  background: var(--paper);
   border: none;
   position: relative;
 }
@@ -371,7 +994,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: #111;
+  background: var(--accent);
   clip-path: inherit;
 }
 
@@ -379,157 +1002,208 @@ body {
   content: "";
   position: absolute;
   inset: 1mm;
-  background: #fff;
+  background: var(--paper);
   clip-path: inherit;
 }
 
 /* -- reflection -------------------------------------------------------- */
 
+.drawing-box {
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-md);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .prompts {
   display: flex;
   flex-direction: column;
-  gap: 3mm;
-  flex: 1 1 auto;
+  gap: var(--space-3);
+  flex: 0 0 auto;
   justify-content: space-between;
 }
 
 .prompt-block {
   display: flex;
   flex-direction: column;
-  gap: 2mm;
+  gap: var(--space-2);
+  break-inside: avoid;
 }
 
 .prompt-label {
-  font-size: 10.5pt;
+  font-size: var(--size-sm);
   font-weight: 700;
 }
 
 .ruled {
-  border-bottom: 1.2px solid #444;
+  border-bottom: 1.2px solid var(--ink-soft);
   height: 7mm;
 }
 
 .stars {
   display: flex;
-  gap: 3mm;
+  gap: var(--space-3);
   justify-content: center;
   align-items: center;
   flex: 0 0 auto;
-  padding-top: 2mm;
+  padding-top: var(--space-2);
 }
 
 /* -- word search -------------------------------------------------------- */
 
-.puzzle-grid {
-  display: grid;
-  gap: 0;
+/* Originally, each .puzzle-cell sized itself off the grid's *width* share
+   alone via its own aspect-ratio, with no row track sized to match — for a
+   square N×N grid that makes the required total height come out to
+   roughly the page's content width regardless of N, which happened to fit
+   at easy/medium but overflowed at hard (see test_no_page_overflows_its_sheet).
+
+   A first fix put aspect-ratio on .puzzle-grid itself with width/height
+   left auto and max-width/max-height:100% as the only bounds — but a
+   *centered* flex child (align-items/justify-content:center, not stretch)
+   is sized by fit-content, i.e. by its own content's natural size, not by
+   the space available; the max-* bounds were never actually reached, so
+   the grid rendered far smaller than the page had room for.
+
+   Container query units solve this properly: .puzzle-stage's own box
+   (definite width and height, from flex:1 1 auto sharing .page-body with
+   the word bank below it) becomes a query container, and .puzzle-grid's
+   width is computed directly as "as large as fits both dimensions" —
+   min(full container width, full container height scaled by the grid's
+   own aspect ratio) — which is exactly the "contain" behaviour a
+   replaced element like <img> gets for free and a plain <div> does not. */
+.puzzle-stage {
   flex: 1 1 auto;
   min-height: 0;
-  align-content: center;
-  justify-items: center;
-  border: 1.5px solid #111;
-  border-radius: 2mm;
-  padding: 4mm;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.puzzle-grid {
+  /* One cell's edge length, in the query container's (.puzzle-stage's) own
+     units — reused below for both the grid's overall size and each cell's
+     font size, so the two can never drift out of proportion with each
+     other regardless of how many columns/rows a difficulty asks for. */
+  --cell: calc(
+    min(100cqw, 100cqh * var(--puzzle-columns, 1) / var(--puzzle-rows, 1))
+    / var(--puzzle-columns, 1)
+  );
+  width: calc(var(--cell) * var(--puzzle-columns, 1));
+  aspect-ratio: var(--puzzle-columns, 1) / var(--puzzle-rows, 1);
+  display: grid;
+  grid-template-columns: repeat(var(--puzzle-columns, 1), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--puzzle-rows, 1), minmax(0, 1fr));
+  gap: 0;
+  border: var(--rule-box);
+  border-color: var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  box-sizing: border-box;
 }
 
 .puzzle-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
   width: 100%;
-  font-family: "DejaVu Sans Mono", monospace;
-  font-size: 13pt;
+  height: 100%;
+  font-family: var(--font-mono);
+  /* Scales with the actual rendered cell size (a "hard" 14x14 grid has
+     much smaller cells than an "easy" 10x10 one in the same space), never
+     below a legible floor or above a silly-looking ceiling. */
+  font-size: clamp(9pt, calc(var(--cell) * 0.6), 20pt);
   letter-spacing: 0;
+}
+
+/* -- maze ---------------------------------------------------------------- */
+
+/* Column math (endcap width/offset, viewBox columns) is always authored
+   left-to-right regardless of book language — see MazeActivity.generate,
+   which already picks the RTL/LTR start and goal corners upstream of here. */
+.maze-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  direction: ltr;
+}
+
+/* The corridors are an inline SVG sized to its viewBox, not the page — it
+   cannot overflow onto a phantom next sheet however big the grid gets.
+   It carries no CSS border of its own: the SVG path already draws the
+   full perimeter (see wall_segments()) at the same stroke-width as every
+   interior wall, so a second, separately-sized CSS border here would only
+   make the outer edge a different thickness from the inner ones. */
+.maze-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+
+.maze-grid {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Each wall is its own disconnected "M...H"/"M...V" subpath (see
+   wall_segments()), not one continuous outline — two perpendicular walls
+   that happen to meet at a grid corner share no vertex for stroke-linejoin
+   to round. A round linecap on unconnected segments then shows up as a
+   small bulge at every corner instead of a crisp right angle; square caps
+   extend each segment by half its own width along its own axis, which is
+   exactly enough to close the corner the other segment leaves open. */
+.maze-walls {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 0.06;
+  stroke-linecap: square;
+}
+
+/* One box per row, sized and offset by inline style to line up with exactly
+   one column of the grid below/above — normal flow, not position:absolute,
+   so its aspect-ratio square is what gives the row its height. */
+.maze-endcap-row {
+  flex: 0 0 auto;
+}
+
+/* No border: the icon sits directly on the page background, same as every
+   other cut-out symbol elsewhere in the book — only the sizing/centring box
+   is real, not a drawn outline around it. */
+.maze-endcap {
+  box-sizing: border-box;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5mm;
+}
+
+/* The cached airplane drawing itself is nose-up (see the "airplane" library
+   entry's subject) — flipped so it reads as heading down into the maze from
+   its box at the top of the page, not flying back out the way it came. Keyed
+   to the symbol (see MazeActivity._REPEAT_START_ICONS) so a repeat maze's
+   animal/vehicle start icon isn't flipped upside down too. */
+.maze-endcap-airplane img {
+  transform: rotate(180deg);
 }
 
 .word-bank {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2mm 3mm;
+  gap: 2mm var(--space-3);
   list-style: none;
-  padding: 3mm;
+  padding: var(--space-3);
   margin: 0;
-  border: 1.5px dashed #111;
-  border-radius: 2mm;
-  font-size: 10.5pt;
+  border: 1.5px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: var(--size-sm);
 }
 
 .word-bank li {
   text-align: center;
-}
-
-/* -- crossword ----------------------------------------------------------- */
-
-.crossword-grid {
-  display: grid;
-  gap: 0;
-  flex: 0 0 auto;
-  justify-content: center;
-  /* Squares stay printable even on a wide grid. */
-  max-width: 150mm;
-  margin: 0 auto;
-}
-
-.crossword-cell {
-  position: relative;
-  aspect-ratio: 1;
-  width: 100%;
-  min-width: 7mm;
-}
-
-.crossword-cell.writable {
-  border: 1px solid #111;
-  margin: -0.5px;
-  background: #fff;
-}
-
-.crossword-cell.blank {
-  border: none;
-}
-
-.crossword-cell i {
-  position: absolute;
-  top: 0.4mm;
-  left: 0.6mm;
-  font-size: 6pt;
-  font-style: normal;
-  color: #444;
-  line-height: 1;
-}
-
-.clue-lists {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5mm;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.clue-column h2 {
-  font-size: 11pt;
-  margin: 0 0 2mm;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1.5px solid #111;
-  padding-bottom: 1mm;
-}
-
-.clues {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 10pt;
-  line-height: 1.5;
-}
-
-.clues li {
-  margin-bottom: 1.5mm;
-}
-
-.clue-length {
-  color: #666;
 }
 
 /* -- two panel (spot the difference) ----------------------------------- */
@@ -537,7 +1211,7 @@ body {
 .panels {
   display: flex;
   flex-direction: column;
-  gap: 3mm;
+  gap: var(--space-3);
   flex: 1 1 auto;
   min-height: 0;
 }
@@ -547,8 +1221,8 @@ body {
 }
 
 .panel-tag {
-  font-size: 9pt;
-  color: #777;
+  font-size: var(--size-xs);
+  color: var(--ink-soft);
 }
 
 /* -- right-to-left languages -------------------------------------------- */
@@ -557,8 +1231,7 @@ body {
    the handful of places where a physical side was assumed. */
 
 [dir="rtl"] .toc th,
-[dir="rtl"] .toc td,
-[dir="rtl"] .clue-column h2 {
+[dir="rtl"] .toc td {
   text-align: right;
 }
 
@@ -568,14 +1241,14 @@ body {
   unicode-bidi: isolate;
 }
 
-[dir="rtl"] .crossword-cell i {
-  left: auto;
-  right: 0.6mm;
+/* --font-mono (JetBrains Mono) has no Hebrew glyphs, so a Hebrew word
+   search was silently falling back to a thin system font for every letter
+   — the title/display face is embedded with a Hebrew cut and reads as
+   properly bold at grid size, unlike the body font's regular weight. */
+[dir="rtl"] .puzzle-cell {
+  font-family: var(--font-display);
 }
 
-[dir="rtl"] .clues b {
-  unicode-bidi: isolate;
-}
 
 /* -- table of contents -------------------------------------------------- */
 
@@ -584,24 +1257,224 @@ body {
   break-after: page;
 }
 
+.toc-eyebrow {
+  margin: 0 0 1mm;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+}
+
 .toc table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 10.5pt;
+  font-size: var(--size-sm);
 }
 
 .toc th,
 .toc td {
   text-align: left;
-  padding: 2mm 2mm;
-  border-bottom: 1px solid #ddd;
+  padding: var(--space-2) var(--space-2);
+  border-bottom: var(--rule-hair);
 }
 
 .toc th {
-  border-bottom: 2px solid #111;
+  font-family: var(--font-display);
+  border-bottom: 2px solid var(--ink);
+}
+
+.toc tbody tr:nth-child(even) td {
+  background: var(--accent-tint);
 }
 
 .toc .num {
   width: 12mm;
-  color: #666;
+  color: var(--ink-soft);
+}
+
+/* -- on-screen A4 page preview -------------------------------------------
+
+   @page above governs printing; a browser tab has no page box of its own,
+   so without this every .page stretches to the window width instead of
+   reading as a sheet of paper. Scoped to @media screen so it never reaches
+   the PDF pass — PdfRenderer prints via Playwright's page.pdf(), which
+   lays pages out from the @page rules only and never loads a screen
+   stylesheet. */
+@media screen {
+  body {
+    background: #d6d6d6;
+    padding: 10mm 0 20mm;
+  }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto 10mm;
+    padding: var(--page-margin-top) 12mm var(--page-margin-bottom) 12mm;
+    background: var(--paper);
+    box-shadow: 0 1mm 5mm rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* -- in-browser image editing ---------------------------------------------
+
+   Screen-only affordance for dropping real artwork onto a placeholder
+   without regenerating the book: click any illustration frame to pick an
+   image file from disk, then use the save bar to write the whole page back
+   to its .html file. Scoped to @media screen for the same reason as the
+   page preview above — none of it reaches print/PDF output. */
+
+/* Not scoped to @media screen: Playwright's page.pdf() prints through the
+   `print` media type, which never sees the @media screen block below, so
+   without an unconditional `display: none` here the save bar would render
+   as an unstyled block at the end of the document and push out an extra
+   printed page. */
+.editor-savebar {
+  display: none;
+}
+
+/* Same reasoning as .editor-savebar above: the text-editing pencil button is
+   injected as a real DOM node (so it survives Playwright's `page.pdf()` pass
+   too), and must default to hidden outside @media screen or it prints as a
+   stray unstyled button on every text box. */
+.t-edit-btn {
+  display: none;
+}
+
+@media screen {
+  .art,
+  .spotting-art {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .art:hover,
+  .spotting-art:hover {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .art::after,
+  .spotting-art::after {
+    content: "+ Add photo";
+    position: absolute;
+    top: 1.5mm;
+    right: 1.5mm;
+    font-family: var(--font-body);
+    font-size: var(--size-xs);
+    font-weight: 700;
+    line-height: 1;
+    padding: 1mm 2mm;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    opacity: 0.85;
+  }
+
+  .art:hover::after,
+  .spotting-art:hover::after {
+    opacity: 1;
+  }
+
+  .art.filled::after,
+  .spotting-art.filled::after {
+    content: "Replace";
+  }
+
+  .editor-savebar {
+    position: fixed;
+    left: 50%;
+    bottom: 8mm;
+    transform: translate(-50%, 14mm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: var(--ink);
+    color: var(--paper);
+    padding: var(--space-2) var(--space-4);
+    border-radius: 999px;
+    box-shadow: 0 1mm 5mm rgba(0, 0, 0, 0.4);
+    font-family: var(--font-body);
+    font-size: var(--size-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 1000;
+  }
+
+  .editor-savebar.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+  }
+
+  .editor-save-btn,
+  .editor-pdf-btn {
+    font: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--paper);
+    border: none;
+    border-radius: 999px;
+    padding: 1.5mm 4mm;
+    cursor: pointer;
+  }
+
+  /* -- in-browser text editing ---------------------------------------------
+
+     Every reader-facing text box (title, instructions, labels, questions,
+     ...) is marked .t-edit at render time. Hovering shows a dashed outline
+     plus a pencil button; clicking the pencil makes just that box's text
+     editable. Only one box is ever mid-edit — starting a new one blurs
+     whichever was active. */
+
+  .t-edit {
+    position: relative;
+  }
+
+  .t-edit:hover,
+  .t-edit.editing {
+    outline: 2px dashed var(--accent);
+    outline-offset: 2px;
+  }
+
+  .t-edit.editing {
+    outline-style: solid;
+    background: rgba(255, 232, 130, 0.35);
+  }
+
+  .t-edit-btn {
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -3mm;
+    right: -3mm;
+    width: 5.5mm;
+    height: 5.5mm;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--paper);
+    font-size: 3mm;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.9;
+    z-index: 5;
+  }
+
+  [dir="rtl"] .t-edit-btn {
+    right: auto;
+    left: -3mm;
+  }
+
+  .t-edit:hover .t-edit-btn,
+  .t-edit.editing .t-edit-btn {
+    display: flex;
+  }
+
+  .t-edit-text {
+    outline: none;
+  }
 }

@@ -27,7 +27,10 @@ class ColoringActivity(ActivityGenerator):
     min_age = 3
     max_age = 10
     weight = 20
-    max_per_workbook = 2
+    # Raised while hidden_objects/spot_difference/wildlife_facts are paused
+    # (see their `enabled = False`), so coloring can absorb most of the slack
+    # in a typical book instead of the planner over-repeating everything else.
+    max_per_workbook = 6
     energy = "calm"
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:

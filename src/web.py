@@ -42,6 +42,7 @@ from src.uploads import UploadError, parse_multipart, safe_stem
 logger = logging.getLogger(__name__)
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates" / "web"
+STATIC_DIR = TEMPLATE_DIR / "static"
 
 LANGUAGE_NAMES = {"en": "English", "he": "עברית"}
 
@@ -106,6 +107,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
                 self._render_form(visitor=visitor, variants=variants),
                 set_visitor=visitor if is_new else None,
             )
+        elif path.startswith("/static/"):
+            self._send_static(path[len("/static/"):])
         elif path.startswith("/files/"):
             self._send_file(path[len("/files/"):])
         elif path.startswith("/go/"):
@@ -347,8 +350,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
 
         def link(path: Path, label: str, note: str) -> str:
             return (
-                f'      <a href="{href(path, tracked=True)}">{_escape(label)}'
-                f"<small>{_escape(note)}</small></a>"
+                f'      <a href="{href(path, tracked=True)}" target="_blank" rel="noopener">'
+                f"{_escape(label)}<small>{_escape(note)}</small></a>"
             )
 
         downloads = []
@@ -402,6 +405,13 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
                 "The pages use general travel material rather than local facts. Adding a pack "
                 "under data/destinations/ fixes that.",
             )
+        if result.language_qa:
+            notice += self._notice(
+                "Some English may have slipped in",
+                f"{len(result.language_qa)} spot(s) in this "
+                f"{_escape(workbook.language)} workbook still show Latin-script words — often "
+                "because this destination has no translated data pack yet. Check workbook.md.",
+            )
 
         return _template("result.html.tmpl").substitute(
             css=_css(),
@@ -424,7 +434,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             reference_note=reference_note,
             prompt_count=len(artifacts.prompt_files),
             prompt_files="\n".join(
-                f'        <li><a href="/go/{quote(slug)}/prompts/{quote(path.name)}">'
+                f'        <li><a href="/go/{quote(slug)}/prompts/{quote(path.name)}" '
+                f'target="_blank" rel="noopener">'
                 f"{_escape(path.name)}</a></li>"
                 for path in artifacts.prompt_files
             ),
@@ -591,6 +602,16 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
 
     def _send_file(self, relative: str) -> None:
         root = Path(self.output_root).resolve()
+        target = (root / relative).resolve()
+        if not target.is_relative_to(root) or not target.is_file():
+            self._send(404, "text/plain; charset=utf-8", b"not found")
+            return
+        content_type = CONTENT_TYPES.get(target.suffix.lower(), "application/octet-stream")
+        self._send(200, content_type, target.read_bytes())
+
+    def _send_static(self, relative: str) -> None:
+        """Serve a fixed asset shipped with the templates, e.g. the logo."""
+        root = STATIC_DIR.resolve()
         target = (root / relative).resolve()
         if not target.is_relative_to(root) or not target.is_file():
             self._send(404, "text/plain; charset=utf-8", b"not found")

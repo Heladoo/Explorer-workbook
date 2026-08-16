@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -27,12 +28,18 @@ INSTALL_HINT = (
     "somewhere unusual)."
 )
 
-#: Where Chromium builds are commonly unpacked, newest last.
+#: Where Chromium builds are commonly unpacked, newest last. Both the older
+#: ("chrome-win") and current ("chrome-win64") Windows folder names are
+#: listed since Playwright has shipped both across versions.
 _CHROMIUM_GLOBS = (
     "chromium-*/chrome-linux/chrome",
     "chromium_headless_shell-*/chrome-linux/chrome-headless-shell",
     "chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    "chromium-*/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium",
     "chromium-*/chrome-win/chrome.exe",
+    "chromium-*/chrome-win64/chrome.exe",
+    "chromium_headless_shell-*/chrome-win/chrome-headless-shell.exe",
+    "chromium_headless_shell-*/chrome-win64/chrome-headless-shell.exe",
 )
 
 
@@ -58,12 +65,22 @@ class PdfRenderer:
         context: WorkbookContext,
         *,
         images: dict[int, Path] | None = None,
+        symbol_images: dict[str, Path] | None = None,
+        symbol_cutouts: dict[str, Path] | None = None,
+        symbol_shadows: dict[str, Path] | None = None,
         output_path: Path | str,
     ) -> Path:
         """Write the PDF and return its path."""
         target = Path(output_path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        html = self.html_renderer.render(workbook, context, images=images)
+        html = self.html_renderer.render(
+            workbook,
+            context,
+            images=images,
+            symbol_images=symbol_images,
+            symbol_cutouts=symbol_cutouts,
+            symbol_shadows=symbol_shadows,
+        )
 
         if self.keep_html:
             source = target.with_suffix(".html")
@@ -119,19 +136,43 @@ class PdfRenderer:
 
 
 def find_chromium() -> str | None:
-    """Locate a Chromium binary without downloading anything."""
+    """Locate a Chromium binary without downloading anything.
+
+    Checks ``PLAYWRIGHT_BROWSERS_PATH`` first, then the platform-default
+    cache ``playwright install`` uses when that variable is unset — which is
+    the common case, so relying on the env var alone made this report "no
+    Chromium" even with a normal ``playwright install`` on the machine.
+    """
     explicit = os.environ.get("CHROMIUM_EXECUTABLE")
     if explicit and Path(explicit).exists():
         return explicit
 
-    root = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
-    if not root:
-        return None
-    base = Path(root)
-    if not base.is_dir():
-        return None
-    for pattern in _CHROMIUM_GLOBS:
-        matches = sorted(path for path in base.glob(pattern) if path.exists())
-        if matches:
-            return str(matches[-1])
+    for base in _candidate_browsers_dirs():
+        if not base.is_dir():
+            continue
+        for pattern in _CHROMIUM_GLOBS:
+            matches = sorted(path for path in base.glob(pattern) if path.exists())
+            if matches:
+                return str(matches[-1])
     return None
+
+
+def _candidate_browsers_dirs() -> list[Path]:
+    """Every directory Playwright might have installed browsers into."""
+    dirs: list[Path] = []
+    configured = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if configured:
+        dirs.append(Path(configured))
+
+    # Playwright's own default cache location per platform (see its
+    # `registry.py`), used whenever PLAYWRIGHT_BROWSERS_PATH is not set.
+    if sys.platform == "win32":
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            dirs.append(Path(local_app_data) / "ms-playwright")
+    elif sys.platform == "darwin":
+        dirs.append(Path.home() / "Library" / "Caches" / "ms-playwright")
+    else:
+        xdg_cache = os.environ.get("XDG_CACHE_HOME")
+        dirs.append(Path(xdg_cache) / "ms-playwright" if xdg_cache else Path.home() / ".cache" / "ms-playwright")
+    return dirs

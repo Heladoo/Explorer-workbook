@@ -29,8 +29,13 @@ STOPWORDS = frozenset(
     }
 )
 
-#: Categories worth mining for puzzle words, in preference order.
-PUZZLE_CATEGORIES = ("wildlife", "landmarks", "plants", "local_food", "activities")
+#: Categories worth mining for puzzle words, in preference order. Deliberately
+#: excludes ``landmarks`` — a landmark is a place name by definition, and a
+#: proper noun in a foreign script or spelling is exactly the kind of word a
+#: child can't be expected to already know how to find, unlike an everyday
+#: noun like "boats" or "chestnuts" (see ``_symbols.py``'s
+#: ``SPOTTABLE_CATEGORIES`` for the same exclusion, for the same reason).
+PUZZLE_CATEGORIES = ("wildlife", "plants", "local_food", "activities")
 
 
 @dataclass(frozen=True)
@@ -71,6 +76,29 @@ def normalize(text: str) -> str:
     return "".join(letters).upper()
 
 
+#: Hebrew attaches a one-letter preposition/conjunction/article directly to
+#: the word that follows, with no space — ``בסירות`` ("in boats") is ``ב``
+#: ("in") plus ``סירות`` ("boats"). English's equivalent function words are
+#: their own tokens and so are already caught by STOPWORDS above; Hebrew's
+#: never are, which used to let a phrase like "watching fishing boats come
+#: into a harbour" print "בסירות" as the puzzle answer instead of "סירות" —
+#: not a word on its own. There's no safe way to *cut* the letter off
+#: (a real word can start with any of these too — ``מפרץ`` "gulf",
+#: ``מקומי`` "local" — and mis-cutting prints a fragment that isn't a word
+#: at all), so a token that might carry one is only used when the phrase
+#: offers nothing better; picking a different real word from the same
+#: phrase is always safe, guessing where to cut one is not.
+_HEBREW_PROCLITICS = "ובכלמשה"
+
+
+def _maybe_prefixed(word: str, *, min_length: int) -> bool:
+    return (
+        len(word) > 1
+        and word[0] in _HEBREW_PROCLITICS
+        and len(word) - 1 >= min_length
+    )
+
+
 def puzzle_word(phrase: str, *, min_length: int = 3, max_length: int = 10) -> str | None:
     """Pick the most distinctive word in a phrase, or ``None`` if there isn't one.
 
@@ -88,7 +116,16 @@ def puzzle_word(phrase: str, *, min_length: int = 3, max_length: int = 10) -> st
             candidates.append(word)
     if not candidates:
         return None
-    return max(candidates, key=lambda word: (len(word), -candidates.index(word)))
+    unprefixed = [w for w in candidates if not _maybe_prefixed(w, min_length=min_length)]
+    # If *every* candidate is proclitic-prefixed, there is no safe word left
+    # to cut off the prefix from (see the module docstring above) — admit
+    # defeat rather than settle for a fragment. build_word_bank() already
+    # round-robins across categories/phrases and accepts fewer than `count`
+    # words if the pool runs out, so a `None` here just means it moves on to
+    # a cleaner word from a different phrase instead.
+    if not unprefixed:
+        return None
+    return max(unprefixed, key=lambda word: (len(word), -unprefixed.index(word)))
 
 
 def build_word_bank(

@@ -8,10 +8,14 @@ from __future__ import annotations
 
 import hashlib
 import random
-import re
-import unicodedata
 from dataclasses import dataclass, field, replace
 from typing import Any, Iterable, Sequence
+
+#: Re-exported for every existing ``from src.models.context import slugify``
+#: call site — the implementation lives in ``src.slug`` so that leaf module
+#: (and ``src.symbols``, which also needs it) can be imported without a cycle
+#: back through here.
+from src.slug import slugify  # noqa: F401
 
 #: Ordered difficulty ladder used by the planner and the activity generators.
 DIFFICULTY_LEVELS = ("easy", "medium", "hard")
@@ -27,18 +31,6 @@ KNOWLEDGE_FIELDS = (
     "weather",
     "interesting_facts",
 )
-
-
-def slugify(value: str) -> str:
-    """Return a filesystem- and URL-safe slug for ``value``.
-
-    Accents are folded rather than dropped so that "Český Krumlov" becomes
-    ``cesky-krumlov`` instead of ``cesk-krumlov``.
-    """
-    normalized = unicodedata.normalize("NFKD", value)
-    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
-    slug = re.sub(r"[^a-zA-Z0-9]+", "-", ascii_only).strip("-").lower()
-    return slug or "destination"
 
 
 def _as_tuple(values: Iterable[str] | None) -> tuple[str, ...]:
@@ -93,6 +85,58 @@ class Trip:
 
 
 @dataclass(frozen=True)
+class DestinationProfile:
+    """Where a destination sits in the symbol library's vocabulary.
+
+    The other half of symbol-to-destination matching: a library entry says
+    which ``environments``/``regions``/``climate`` it belongs to (see
+    ``src.symbols.model.SymbolFacets``); a profile says the same about a
+    destination, in the same closed vocabulary (``src.symbols.vocab``), so a
+    future relevance score can compare the two by plain set overlap. Lives
+    here rather than in ``src.symbols`` so ``DestinationKnowledge`` can carry
+    one without this module depending on that package.
+
+    Deliberately lenient like the rest of ``DestinationKnowledge.from_dict``
+    — an authored pack is content, not structure, so a stray or misspelt tag
+    is left for a test to catch rather than raised here. See
+    ``src.symbols.profile`` for both the strict-vocabulary test helper and
+    the keyword-scan fallback that builds one of these when a pack has none.
+    """
+
+    regions: tuple[str, ...] = ()
+    environments: tuple[str, ...] = ()
+    climate: tuple[str, ...] = ()
+    #: ``"authored"`` (the pack's own ``profile`` block) or ``"derived"`` (a
+    #: keyword scan over the destination's knowledge text). Recorded because
+    #: only an authored profile is complete enough to be trusted to *bar* a
+    #: symbol later: a scan that simply failed to notice the river must cost
+    #: a boat some points, never all of them.
+    source: str = "derived"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "regions", _as_tuple(self.regions))
+        object.__setattr__(self, "environments", _as_tuple(self.environments))
+        object.__setattr__(self, "climate", _as_tuple(self.climate))
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any], *, source: str = "authored") -> "DestinationProfile":
+        return cls(
+            regions=tuple(data.get("regions", ())),
+            environments=tuple(data.get("environments", ())),
+            climate=tuple(data.get("climate", ())),
+            source=str(data.get("source", source)),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "regions": list(self.regions),
+            "environments": list(self.environments),
+            "climate": list(self.climate),
+            "source": self.source,
+        }
+
+
+@dataclass(frozen=True)
 class DestinationKnowledge:
     """Structured facts about a destination, produced by Agent 1.
 
@@ -118,6 +162,24 @@ class DestinationKnowledge:
     #: prompts are always written in English, so the prompt generator maps
     #: terms back through this before rendering. Empty for English packs.
     illustration_terms: tuple[tuple[str, str], ...] = ()
+    #: ISO 3166-1 alpha-2 code naming which entry in ``data/countries.json``
+    #: this destination belongs to. "" when unknown — a destination with no
+    #: curated pack (or a pack that doesn't name one) simply has no country
+    #: facts, and callers must degrade gracefully rather than guess one.
+    #: Deliberately *not* a ``KNOWLEDGE_FIELDS`` entry: that tuple means
+    #: "a category of short strings", and membership drives six different
+    #: behaviours below (``_as_tuple``, ``coverage``, ``is_empty``,
+    #: ``filled_with``, ``to_dict``, the LLM provider's field list) that all
+    #: assume a tuple, not a single scalar reference.
+    country: str = ""
+    #: Where this destination sits in the symbol library's vocabulary, for
+    #: matching symbols to a destination. ``None`` until something has
+    #: populated it — a bare pack with no ``profile`` block stays ``None``
+    #: rather than an empty, misleadingly "authored" profile; callers that
+    #: need one unconditionally should go through
+    #: ``src.symbols.profile.profile_for()``, which falls back to a derived
+    #: guess.
+    profile: DestinationProfile | None = None
 
     def __post_init__(self) -> None:
         for name in KNOWLEDGE_FIELDS + ("notes",):
@@ -135,6 +197,9 @@ class DestinationKnowledge:
         payload["illustration_terms"] = tuple(
             (str(term), str(english)) for term, english in dict(terms).items()
         )
+        profile_block = data.get("profile")
+        payload["profile"] = DestinationProfile.from_dict(profile_block) if profile_block else None
+        payload["country"] = str(data.get("country", "") or "").upper()
         return cls(**payload)
 
     @property
@@ -178,6 +243,10 @@ class DestinationKnowledge:
             data["notes"] = list(self.notes)
         if self.illustration_terms:
             data["illustration_terms"] = dict(self.illustration_terms)
+        if self.profile is not None:
+            data["profile"] = self.profile.to_dict()
+        if self.country:
+            data["country"] = self.country
         return data
 
 

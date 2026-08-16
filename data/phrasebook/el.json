@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "el",
+  "script": "greek",
+  "direction": "ltr",
+  "entries": {
+    "yes": { "native": "ναι", "pronunciation": { "en": "neh", "he": "נֵה" } },
+    "no": { "native": "όχι", "pronunciation": { "en": "O-hee", "he": "אוֹחִי" } },
+    "please": { "native": "παρακαλώ", "pronunciation": { "en": "pa-ra-ka-LO", "he": "פָּארָקָלוֹ" } },
+    "thank_you": { "native": "ευχαριστώ", "pronunciation": { "en": "ef-ha-ree-STO", "he": "אֶפְחָרִיסְטוֹ" } },
+    "sorry": { "native": "συγγνώμη", "pronunciation": { "en": "see-GHNO-mee", "he": "סִיגְנוֹמִי" } },
+    "good_morning": { "native": "καλημέρα", "pronunciation": { "en": "ka-lee-ME-ra", "he": "קָאלִימֶרָה" } },
+    "good_night": { "native": "καληνύχτα", "pronunciation": { "en": "ka-lee-NEEKH-ta", "he": "קָלִינִיכְטָה" } },
+    "water": { "native": "νερό", "pronunciation": { "en": "ne-RO", "he": "נֶרוֹ" } },
+    "bathroom": { "native": "τουαλέτα", "pronunciation": { "en": "too-a-LE-ta", "he": "טוּאָלֶטָה" } },
+    "family": { "native": "οικογένεια", "pronunciation": { "en": "ee-ko-YE-nee-a", "he": "אִיקוֹיֶנְיָה" } }
+  }
+}

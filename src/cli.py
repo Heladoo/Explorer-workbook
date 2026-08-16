@@ -8,10 +8,15 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from pathlib import Path
 from typing import Sequence
 
 from src.agents.destination_agent import FileKnowledgeProvider
 from src.api import generate_workbook
+from src.image_backends.openrouter import DEFAULT_MODEL, OpenRouterImageBackend
+from src.image_backends.runner import generate_images, generate_symbol_images
+from src.image_backends.sources import DEFAULT_SOURCES_DIR, write_readme, write_symbol_prompts
+from src.output_writer import write_bundle
 from src.strings import available_languages
 
 
@@ -79,9 +84,39 @@ def build_parser() -> argparse.ArgumentParser:
         help="Also print the workbook to A4 PDF (implies --html; needs playwright).",
     )
     parser.add_argument(
+        "--ink-saver",
+        action="store_true",
+        help="Flatten the print layout's brand colors to grayscale, for cheap "
+        "home printing.",
+    )
+    parser.add_argument(
         "--list-destinations",
         action="store_true",
         help="List destinations that have a curated data pack, then exit.",
+    )
+    parser.add_argument(
+        "--generate-images",
+        action="store_true",
+        help="Render every page's image_prompt via OpenRouter (needs OPENROUTER_API_KEY).",
+    )
+    parser.add_argument(
+        "--image-model",
+        default=DEFAULT_MODEL,
+        help=f"OpenRouter model slug for image generation (default: {DEFAULT_MODEL}).",
+    )
+    parser.add_argument(
+        "--symbol-cache",
+        default=str(DEFAULT_SOURCES_DIR / "images"),
+        help="Directory of reusable scavenger-hunt symbol drawings, reused across "
+        "every book and shared with the repo's pre-generated set "
+        f"(default: {DEFAULT_SOURCES_DIR / 'images'}).",
+    )
+    parser.add_argument(
+        "--write-symbol-sources",
+        action="store_true",
+        help=f"Write every universal scavenger-hunt symbol's prompt to "
+        f"{DEFAULT_SOURCES_DIR}/prompts/ (checked into the repo, reused by every "
+        "book — see sources/symbols/README.md), then exit.",
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Show provider decisions.")
     return parser
@@ -100,6 +135,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         for name in known or ("(none found)",):
             print(f"  - {name}")
         print("\nAny other destination works too, via --provider llm or generic material.")
+        return 0
+
+    if args.write_symbol_sources:
+        written = write_symbol_prompts()
+        write_readme()
+        print(f"Wrote {len(written)} symbol prompts to {DEFAULT_SOURCES_DIR / 'prompts'}")
         return 0
 
     if not args.destination:
@@ -132,6 +173,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=args.out,
             html=args.html,
             pdf=args.pdf,
+            ink_saver=args.ink_saver,
         )
     except (ValueError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -140,6 +182,29 @@ def main(argv: Sequence[str] | None = None) -> int:
     workbook = result.workbook
     artifacts = result.artifacts
     assert artifacts is not None  # generate_workbook wrote by default
+
+    if args.generate_images:
+        backend = OpenRouterImageBackend(model=args.image_model)
+        images_dir = artifacts.output_dir / "images"
+        symbols_dir = Path(args.symbol_cache)
+        context = result.bundle.context
+        images = generate_images(workbook, context, backend, output_dir=images_dir)
+        symbol_images = generate_symbol_images(
+            workbook, context, backend, output_dir=symbols_dir
+        )
+        if images or symbol_images:
+            artifacts = write_bundle(
+                result.bundle,
+                artifacts.output_dir,
+                html=args.html,
+                pdf=args.pdf,
+                ink_saver=args.ink_saver,
+                images=images,
+                symbol_images=symbol_images,
+            )
+        print(f"  images      : {len(images)}/{workbook.page_count} pages")
+        if symbol_images:
+            print(f"  symbols     : {len(symbol_images)} in {symbols_dir}")
 
     print(f"{workbook.title}")
     print(f"  destination : {workbook.destination}")
@@ -162,6 +227,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if workbook.metadata.get("language_fallback"):
         print(f"  note        : {workbook.metadata['language_fallback']}")
         print(f"                available: {', '.join(available_languages())}")
+    if result.language_qa:
+        print(f"  language QA : {len(result.language_qa)} possible English leak(s)")
+        for finding in result.language_qa:
+            print(f"    - {finding}")
     return 0
 
 

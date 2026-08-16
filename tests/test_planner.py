@@ -77,11 +77,13 @@ def test_activities_alternate_between_quiet_and_active(context):
 
 
 def test_interests_pull_matching_activities_into_the_book(context):
+    # wildlife_facts and hidden_objects are currently paused (`enabled = False`),
+    # so "animals" can only pull in the third favoured activity: matching.
     plain = WorkbookPlanner().plan(_with(context, page_count=6))
     animal_lover = WorkbookPlanner().plan(
         _with(context, page_count=6, interests=("animals",))
     )
-    assert "wildlife_facts" in [page.activity_type for page in animal_lover]
+    assert "matching" in [page.activity_type for page in animal_lover]
     assert plain != animal_lover
 
 

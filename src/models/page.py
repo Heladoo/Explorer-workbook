@@ -68,6 +68,62 @@ class ImageBrief:
 
 
 @dataclass(frozen=True)
+class SymbolBrief:
+    """One small standalone picture, drawn from its own prompt.
+
+    A page whose working area is a *table* of pictures — the scavenger hunt
+    grid — asks for one of these per cell instead of asking a single prompt to
+    draw the whole labelled grid. One subject per prompt is what image models
+    are reliable at; exact cell counts and in-image checkboxes are not.
+
+    ``key`` is a stable, language-independent slug naming the prompt file and
+    the generated image. A symbol whose subject is the same everywhere (a stop
+    sign) therefore has the same key in every book, so its drawing can be
+    generated once and reused. ``subject`` is always English; ``label`` is what
+    the child reads, in the workbook's language.
+    """
+
+    key: str
+    label: str
+    subject: str
+    #: Filled by Agent 4 — the activity never writes prompt text itself.
+    prompt: str = ""
+    #: ``False`` marks a destination-specific sight, whose drawing is only
+    #: reusable within books about the same place.
+    universal: bool = True
+    #: Whether ``sources/symbols/prompts/<key>.md`` actually exists — only
+    #: the library's always-findable pool (``ubiquity`` "everywhere"/"common")
+    #: has one; a "regional"/"local" ``ready`` symbol got its art some other
+    #: way (hand-authored from a destination's doodle sheet, typically) and
+    #: was never machine-prompted. Set by the pipeline, which knows the whole
+    #: library — a bare ``SymbolBrief`` has no way to check this itself.
+    has_shared_prompt: bool = False
+
+    @property
+    def prompt_filename(self) -> str:
+        """Prompt path relative to ``prompts/``, e.g. ``symbols/stop-sign.md``."""
+        return f"symbols/{self.key}.md"
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "key": self.key,
+            "label": self.label,
+            "subject": self.subject,
+            "prompt": self.prompt,
+            "universal": self.universal,
+        }
+        # This symbol has no per-book prompt file — see ``prompt`` above —
+        # so ``prompt_file`` must name the one place a real prompt actually
+        # lives, and only when it does. Claiming the per-book path here was
+        # always false (nothing ever writes prompts/symbols/*.md), and
+        # claiming the shared path unconditionally would be false for every
+        # "regional"/"local" symbol too — see ``has_shared_prompt`` above.
+        if self.has_shared_prompt:
+            data["prompt_file"] = f"sources/symbols/prompts/{self.key}.md"
+        return data
+
+
+@dataclass(frozen=True)
 class ActivityDraft:
     """What an activity generator returns.
 
@@ -78,13 +134,20 @@ class ActivityDraft:
     type: str
     title: str
     instructions: str
-    image_brief: ImageBrief
+    image_brief: ImageBrief | None = None
     educational_goal: str = ""
     estimated_age: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    #: Per-cell pictures for pages that lay their artwork out as a table.
+    symbols: tuple[SymbolBrief, ...] = ()
 
-    def to_page(self, number: int, image_prompt: str) -> "Page":
-        """Combine the draft with its page number and rendered prompt."""
+    def to_page(
+        self,
+        number: int,
+        image_prompt: str,
+        symbols: tuple[SymbolBrief, ...] | None = None,
+    ) -> "Page":
+        """Combine the draft with its page number and rendered prompts."""
         return Page(
             number=number,
             type=self.type,
@@ -95,6 +158,7 @@ class ActivityDraft:
             estimated_age=self.estimated_age,
             metadata=dict(self.metadata),
             image_brief=self.image_brief,
+            symbols=tuple(symbols if symbols is not None else self.symbols),
         )
 
 
@@ -111,6 +175,8 @@ class Page:
     estimated_age: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
     image_brief: ImageBrief | None = None
+    #: Per-cell pictures, each with its own prompt. Empty for most pages.
+    symbols: tuple[SymbolBrief, ...] = ()
 
     @property
     def prompt_filename(self) -> str:
@@ -132,7 +198,7 @@ class Page:
         metadata = dict(self.metadata)
         if self.image_brief is not None:
             metadata.setdefault("image_brief", self.image_brief.to_dict())
-        return {
+        data: dict[str, Any] = {
             "number": self.number,
             "type": self.type,
             "title": self.title,
@@ -143,6 +209,9 @@ class Page:
             "prompt_file": f"prompts/{self.prompt_filename}",
             "metadata": metadata,
         }
+        if self.symbols:
+            data["symbols"] = [symbol.to_dict() for symbol in self.symbols]
+        return data
 
 
 def _clean(values: Iterable[str] | None) -> tuple[str, ...]:

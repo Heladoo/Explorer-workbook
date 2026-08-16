@@ -34,6 +34,9 @@ class SpotDifferenceActivity(ActivityGenerator):
     max_age = 12
     weight = 16
     energy = "active"
+    # Paused in favour of more coloring pages while we gather experience with
+    # the book. Flip back to True to bring it back into rotation.
+    enabled = False
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
         focus = self.visual_focus(planned, allowed=NOUN_CATEGORIES)
