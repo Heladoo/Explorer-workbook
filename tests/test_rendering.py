@@ -46,6 +46,20 @@ def test_the_document_is_print_styled_for_the_default_a5_booklet(rendered):
     assert "<style>" in html, "the CSS must be inlined so the file stands alone"
 
 
+def test_the_final_page_break_is_relaxed_by_element_type_not_dom_position(rendered):
+    """Must be :last-of-type, not :last-child — the printed document always
+    has non-<section> siblings trailing the last page (the editor's own
+    <script>, its hidden file <input>), and in the wild a browser extension
+    injects its own element there too (Grammarly's
+    <grammarly-desktop-integration>, seen right after </body> in a real save).
+    :last-child stops matching the true last page the moment anything trails
+    it, which costs a genuine blank page at the end of the PDF — see
+    test_trailing_markup_after_the_last_page_does_not_add_a_blank_page."""
+    _, html = rendered
+    assert ".page:last-of-type" in html
+    assert ".page:last-child" not in html
+
+
 def test_the_a4_format_is_still_available_and_prints_at_a4(builder):
     """The original one-page-per-sheet format is a flag away, not gone."""
     result = generate_workbook(
@@ -838,6 +852,39 @@ def test_render_html_prints_an_already_rendered_document(tmp_path, builder):
     assert target.exists()
     raw = target.read_bytes()
     assert raw.startswith(b"%PDF-")
+    assert raw.count(b"/Type /Page\n") == result.workbook.page_count
+
+
+@requires_chromium
+def test_trailing_markup_after_the_last_page_does_not_add_a_blank_page(tmp_path, builder):
+    """A real user's saved-from-the-editor document came back from a browser
+    extension (Grammarly) with its own custom element injected as a sibling
+    of <body>, landing right after </body> — and the editor's own <script>
+    and hidden file-picker <input> already trail every printed document
+    regardless of any extension. ``.page:last-of-type`` (book.css) is what
+    keeps any of that from costing a genuine blank page at the end of the
+    PDF: page-break-after must relax for the true last <section>, not just
+    whichever element happens to still be body's literal last child.
+    """
+    from src.rendering.pdf_renderer import PdfRenderer
+
+    result = generate_workbook(
+        destination="Prague", page_count=4, write=False, builder=builder
+    )
+    html = HtmlRenderer(include_contents=False).render(
+        result.workbook, result.bundle.context
+    )
+    polluted = html.replace(
+        "</body>\n</html>",
+        '</body><grammarly-desktop-integration data-grammarly-shadow-root="true">'
+        "</grammarly-desktop-integration></html>",
+    )
+    assert polluted != html
+
+    target = tmp_path / "polluted.pdf"
+    PdfRenderer(keep_html=False).render_html(polluted, target)
+
+    raw = target.read_bytes()
     assert raw.count(b"/Type /Page\n") == result.workbook.page_count
 
 

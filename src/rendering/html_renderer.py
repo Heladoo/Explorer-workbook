@@ -134,6 +134,10 @@ class HtmlRenderer:
         # there. See src/fonts.py::scripts_in.
         needed_scripts = fonts.scripts_in(pages + contents + workbook.title)
 
+        # Stamped onto <html> as data-page-format/data-page-count so the
+        # in-browser editor's "Save as PDF" can hand the *edited* document
+        # back to PdfRenderer/impose_booklet with no Workbook in sight — see
+        # src/rendering/print_metadata.py.
         return self.templates.render(
             "book",
             language=workbook.language,
@@ -144,6 +148,8 @@ class HtmlRenderer:
             body_class="ink-saver" if self.ink_saver else "",
             contents=contents,
             pages=pages,
+            page_format=self.page_format.key,
+            page_count=workbook.page_count,
         )
 
     # -- internals -------------------------------------------------------

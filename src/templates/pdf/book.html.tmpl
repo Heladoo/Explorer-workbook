@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="$language" dir="$direction">
+<html lang="$language" dir="$direction" data-page-format="$page_format" data-page-count="$page_count">
 <head>
 <meta charset="utf-8">
 <title>$title</title>
@@ -82,10 +82,76 @@ $pages
   saveBar.appendChild(pdfButton);
   document.body.appendChild(saveBar);
   saveButton.addEventListener("click", save);
-  pdfButton.addEventListener("click", function () {
+  pdfButton.addEventListener("click", printPdf);
+
+  // Printing through the browser's own dialog only ever offers loose page
+  // sizes (A4, Letter, ...) — there is no way to ask it for this book's real
+  // format (A5, two-up on an A4 sheet, folded and stapled), so a "Save as
+  // PDF" through window.print() came out A4 regardless of what the book
+  // actually is. /print runs the exact same headless-Chromium + imposition
+  // pipeline the generator itself uses — reading the format straight off
+  // this document (its own data-page-format/data-page-count if present,
+  // otherwise sniffed from its @page CSS and .page sections — see
+  // src/rendering/print_metadata.py — so even a book saved before this
+  // endpoint existed still prints correctly) — so the result matches the
+  // book's real format instead of whatever the browser defaults to.
+  async function printPdf() {
     stopEditing(activeTextEl);
-    window.print();
-  });
+    var originalLabel = pdfButton.textContent;
+    pdfButton.disabled = true;
+    pdfButton.textContent = "Preparing PDF…";
+    try {
+      var response;
+      try {
+        response = await fetch("/print", {
+          method: "POST",
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+          body: serializedDocument(),
+        });
+      } catch (networkErr) {
+        // No server to ask at all — e.g. this file was opened directly from
+        // disk rather than through `python -m src.web`. That is the expected
+        // offline case, not an error, so degrade quietly to what printing
+        // already did before this endpoint existed.
+        window.print();
+        return;
+      }
+      if (!response.ok) {
+        // A server *is* there but genuinely couldn't print this document —
+        // worth saying so, rather than silently reproducing the old
+        // A4-no-matter-what behaviour with no explanation.
+        var message = (await response.text().catch(function () { return ""; }))
+          || ("HTTP " + response.status);
+        window.alert("Couldn't generate the PDF (" + message + ") — using your browser's print dialog instead.");
+        window.print();
+        return;
+      }
+      var blob = await response.blob();
+      var disposition = response.headers.get("Content-Disposition") || "";
+      var encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+      var plain = /filename="([^"]+)"/.exec(disposition);
+      var filename = encoded ? decodeURIComponent(encoded[1]) : (plain ? plain[1] : "workbook.pdf");
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      // A 200 here only means *a* PDF came back — this book's format may
+      // still have failed to fold into a booklet (an odd page count, or the
+      // imposition step itself hit something). Say so rather than handing
+      // over plain A5 pages under no-visible-difference circumstances.
+      var warning = response.headers.get("X-Print-Warning");
+      if (warning) {
+        window.alert("Saved, but couldn't make it a fold-and-staple booklet: " + decodeURIComponent(warning));
+      }
+    } finally {
+      pdfButton.disabled = false;
+      pdfButton.textContent = originalLabel;
+    }
+  }
 
   function markDirty() {
     dirty = true;

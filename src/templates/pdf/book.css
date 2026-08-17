@@ -179,7 +179,19 @@ body {
   overflow: hidden;
 }
 
-.page:last-child {
+/* :last-of-type, not :last-child: the in-browser editor's saved/posted
+   document always has trailing non-<section> siblings after the last page
+   (its own <script>, the hidden file-picker <input>) — and, in the wild, a
+   browser extension's own injected element too (Grammarly's
+   <grammarly-desktop-integration>, seen landing right after </body> in a
+   real user's saved copy). :last-child stops matching the true last page the
+   moment anything trails it, so page-break-after stays "always" with no page
+   left to fill it — which Chromium's print pass answers with one genuine
+   blank page. Every .page is a <section> and nothing else in this document
+   ever is (except the table-of-contents section, which is always first, not
+   last), so :last-of-type finds the real last page regardless of what
+   unrelated markup — ours or a browser extension's — ends up after it. */
+.page:last-of-type {
   page-break-after: auto;
   break-after: auto;
 }

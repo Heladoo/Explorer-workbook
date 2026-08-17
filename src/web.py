@@ -21,7 +21,9 @@ from __future__ import annotations
 import argparse
 import html
 import logging
+import re
 import secrets
+import tempfile
 import time
 import traceback
 from http.cookies import SimpleCookie
@@ -37,6 +39,7 @@ from src.experiments import assignments
 from src.models.context import slugify
 from src.output_writer import DEFAULT_OUTPUT_ROOT
 from src.rendering.formats import DEFAULT_PAGE_COUNT
+from src.rendering.print_metadata import PrintMetadataError, read_print_metadata
 from src.strings import available_languages
 from src.uploads import UploadError, parse_multipart, safe_stem
 
@@ -129,6 +132,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             self._handle_generate()
         elif path == "/feedback":
             self._handle_feedback()
+        elif path == "/print":
+            self._handle_print()
         else:
             self._send_html(self._render_form(error="Unknown form target."), status=404)
 
@@ -493,6 +498,115 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
         )
         self._send(200, "application/json", b'{"status":"ok"}')
 
+    # -- printing an edited document ----------------------------------------
+
+    def _handle_print(self) -> None:
+        """Print a (possibly hand-edited) workbook document straight to PDF.
+
+        The in-browser editor's "Save as PDF" button posts its edited
+        document here instead of calling ``window.print()`` — a browser's own
+        print dialog only ever offers loose page sizes (A4, Letter, ...), with
+        no way to ask it for this book's real format (A5, two-up on an A4
+        sheet, folded and stapled). This runs the exact same headless-Chromium
+        + imposition pipeline ``--pdf`` uses, keyed off what the document
+        itself says about how to print it (see
+        ``src/rendering/print_metadata.py``) — so the result matches the
+        book's actual format, edited or not, even for a book saved before
+        this endpoint existed.
+        """
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0 or length > MAX_BODY_BYTES:
+            self._send(400, "text/plain; charset=utf-8", b"missing or oversized document")
+            return
+        html_text = self.rfile.read(length).decode("utf-8", errors="replace")
+
+        try:
+            page_format, page_count, binding, title = read_print_metadata(html_text)
+        except PrintMetadataError as exc:
+            self._send(400, "text/plain; charset=utf-8", str(exc).encode("utf-8"))
+            return
+
+        if not _pdf_available():
+            self._send(
+                503,
+                "text/plain; charset=utf-8",
+                b"PDF rendering isn't set up on this server (Playwright/Chromium missing).",
+            )
+            return
+
+        from src.rendering.pdf_renderer import PdfRenderer
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = Path(tmp)
+            try:
+                pdf_path = PdfRenderer(keep_html=False).render_html(
+                    html_text, tmp_dir / "workbook.pdf"
+                )
+            except RuntimeError as exc:
+                self._send(500, "text/plain; charset=utf-8", str(exc).encode("utf-8"))
+                return
+
+            # Fold-and-staple sheets, the same "second file, never instead"
+            # rule output_writer._impose follows — a failure here (unfoldable
+            # length, missing pypdf) costs only the imposed copy, not the
+            # readable one already on disk. Unlike output_writer, there is no
+            # second call site quietly reading workbook_booklet_pdf here — the
+            # editor's button downloads whatever comes back, so a silent
+            # fallback would hand someone plain A5 pages with no sign anything
+            # was ever meant to fold. booklet_warning carries the reason back
+            # as a response header instead, for the button to surface.
+            booklet_warning: str | None = None
+            if page_format.booklet:
+                if page_count % 4:
+                    booklet_warning = (
+                        f"{page_count} pages is not a multiple of 4, so this book can't "
+                        "be folded into a booklet — these are plain A5 pages instead."
+                    )
+                else:
+                    try:
+                        from src.rendering.imposition import impose_booklet
+
+                        pdf_path = impose_booklet(
+                            pdf_path,
+                            tmp_dir / "workbook-booklet.pdf",
+                            page_format=page_format,
+                            page_count=page_count,
+                            binding=binding,
+                        )
+                    except (RuntimeError, ValueError) as exc:
+                        booklet_warning = str(exc)
+                        debug_path = self._save_print_debug_copy(html_text)
+                        logger.warning(
+                            "printing %d pages without booklet imposition: %s "
+                            "(posted document saved to %s for inspection)",
+                            page_count,
+                            exc,
+                            debug_path,
+                        )
+
+            data = pdf_path.read_bytes()
+
+        headers = [("Content-Disposition", _content_disposition(title))]
+        if booklet_warning:
+            headers.append(("X-Print-Warning", quote(booklet_warning)))
+        self._send(200, "application/pdf", data, headers)
+
+    def _save_print_debug_copy(self, html_text: str) -> Path:
+        """Keep the exact posted document when imposition fails on it.
+
+        A failure here has been hard to pin down from the PDF alone — the
+        rendered page count disagreeing with the declared one could come from
+        several different DOM shapes a real browser's edit-then-serialize
+        round trip might produce, and none reproduced yet from a synthetic
+        POST. Keeping the actual bytes turns the next occurrence into
+        something inspectable instead of another guess.
+        """
+        debug_dir = Path(self.output_root) / ".print-debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        path = debug_dir / f"{int(time.time())}.html"
+        path.write_text(html_text, encoding="utf-8")
+        return path
+
     # -- redirect-and-track for outbound links ------------------------------
 
     def _redirect_and_track(self, relative: str) -> None:
@@ -702,6 +816,24 @@ def _pdf_available() -> bool:
     from src.rendering.pdf_renderer import find_chromium
 
     return find_chromium() is not None
+
+
+def _content_disposition(title: str) -> str:
+    """Name a /print download after the book itself, not the generic
+    "workbook.pdf" every download used to share.
+
+    A title is very often not ASCII (Hebrew, Greek, ...), so this carries it
+    twice: ``filename*`` (RFC 6266) is the real title, percent-encoded UTF-8,
+    which every current browser reads; the plain ``filename`` stays an ASCII
+    fallback for anything older that only understands that form.
+    """
+    base = re.sub(r'[\\/:*?"<>|\r\n]+', " ", title or "").strip()
+    base = re.sub(r"\s+", " ", base) or "workbook"
+    ascii_fallback = base.encode("ascii", "ignore").decode("ascii").strip() or "workbook"
+    return (
+        f'attachment; filename="{ascii_fallback}.pdf"; '
+        f"filename*=UTF-8''{quote(f'{base}.pdf')}"
+    )
 
 
 def serve(

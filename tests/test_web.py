@@ -489,6 +489,27 @@ def test_print_prints_the_posted_document_not_a_fresh_regeneration(site, monkeyp
     assert body.startswith(b"%PDF-")
 
 
+@requires_chromium
+def test_print_warns_rather_than_silently_skipping_the_booklet(site, monkeypatch):
+    """A booklet format that can't actually fold (page count not a multiple
+    of 4) must say so — the download would otherwise be indistinguishable
+    from a real booklet by filename alone, and the earlier silent fallback
+    is exactly what made a failed imposition invisible."""
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+    unfoldable = html.replace('data-page-count="12"', 'data-page-count="10"')
+    assert unfoldable != html
+
+    with _post_html(site, "/print", unfoldable) as response:
+        assert response.status == 200
+        warning = response.headers["X-Print-Warning"]
+        assert "not a multiple of 4" in urllib.parse.unquote(warning)
+        body = response.read()
+
+    assert body.startswith(b"%PDF-")
+
+
 def test_print_rejects_a_document_with_no_print_metadata(site):
     with pytest.raises(urllib.error.HTTPError) as error:
         _post_html(site, "/print", "<html><body>not a rendered book</body></html>")

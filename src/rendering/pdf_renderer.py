@@ -71,8 +71,6 @@ class PdfRenderer:
         output_path: Path | str,
     ) -> Path:
         """Write the PDF and return its path."""
-        target = Path(output_path)
-        target.parent.mkdir(parents=True, exist_ok=True)
         html = self.html_renderer.render(
             workbook,
             context,
@@ -81,6 +79,21 @@ class PdfRenderer:
             symbol_cutouts=symbol_cutouts,
             symbol_shadows=symbol_shadows,
         )
+        return self.render_html(html, output_path)
+
+    def render_html(self, html: str, output_path: Path | str) -> Path:
+        """Print an already-rendered document straight to PDF.
+
+        Unlike :meth:`render`, this takes finished markup rather than a
+        ``Workbook`` to build it from — the in-browser editor's "Save as PDF"
+        hands back exactly this: a self-contained document (images already
+        inlined as data URIs) that someone may have edited text or photos in,
+        with no ``Workbook``/``WorkbookContext`` behind it any more. Both
+        methods print through the same Chromium pass, so an edited document
+        comes out with the same fidelity as a freshly generated one.
+        """
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
 
         if self.keep_html:
             source = target.with_suffix(".html")
