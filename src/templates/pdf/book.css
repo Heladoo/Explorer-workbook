@@ -179,7 +179,19 @@ body {
   overflow: hidden;
 }
 
-.page:last-child {
+/* :last-of-type, not :last-child: the in-browser editor's saved/posted
+   document always has trailing non-<section> siblings after the last page
+   (its own <script>, the hidden file-picker <input>) — and, in the wild, a
+   browser extension's own injected element too (Grammarly's
+   <grammarly-desktop-integration>, seen landing right after </body> in a
+   real user's saved copy). :last-child stops matching the true last page the
+   moment anything trails it, so page-break-after stays "always" with no page
+   left to fill it — which Chromium's print pass answers with one genuine
+   blank page. Every .page is a <section> and nothing else in this document
+   ever is (except the table-of-contents section, which is always first, not
+   last), so :last-of-type finds the real last page regardless of what
+   unrelated markup — ours or a browser extension's — ends up after it. */
+.page:last-of-type {
   page-break-after: auto;
   break-after: auto;
 }
@@ -1396,19 +1408,23 @@ body {
 }
 
 @media screen {
-  .art,
+  /* .art-blank (the drawing page's empty frame — see art_blank.html.tmpl) is
+     deliberately excluded from all of this: it's a space for the *child* to
+     draw in by hand, not an illustration slot, so it must never invite a
+     photo upload the way a real .art frame does. */
+  .art:not(.art-blank),
   .spotting-art {
     cursor: pointer;
     position: relative;
   }
 
-  .art:hover,
+  .art:not(.art-blank):hover,
   .spotting-art:hover {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 
-  .art::after,
+  .art:not(.art-blank)::after,
   .spotting-art::after {
     content: "+ Add photo";
     position: absolute;
@@ -1425,21 +1441,27 @@ body {
     opacity: 0.85;
   }
 
-  .art:hover::after,
+  .art:not(.art-blank):hover::after,
   .spotting-art:hover::after {
     opacity: 1;
   }
 
-  .art.filled::after,
+  .art:not(.art-blank).filled::after,
   .spotting-art.filled::after {
     content: "Replace";
   }
 
+  /* Always visible and clickable, not gated behind a first edit — someone
+     who opens this to check the book over and finds nothing to change still
+     needs a way to finish (print/save it, or hand off to the saved page).
+     Only the "Unsaved changes" status text (.save-status) is conditional:
+     it fades in once .dirty is set by markDirty(), so a book with no edits
+     doesn't falsely claim to have any. */
   .editor-savebar {
     position: fixed;
     left: 50%;
     bottom: 8mm;
-    transform: translate(-50%, 14mm);
+    transform: translate(-50%, 0);
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -1450,16 +1472,16 @@ body {
     box-shadow: 0 1mm 5mm rgba(0, 0, 0, 0.4);
     font-family: var(--font-body);
     font-size: var(--size-sm);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
     z-index: 1000;
   }
 
-  .editor-savebar.visible {
+  .editor-savebar .save-status {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .editor-savebar.dirty .save-status {
     opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, 0);
   }
 
   .editor-save-btn,

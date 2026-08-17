@@ -82,6 +82,20 @@ STRINGS: dict[str, object] = {
     "toc.column_page": "עמוד",
     "toc.column_activity": "פעילות",
     "toc.footer_label": "תוכן",
+    # -- in-browser editor (book.html.tmpl's floating save toolbar) ----
+    "editor.unsaved_changes": "יש שינויים שלא נשמרו",
+    "editor.save_workbook": "שמירת החוברת",
+    "editor.save_as_pdf": "שמירה כ-PDF",
+    "editor.preparing_pdf": "מכינים PDF…",
+    "editor.edit_text_title": "עריכת טקסט",
+    "editor.add_photo_title": "לחצו כדי להוסיף תמונה",
+    "editor.replace_photo_title": "לחצו כדי להחליף את התמונה",
+    "editor.print_fallback_alert": (
+        "לא הצלחנו ליצור את קובץ ה-PDF ({{message}}) — עוברים לחלון ההדפסה של הדפדפן."
+    ),
+    "editor.booklet_warning_alert": (
+        "נשמר, אבל לא הצלחנו להפוך אותו לחוברת מקופלת: {{warning}}"
+    ),
     # -- workbook framing ---------------------------------------------
     "workbook.title_with_names": "חוברת ההרפתקה של {names} ב{destination}",
     "workbook.title_plain": "חוברת החוקרים של {destination}",

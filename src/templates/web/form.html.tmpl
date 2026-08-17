@@ -10,8 +10,10 @@ $css
 </head>
 <body>
 <main class="lean">
+$step_indicator
+
   <header class="masthead">
-    <img class="logo" src="/static/logo-color.png" alt="Adventure Kit" width="180" height="144">
+    <img class="logo" src="/static/logo-color.png" alt="Adventure Kit" width="275" height="220">
     <h1>Let's make a trip book</h1>
     <p>Tell us where you're off to. We'll put together a printable activity book —
        puzzles, coloring pages, the works.</p>
@@ -40,6 +42,13 @@ $optional_section
       <span class="label">Which language?</span>
       <div class="chips">
 $language_choices
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label">How many pages?</span>
+      <div class="chips">
+$page_count_choices
       </div>
     </div>
 

@@ -113,7 +113,7 @@ _MARKUP_KEYS = ("body", "art", "items", "rows", "options", "cards", "panels",
                 "prompts", "stars", "lines", "left", "right", "pages", "contents", "css",
                 "cells", "words", "across", "down", "logo_html", "fonts",
                 "start_endcap", "goal_endcap", "art_html", "nodes",
-                "dictionary", "entries")
+                "dictionary", "entries", "editor_strings")
 
 
 def _is_markup(key: str) -> bool:

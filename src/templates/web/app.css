@@ -33,7 +33,7 @@ body {
 main { max-width: 46rem; margin: 0 auto; }
 
 .masthead { margin-bottom: 1.75rem; }
-.masthead .logo { display: block; height: 3.25rem; width: auto; margin-bottom: .9rem; }
+.masthead .logo { display: block; height: 7.5rem; width: auto; margin: 0 auto 1.1rem; }
 .masthead h1 {
   font-size: 1.9rem;
   line-height: 1.15;
@@ -170,6 +170,11 @@ button, .button {
 button:hover, .button:hover { filter: brightness(1.08); }
 button[disabled] { cursor: wait; opacity: .85; }
 
+.button.secondary, button.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+
 .btn-spinner {
   display: none;
   width: .95em;
@@ -239,13 +244,41 @@ h2:first-child { margin-top: 0; }
   font-weight: 600;
 }
 
-.prompt-list {
-  margin: .6rem 0 0;
-  padding-inline-start: 1.2rem;
+.prompt-list { margin: .6rem 0 0; }
+
+.prompt-item {
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  margin-bottom: .5rem;
+  overflow: hidden;
+}
+.prompt-item summary {
+  cursor: pointer;
+  padding: .55rem .8rem;
   font-family: ui-monospace, "DejaVu Sans Mono", monospace;
   font-size: .82rem;
+  list-style: none;
 }
-.prompt-list a { color: inherit; }
+.prompt-item summary::-webkit-details-marker { display: none; }
+.prompt-item summary::before { content: "▸ "; color: var(--accent); }
+.prompt-item[open] summary::before { content: "▾ "; }
+.prompt-box {
+  display: flex;
+  gap: .5rem;
+  align-items: flex-start;
+  padding: 0 .8rem .8rem;
+}
+.prompt-box textarea {
+  flex: 1;
+  font-family: ui-monospace, "DejaVu Sans Mono", monospace;
+  font-size: .8rem;
+  background: var(--paper);
+}
+.copy-btn {
+  flex: none;
+  font-size: .8rem;
+  padding: .5rem .8rem;
+}
 
 details summary { cursor: pointer; font-size: .9rem; }
 
@@ -254,6 +287,55 @@ footer {
   font-size: .8rem;
   color: var(--muted);
 }
+
+/* -- step indicator -------------------------------------------------------- */
+
+.steps {
+  display: flex;
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex: 1 1 auto;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.step:not(:last-child)::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 1.25rem;
+  background: var(--line);
+  margin-inline: .6rem;
+}
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: .76rem;
+}
+.step.done .step-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.step.active .step-num { border-color: var(--accent); color: var(--accent); }
+.step.done .step-label, .step.active .step-label { color: var(--ink); }
+.step.active .step-label { font-weight: 700; }
 
 /* -- lean form ----------------------------------------------------------- */
 

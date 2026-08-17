@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="$language" dir="$direction">
+<html lang="$language" dir="$direction" data-page-format="$page_format" data-page-count="$page_count">
 <head>
 <meta charset="utf-8">
 <title>$title</title>
@@ -15,6 +15,8 @@ $pages
 (function () {
   "use strict";
 
+  var STR = $editor_strings;
+
   var fileInput = document.createElement("input");
   fileInput.type = "file";
   fileInput.accept = "image/*";
@@ -27,7 +29,11 @@ $pages
   var fileHandle = null;
 
   function findSlot(target) {
-    return target.closest(".art, .spotting-art");
+    // .art-blank (the drawing page's empty frame) is a space for the child
+    // to draw in by hand, never a photo/illustration slot — see art_blank
+    // .html.tmpl and the matching exclusion in book.css.
+    var slot = target.closest(".art, .spotting-art");
+    return slot && slot.classList.contains("art-blank") ? null : slot;
   }
 
   document.addEventListener("click", function (event) {
@@ -68,28 +74,122 @@ $pages
   var saveBar = document.createElement("div");
   saveBar.className = "editor-savebar";
   var saveText = document.createElement("span");
-  saveText.textContent = "Unsaved changes";
+  saveText.className = "save-status";
+  saveText.textContent = STR.unsavedChanges;
   var saveButton = document.createElement("button");
   saveButton.type = "button";
   saveButton.className = "editor-save-btn";
-  saveButton.textContent = "Save workbook";
+  saveButton.textContent = STR.saveWorkbook;
   var pdfButton = document.createElement("button");
   pdfButton.type = "button";
   pdfButton.className = "editor-pdf-btn";
-  pdfButton.textContent = "Save as PDF";
+  pdfButton.textContent = STR.saveAsPdf;
   saveBar.appendChild(saveText);
   saveBar.appendChild(saveButton);
   saveBar.appendChild(pdfButton);
   document.body.appendChild(saveBar);
   saveButton.addEventListener("click", save);
-  pdfButton.addEventListener("click", function () {
+  pdfButton.addEventListener("click", printPdf);
+
+  // Printing through the browser's own dialog only ever offers loose page
+  // sizes (A4, Letter, ...) — there is no way to ask it for this book's real
+  // format (A5, two-up on an A4 sheet, folded and stapled), so a "Save as
+  // PDF" through window.print() came out A4 regardless of what the book
+  // actually is. /print runs the exact same headless-Chromium + imposition
+  // pipeline the generator itself uses — reading the format straight off
+  // this document (its own data-page-format/data-page-count if present,
+  // otherwise sniffed from its @page CSS and .page sections — see
+  // src/rendering/print_metadata.py — so even a book saved before this
+  // endpoint existed still prints correctly) — so the result matches the
+  // book's real format instead of whatever the browser defaults to.
+  // Set only when this document was opened through the local server
+  // (/files/<slug>/...) rather than off local disk — that slug is what lets
+  // /print write the edited book back into its own output folder and hand
+  // the browser off to the saved page afterwards. See _resolve_book_slug in
+  // src/web.py.
+  var bookSlug = (function () {
+    var match = /^\/files\/([^/]+)\//.exec(window.location.pathname || "");
+    return match ? match[1] : null;
+  })();
+
+  async function printPdf() {
     stopEditing(activeTextEl);
-    window.print();
-  });
+    var originalLabel = pdfButton.textContent;
+    pdfButton.disabled = true;
+    pdfButton.textContent = STR.preparingPdf;
+    try {
+      var response;
+      try {
+        var printUrl = "/print" + (bookSlug ? "?slug=" + encodeURIComponent(bookSlug) : "");
+        response = await fetch(printUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+          body: serializedDocument(),
+        });
+      } catch (networkErr) {
+        // No server to ask at all — e.g. this file was opened directly from
+        // disk rather than through `python -m src.web`. That is the expected
+        // offline case, not an error, so degrade quietly to what printing
+        // already did before this endpoint existed.
+        window.print();
+        return;
+      }
+      if (!response.ok) {
+        // A server *is* there but genuinely couldn't print this document —
+        // worth saying so, rather than silently reproducing the old
+        // A4-no-matter-what behaviour with no explanation.
+        var message = (await response.text().catch(function () { return ""; }))
+          || ("HTTP " + response.status);
+        window.alert(STR.printFallbackAlert.replace("{message}", message));
+        window.print();
+        return;
+      }
+      var blob = await response.blob();
+      var disposition = response.headers.get("Content-Disposition") || "";
+      var encoded = /filename\*=UTF-8''([^;]+)/i.exec(disposition);
+      var plain = /filename="([^"]+)"/.exec(disposition);
+      var filename = encoded ? decodeURIComponent(encoded[1]) : (plain ? plain[1] : "workbook.pdf");
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      markClean();
+      // A 200 here only means *a* PDF came back — this book's format may
+      // still have failed to fold into a booklet (an odd page count, or the
+      // imposition step itself hit something). Say so rather than handing
+      // over plain A5 pages under no-visible-difference circumstances.
+      var warning = response.headers.get("X-Print-Warning");
+      if (warning) {
+        window.alert(STR.bookletWarningAlert.replace("{warning}", decodeURIComponent(warning)));
+      }
+      // The server only sends this back when it could tell which book this
+      // is and wrote the edits into its output folder (see
+      // _resolve_book_slug in src/web.py) — that's the signal this is a
+      // real save, not just a one-off PDF, so hand the tab off to the
+      // saved-book page instead of leaving the editor open behind a download.
+      var savedSlug = response.headers.get("X-Saved-Slug");
+      if (savedSlug) {
+        window.location.href = "/saved/" + encodeURIComponent(decodeURIComponent(savedSlug));
+        return;
+      }
+    } finally {
+      pdfButton.disabled = false;
+      pdfButton.textContent = originalLabel;
+    }
+  }
 
   function markDirty() {
     dirty = true;
-    saveBar.classList.add("visible");
+    saveBar.classList.add("dirty");
+  }
+
+  function markClean() {
+    dirty = false;
+    saveBar.classList.remove("dirty");
   }
 
   function suggestedName() {
@@ -131,8 +231,7 @@ $pages
         var writable = await fileHandle.createWritable();
         await writable.write(blob);
         await writable.close();
-        dirty = false;
-        saveBar.classList.remove("visible");
+        markClean();
         return;
       } catch (err) {
         if (err && err.name === "AbortError") return;
@@ -149,14 +248,12 @@ $pages
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    dirty = false;
-    saveBar.classList.remove("visible");
+    markClean();
   }
 
   Array.prototype.forEach.call(document.querySelectorAll(".art, .spotting-art"), function (slot) {
-    slot.title = slot.classList.contains("filled")
-      ? "Click to replace this photo"
-      : "Click to add a photo";
+    if (slot.classList.contains("art-blank")) return;
+    slot.title = slot.classList.contains("filled") ? STR.replacePhoto : STR.addPhoto;
   });
 
   // -- in-browser text editing ---------------------------------------------
@@ -202,7 +299,7 @@ $pages
     btn.type = "button";
     btn.className = "t-edit-btn";
     btn.textContent = "✎";
-    btn.title = "Edit text";
+    btn.title = STR.editText;
     btn.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
