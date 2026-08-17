@@ -27,10 +27,13 @@ class ColoringActivity(ActivityGenerator):
     min_age = 3
     max_age = 10
     weight = 20
-    # Raised while hidden_objects/spot_difference/wildlife_facts are paused
-    # (see their `enabled = False`), so coloring can absorb most of the slack
-    # in a typical book instead of the planner over-repeating everything else.
-    max_per_workbook = 6
+    # No practical cap: every scene comes from its own landmark/subject pick
+    # (salted with the page number, see generate() below), so a repeat is a
+    # different picture, not a near-duplicate — the safest activity in the
+    # book to lean on for filling out a longer one, and preferred over
+    # maze's own uncapped repeats (see its comment) once a book is long
+    # enough for either to show up more than once.
+    max_per_workbook = 99
     energy = "calm"
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:

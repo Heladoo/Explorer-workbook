@@ -77,11 +77,13 @@ class MatchingActivity(ActivityGenerator):
     max_age = 9
     weight = 12
     energy = "active"
-    # Raised so the book has enough active-energy supply to alternate against
-    # calm pages now that hidden_objects/spot_difference are paused (see their
-    # `enabled = False`) — with only 3 active activity types left, capping
-    # each at 1 left books tailing off into a long run of calm pages.
-    max_per_workbook = 3
+    # Raised above the default of 1 for the same reason maze's is (see its
+    # own comment: enough active-energy supply to alternate against calm
+    # pages now that hidden_objects/spot_difference are paused). Kept at 2
+    # rather than maze's higher ceiling — its shadow-matching set draws from
+    # a shared universal symbol pool, so a repeat wears thinner sooner than a
+    # maze's freshly carved layout does.
+    max_per_workbook = 2
 
     def supports(self, context: WorkbookContext) -> bool:
         # Like the scavenger hunt, this page is built from the universal symbol

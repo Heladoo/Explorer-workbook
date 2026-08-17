@@ -66,11 +66,17 @@ class MazeActivity(ActivityGenerator):
     max_age = 11
     weight = 18
     energy = "active"
-    # Raised so the book has enough active-energy supply to alternate against
-    # calm pages now that hidden_objects/spot_difference are paused (see their
-    # `enabled = False`) — with only 3 active activity types left, capping
-    # each at 1 left books tailing off into a long run of calm pages.
-    max_per_workbook = 3
+    # No practical cap: every maze is a freshly carved layout (see
+    # generate_maze/_goal below), so a repeat is a new puzzle, not a
+    # near-duplicate. This book's only uncapped active-energy activity —
+    # matching stays capped at 2 (see its own comment) — so a longer book's
+    # active-energy filler pages come from here. coloring (also uncapped,
+    # see its own comment) is the calm-energy counterpart, and outnumbers
+    # this one by design at every offered length (coloring's slightly higher
+    # weight plus deeper competition among calm-energy alternatives edges it
+    # ahead once a book is long enough for either to repeat more than once —
+    # e.g. 4 coloring pages to 3 mazes in a 16-page book).
+    max_per_workbook = 99
 
     def generate(self, context: WorkbookContext, planned: PlannedPage) -> ActivityDraft:
         hero = self.hero(context)
