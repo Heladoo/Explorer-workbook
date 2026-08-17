@@ -104,11 +104,15 @@ class ScavengerHuntActivity(ActivityGenerator):
     max_age = 12
     weight = 14
     energy = "active"
-    # Raised so the book has enough active-energy supply to alternate against
-    # calm pages now that hidden_objects/spot_difference are paused (see their
-    # `enabled = False`) — with only 3 active activity types left, capping
-    # each at 1 left books tailing off into a long run of calm pages.
-    max_per_workbook = 3
+    # Capped at 1, unlike maze/matching (still 3): a repeat hunt reuses the
+    # same "mostly everyday things" item pool, so a second or third one in
+    # the same book reads as a near-duplicate rather than a fresh puzzle —
+    # maze and matching stay varied on a repeat (a new layout, a new set of
+    # shadows), a hunt mostly doesn't. maze+matching alone (3+3=6) still
+    # supply enough active-energy pages to alternate against calm ones —
+    # see their own `max_per_workbook` comment for why that headroom exists
+    # at all (hidden_objects/spot_difference are paused, `enabled = False`).
+    max_per_workbook = 1
 
     def supports(self, context: WorkbookContext) -> bool:
         # The universal pool works anywhere, so unlike most activities this one
