@@ -162,11 +162,20 @@ def test_form_renders_with_four_fields(site):
 
 
 def test_form_asks_for_nothing_else(site):
-    """Lean means lean — no ages, page counts or provider pickers."""
+    """Lean means lean — no ages, provider pickers or raw seeds. Page count
+    (name="page_count") is the one exception, added on request."""
     _, raw = site.get("/")
     body = raw.decode("utf-8")
-    for absent in ("name=\"ages\"", "name=\"children\"", "name=\"pages\"", "name=\"seed\""):
+    for absent in ("name=\"ages\"", "name=\"children\"", "name=\"seed\""):
         assert absent not in body
+
+
+def test_form_offers_the_three_page_counts(site):
+    _, raw = site.get("/")
+    body = raw.decode("utf-8")
+    assert 'value="12" checked' in body
+    for count in (8, 12, 16):
+        assert f'value="{count}"' in body
 
 
 def test_form_offers_both_languages(site):
@@ -189,7 +198,10 @@ def test_a_destination_alone_is_enough(site):
     """The minimum viable submission."""
     status, body = site.submit([("destination", "Kfar Hanokdim")])
     assert status == 200
-    assert "All done" in body
+    # The web form never generates real artwork, so a fresh book always still
+    # has pictures missing — the review page must say so, not "All done".
+    # See _render_result in src/web.py.
+    assert "Almost ready" in body
 
     written = site.root / "kfar-hanokdim"
     assert (written / "workbook.json").exists()
@@ -228,8 +240,21 @@ def test_generated_files_are_served(site):
 
 
 def test_result_page_flags_pages_that_need_no_picture(site):
+    """The review page's "Before you print" checklist says how many pages
+    still need a picture (no longer a per-page list — see "What's in it"
+    in the redesign notes)."""
     _, body = site.submit([("destination", "Kfar Hanokdim")])
-    assert "no picture needed" in body
+    data = _book(site, "kfar-hanokdim")
+    missing = sum(
+        1 for page in data["pages"] if page["metadata"].get("needs_illustration") is not False
+    )
+    assert missing, "expected at least one illustrated page for this fixture"
+    expected = (
+        "Only 1 page still needs a picture."
+        if missing == 1
+        else f"Only {missing} pages still need a picture."
+    )
+    assert expected in body
 
 
 def test_an_unknown_destination_says_so_kindly(site):
@@ -423,6 +448,18 @@ def test_defaults_are_sane(site):
     assert data["metadata"]["knowledge_source"] == "file"
 
 
+def test_page_count_can_be_chosen(site):
+    site.submit([("destination", "Kfar Hanokdim"), ("page_count", "16")])
+    data = _book(site, "kfar-hanokdim")
+    assert data["page_count"] == 16
+
+
+def test_an_unoffered_page_count_falls_back_to_the_default(site):
+    site.submit([("destination", "Kfar Hanokdim"), ("page_count", "13")])
+    data = _book(site, "kfar-hanokdim")
+    assert data["page_count"] == 12
+
+
 # -- printing an edited document (/print) ----------------------------------
 #
 # The in-browser editor's "Save as PDF" button posts its edited document
@@ -487,6 +524,105 @@ def test_print_prints_the_posted_document_not_a_fresh_regeneration(site, monkeyp
         body = response.read()
 
     assert body.startswith(b"%PDF-")
+
+
+@requires_chromium
+def test_print_warns_rather_than_silently_skipping_the_booklet(site, monkeypatch):
+    """A booklet format that can't actually fold (page count not a multiple
+    of 4) must say so — the download would otherwise be indistinguishable
+    from a real booklet by filename alone, and the earlier silent fallback
+    is exactly what made a failed imposition invisible."""
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+    unfoldable = html.replace('data-page-count="12"', 'data-page-count="10"')
+    assert unfoldable != html
+
+    with _post_html(site, "/print", unfoldable) as response:
+        assert response.status == 200
+        warning = response.headers["X-Print-Warning"]
+        assert "not a multiple of 4" in urllib.parse.unquote(warning)
+        body = response.read()
+
+    assert body.startswith(b"%PDF-")
+
+
+@requires_chromium
+def test_a4_alternative_is_written_alongside_the_booklet(site, monkeypatch):
+    """The saved page's no-fold A4 download — see write_additional_format in
+    src/output_writer.py and _write_a4_alternative in src/web.py."""
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    assert (site.root / "prague" / "workbook-a4.pdf").is_file()
+
+
+@requires_chromium
+def test_print_with_a_slug_saves_the_edit_and_signals_the_saved_page(site, monkeypatch):
+    """/print writes the edited document and its imposed PDF back into the
+    book's own output folder when it knows which book this is, and tells the
+    editor's JS to hand the tab off to /saved/<slug> — see
+    _resolve_book_slug/_persist_saved_book in src/web.py."""
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+    edited = html.replace("<body", '<body data-edited="1"', 1)
+
+    with _post_html(site, "/print?slug=prague", edited) as response:
+        assert response.status == 200
+        assert response.headers["X-Saved-Slug"] == "prague"
+        response.read()
+
+    saved_html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+    assert 'data-edited="1"' in saved_html
+    assert (site.root / "prague" / "workbook-booklet.pdf").is_file()
+
+
+@requires_chromium
+def test_print_with_an_unrecognised_slug_is_not_saved(site, monkeypatch):
+    """A stale or tampered slug degrades to "not saved anywhere" — the PDF
+    request itself is otherwise unaffected."""
+    monkeypatch.setattr("src.web._pdf_available", lambda: True)
+    site.submit([("destination", "Prague")])
+    html = (site.root / "prague" / "workbook.html").read_text(encoding="utf-8")
+
+    with _post_html(site, "/print?slug=does-not-exist", html) as response:
+        assert "X-Saved-Slug" not in response.headers
+
+
+# -- the saved page (step 3) -------------------------------------------------
+
+
+def test_saved_page_shows_only_the_downloads_actually_on_disk(site):
+    """No PDF backend in this fixture (see the ``site`` fixture), so neither
+    PDF download should appear — only the browser-view link, which html=True
+    always writes regardless of PDF availability."""
+    site.submit([("destination", "Prague")])
+    status, raw = site.get("/saved/prague")
+    body = raw.decode("utf-8")
+    assert status == 200
+    assert "Keep editing" in body
+    assert "workbook-booklet.pdf" not in body
+    assert "workbook-a4.pdf" not in body
+
+
+def test_saved_page_is_localized_to_the_workbook_language(site):
+    site.submit([("destination", "Kfar Hanokdim"), ("language", "he")])
+    _, raw = site.get("/saved/kfar-hanokdim")
+    body = raw.decode("utf-8")
+    assert 'dir="rtl"' in body
+    assert "נשמר" in body  # saved.eyebrow
+
+
+def test_unknown_saved_book_is_a_404(site):
+    with pytest.raises(urllib.error.HTTPError) as error:
+        site.get("/saved/does-not-exist")
+    assert error.value.code == 404
+
+
+def test_a_saved_book_cannot_escape_the_output_directory(site):
+    with pytest.raises(urllib.error.HTTPError) as error:
+        site.get("/saved/../../../etc")
+    assert error.value.code == 404
 
 
 def test_print_rejects_a_document_with_no_print_metadata(site):

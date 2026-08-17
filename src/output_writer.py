@@ -154,6 +154,51 @@ def write_bundle(
     )
 
 
+def write_additional_format(
+    bundle: WorkbookBundle,
+    output_dir: Path | str,
+    page_format: str | PageFormat,
+    filename: str,
+    *,
+    images: dict[int, Path] | None = None,
+    symbol_images: dict[str, Path] | None = None,
+    ink_saver: bool = False,
+) -> Path | None:
+    """Render the same book a second time in another page format.
+
+    For offering, say, a no-fold A4 alternative alongside the default A5
+    booklet without disturbing ``workbook.pdf``/``workbook.html`` — this
+    writes to its own ``filename`` in the same output directory and never
+    touches the primary format's files. Never imposed (a booklet-only
+    concern the primary format already covers) and never HTML, only a PDF.
+
+    Returns ``None`` rather than raising if the bundle has no context — that
+    would mean the primary format was never written either, so there is
+    nothing wrong here specifically, just nothing to render from.
+    """
+    if bundle.context is None:
+        return None
+    root = Path(output_dir)
+    fmt = get_format(page_format)
+    art = artwork_for(bundle.workbook, overrides=symbol_images)
+
+    from src.rendering.html_renderer import HtmlRenderer
+    from src.rendering.pdf_renderer import PdfRenderer
+
+    return PdfRenderer(
+        HtmlRenderer(ink_saver=ink_saver, include_contents=False, page_format=fmt),
+        keep_html=False,
+    ).render(
+        bundle.workbook,
+        bundle.context,
+        images=images,
+        symbol_images=art.images,
+        symbol_cutouts=art.cutouts,
+        symbol_shadows=art.silhouettes,
+        output_path=root / filename,
+    )
+
+
 def _impose(
     bundle: WorkbookBundle, fmt: PageFormat, pdf_path: Path, target: Path
 ) -> Path | None:

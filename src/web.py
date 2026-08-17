@@ -20,8 +20,11 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 import logging
+import re
 import secrets
+import tempfile
 import time
 import traceback
 from http.cookies import SimpleCookie
@@ -35,9 +38,11 @@ from src.analytics import Analytics, Report, build_analytics
 from src.api import generate_workbook
 from src.experiments import assignments
 from src.models.context import slugify
-from src.output_writer import DEFAULT_OUTPUT_ROOT
-from src.rendering.formats import DEFAULT_PAGE_COUNT
-from src.strings import available_languages
+from src.output_writer import DEFAULT_OUTPUT_ROOT, write_additional_format
+from src.rendering.formats import A4_PORTRAIT, DEFAULT_PAGE_COUNT, PAGE_COUNT_CHOICES
+from src.rendering.print_metadata import PrintMetadataError, read_print_metadata
+from src.strings import available_languages, strings_for
+from src.templates.web.copy import web_text
 from src.uploads import UploadError, parse_multipart, safe_stem
 
 logger = logging.getLogger(__name__)
@@ -65,6 +70,20 @@ VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 #: Wording per variant of the "cta" experiment.
 CTA_LABELS = {"make_my_book": "Make my book", "build_it": "Build it"}
 
+#: The no-fold A4 alternative to the default A5 booklet, written beside it at
+#: generation time — see ``_write_a4_alternative``. Filename by convention
+#: rather than a field on ``WrittenArtifacts``: the saved page rediscovers it
+#: from a fresh request with no in-memory result to read a path off of.
+A4_ALTERNATIVE_FILENAME = "workbook-a4.pdf"
+
+#: The book's own edited copy, saved by ``/print`` after imposition — see
+#: ``_handle_print`` and book.html.tmpl's ``printPdf()``.
+SAVED_BOOKLET_FILENAME = "workbook-booklet.pdf"
+
+#: The 3-step progress shown identically on the create, review and saved
+#: pages (Nielsen's "visibility of system status") — see ``_step_indicator``.
+STEP_KEYS = ("step.create", "step.review", "step.save")
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".json": "application/json; charset=utf-8",
@@ -88,6 +107,23 @@ def _css() -> str:
 
 def _escape(value: object) -> str:
     return html.escape(str(value or ""), quote=True)
+
+
+def _step_indicator(active: int, language: str = "en") -> str:
+    """The 1-2-3 progress strip, translated and with ``active`` highlighted.
+
+    Steps before ``active`` render as done, the current one as active, the
+    rest as upcoming — the same three states on every one of the three
+    pages that includes this, just with a different step lit up.
+    """
+    items = []
+    for index, key in enumerate(STEP_KEYS, start=1):
+        state = "done" if index < active else "active" if index == active else ""
+        items.append(
+            f'    <li class="step {state}"><span class="step-num">{index}</span>'
+            f'<span class="step-label">{_escape(web_text(language, key))}</span></li>'
+        )
+    return '  <ol class="steps">\n' + "\n".join(items) + "\n  </ol>"
 
 
 class WorkbookFormHandler(BaseHTTPRequestHandler):
@@ -116,6 +152,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             self._send_file(path[len("/files/"):])
         elif path.startswith("/go/"):
             self._redirect_and_track(path[len("/go/"):])
+        elif path.startswith("/saved/"):
+            self._handle_saved(path[len("/saved/"):])
         elif path == "/stats":
             self._send_html(self._render_stats())
         elif path == "/health":
@@ -129,6 +167,8 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             self._handle_generate()
         elif path == "/feedback":
             self._handle_feedback()
+        elif path == "/print":
+            self._handle_print()
         else:
             self._send_html(self._render_form(error="Unknown form target."), status=404)
 
@@ -196,6 +236,10 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
 
         known = FileKnowledgeProvider(self.data_dir).known_destinations()
         chosen_language = (values.get("language") or ["en"])[0]
+        try:
+            chosen_page_count = int((values.get("page_count") or [DEFAULT_PAGE_COUNT])[0])
+        except ValueError:
+            chosen_page_count = DEFAULT_PAGE_COUNT
 
         optional_template = (
             "optional_fields_tucked.html.tmpl"
@@ -208,6 +252,12 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
 
         return _template("form.html.tmpl").substitute(
             css=_css(),
+            # Always English, unlike the review/saved pages: the create form's
+            # own chrome (labels, hints, CTA) isn't localized at all — the
+            # language radio only picks the *workbook's* language — so a
+            # translated step indicator here would sit above an otherwise
+            # all-English page rather than match it.
+            step_indicator=_step_indicator(1),
             message=self._notice("Hmm, that didn't work", error, kind="error") if error else "",
             visitor=_escape(visitor),
             destination=value("destination"),
@@ -222,6 +272,13 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
                 f'{" checked" if code == chosen_language else ""}>'
                 f"<span>{_escape(LANGUAGE_NAMES.get(code, code))}</span></label>"
                 for code in available_languages()
+            ),
+            page_count_choices="\n".join(
+                '        <label class="chip radio"><input type="radio" name="page_count" '
+                f'value="{count}"'
+                f'{" checked" if count == chosen_page_count else ""}>'
+                f"<span>{count}</span></label>"
+                for count in PAGE_COUNT_CHOICES
             ),
         )
 
@@ -284,6 +341,7 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             raise ValueError("we need somewhere to go — add a destination")
 
         language = one("language", "en") or "en"
+        page_count = self._chosen_page_count(one("page_count"))
         itinerary = [line.strip() for line in one("itinerary").splitlines() if line.strip()]
         photos = self._save_photos(uploads, destination)
 
@@ -291,7 +349,7 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
         result = generate_workbook(
             destination=destination,
             language=language,
-            page_count=DEFAULT_PAGE_COUNT,
+            page_count=page_count,
             itinerary=itinerary,
             family_photos=[str(path) for path in photos],
             provider=DEFAULT_PROVIDER,
@@ -320,7 +378,44 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             # whoever is just trying to print a book.
             language_qa_leaks=len(result.language_qa),
         )
-        return self._render_result(result, photos, visitor)
+        self._write_a4_alternative(result)
+        return self._render_result(result, photos)
+
+    def _write_a4_alternative(self, result) -> None:
+        """Render the no-fold A4 alternative alongside the default A5 booklet.
+
+        Written eagerly, at the same time as the primary format, rather than
+        on demand from the saved page — it comes from the same freshly built
+        ``bundle`` already in memory here; reconstructing one from a bare
+        ``workbook.json`` later would be a much bigger detour. Skipped
+        whenever the primary PDF was (no Chromium, or ``--pdf`` off), and
+        never fatal to the book itself if it fails on its own.
+        """
+        if not (result.artifacts and result.artifacts.workbook_pdf):
+            return
+        try:
+            write_additional_format(
+                result.bundle,
+                result.artifacts.output_dir,
+                A4_PORTRAIT,
+                A4_ALTERNATIVE_FILENAME,
+            )
+        except (RuntimeError, ValueError) as exc:
+            logger.warning(
+                "no A4 alternative written for %s: %s", result.workbook.destination, exc
+            )
+
+    def _chosen_page_count(self, raw: str) -> int:
+        """The submitted page count, or the default for anything not on offer.
+
+        Degrades quietly rather than rejecting the submission — a tampered or
+        missing value is not something worth stopping someone's book over.
+        """
+        try:
+            count = int(raw)
+        except ValueError:
+            return DEFAULT_PAGE_COUNT
+        return count if count in PAGE_COUNT_CHOICES else DEFAULT_PAGE_COUNT
 
     def _save_photos(self, uploads, destination: str) -> list[Path]:
         """Store reference photos beside the book they belong to."""
@@ -347,74 +442,59 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             saved.append(path)
         return saved
 
-    def _render_result(self, result, photos: list[Path], visitor: str) -> str:
+    def _render_result(self, result, photos: list[Path]) -> str:
         workbook = result.workbook
         artifacts = result.artifacts
         context = result.bundle.context
         slug = artifacts.output_dir.name
+        language = workbook.language
+        direction = strings_for(language).direction
+
+        def web(key: str, **kwargs) -> str:
+            return web_text(language, key, **kwargs)
 
         def href(path: Path, *, tracked: bool = False) -> str:
             relative = path.relative_to(artifacts.output_dir).as_posix()
             target = f"{quote(slug)}/{quote(relative)}"
             return f"/go/{target}" if tracked else f"/files/{target}"
 
-        def link(path: Path, label: str, note: str) -> str:
-            return (
-                f'      <a href="{href(path, tracked=True)}" target="_blank" rel="noopener">'
-                f"{_escape(label)}<small>{_escape(note)}</small></a>"
-            )
-
-        downloads = []
-        # The fold-and-staple sheets lead when they exist: that is the file
-        # you send to a printer to end up holding a book, and the page PDF
-        # beside it is the one to read on screen or hand to a print shop.
-        if artifacts.workbook_booklet_pdf:
-            downloads.append(
-                link(
-                    artifacts.workbook_booklet_pdf,
-                    "Print it",
-                    f"{workbook.page_count // 4} A4 sheet(s) — print both sides, "
-                    "fold in half, staple the fold",
-                )
-            )
-        if artifacts.workbook_pdf:
-            label = "Read it" if artifacts.workbook_booklet_pdf else "Print it"
-            note = "A5 pages" if artifacts.workbook_booklet_pdf else "one page per sheet"
-            downloads.append(link(artifacts.workbook_pdf, label, note))
+        # Only the browser view here — the finished PDFs belong on the saved
+        # page (see _render_saved), once there is something actually final to
+        # hand over rather than a book that may still be missing pictures.
+        downloads = ""
         if artifacts.workbook_html:
-            downloads.append(link(artifacts.workbook_html, "Have a look", "in your browser"))
-        downloads.append(link(artifacts.workbook_json, "workbook.json", "every page as data"))
-        downloads.append(link(artifacts.workbook_md, "workbook.md", "the full spec"))
+            downloads = (
+                f'      <a href="{href(artifacts.workbook_html, tracked=True)}" '
+                f'target="_blank" rel="noopener">{_escape(web("review.browser_view"))}'
+                f'<small>{_escape(web("review.browser_view_note"))}</small></a>'
+            )
 
         illustrated = [
             page for page in workbook.pages if page.metadata.get("needs_illustration") is not False
         ]
-        free = len(workbook.pages) - len(illustrated)
-        summary = (
-            f"{len(illustrated)} pages want a picture. Each one has a prompt file below — "
-            "paste it into your favourite image tool and drop the result in."
-        )
-        if free:
-            summary += (
-                f" The other {free} are already finished: their puzzles are typeset, "
-                "so any border art is just decoration."
-            )
+        missing = len(illustrated)
+        ready = missing == 0
+        if ready:
+            checklist_body = web("review.checklist_done")
+        elif missing == 1:
+            checklist_body = web("review.checklist_missing_one")
+        else:
+            checklist_body = web("review.checklist_missing_many", missing=missing)
+        checklist_body += " " + web("review.checklist_invite")
 
         reference_note = ""
         if photos:
             thumbs = "\n".join(
                 f'        <img src="{href(path)}" alt="reference photo">' for path in photos
             )
-            attach = (
-                "Attach it when you make the artwork"
-                if len(photos) == 1
-                else f"Attach all {len(photos)} when you make the artwork"
+            attach = web(
+                "review.reference_attach_one" if len(photos) == 1 else "review.reference_attach_many",
+                count=len(photos),
             )
+            body = web("review.reference_body_one" if len(photos) == 1 else "review.reference_body_many")
             reference_note = (
-                '    <div class="notice"><strong>Your photos made it into the prompts</strong>'
-                "<p>Every prompt now asks for children who look like "
-                f"{'this' if len(photos) == 1 else 'these'}. {attach} — most image tools "
-                "take a reference picture alongside the prompt.</p>"
+                f'    <div class="notice"><strong>{_escape(web("review.reference_heading"))}</strong>'
+                f"<p>{_escape(body)} {_escape(attach)}.</p>"
                 f'<div class="thumbs">\n{thumbs}\n</div></div>'
             )
 
@@ -440,32 +520,141 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
         # real pattern shows up in /stats without alarming whoever is just
         # trying to print a book for their kid.
 
+        prompt_items = "\n".join(
+            self._prompt_item(index, path, language)
+            for index, path in enumerate(artifacts.prompt_files, start=1)
+        )
+
         return _template("result.html.tmpl").substitute(
             css=_css(),
+            language=_escape(language),
+            direction=direction,
+            step_indicator=_step_indicator(2, language),
+            eyebrow=_escape(web("review.eyebrow_ready" if ready else "review.eyebrow_almost")),
             title=_escape(workbook.title),
-            page_count=workbook.page_count,
-            message=notice,
-            downloads="\n".join(downloads),
-            pages="\n".join(
-                f'      <li dir="auto">{_escape(page.title)} '
-                f'<span class="type">{_escape(page.type)}</span>'
-                + (
-                    ' <span class="free">no picture needed</span>'
-                    if page.metadata.get("needs_illustration") is False
-                    else ""
+            subtitle=_escape(
+                web(
+                    "review.subtitle_ready" if ready else "review.subtitle_almost",
+                    page_count=workbook.page_count,
                 )
-                + "</li>"
-                for page in workbook.pages
             ),
-            prompt_summary=summary,
+            message=notice,
+            downloads=downloads,
+            checklist_heading=_escape(web("review.checklist_heading")),
+            checklist_body=_escape(checklist_body),
+            recommendation=_escape(web("review.recommendation")),
             reference_note=reference_note,
-            prompt_count=len(artifacts.prompt_files),
-            prompt_files="\n".join(
-                f'        <li><a href="/go/{quote(slug)}/prompts/{quote(path.name)}" '
-                f'target="_blank" rel="noopener">'
-                f"{_escape(path.name)}</a></li>"
-                for path in artifacts.prompt_files
+            prompts_heading=_escape(web("review.prompts_heading")),
+            prompts_hint=_escape(web("review.prompts_hint")),
+            prompt_items=prompt_items,
+            make_another=_escape(web("review.make_another")),
+        )
+
+    def _prompt_item(self, index: int, path: Path, language: str) -> str:
+        """One reveal-to-copy prompt block — see result.html.tmpl's copy button.
+
+        Inlines the prompt text itself rather than linking to the file: the
+        point is to use it without ever leaving this page.
+        """
+        text = path.read_text(encoding="utf-8")
+        copy_label = _escape(web_text(language, "review.copy_button"))
+        copied_label = _escape(web_text(language, "review.copy_done"))
+        return (
+            f'      <details class="prompt-item">\n'
+            f"        <summary>{_escape(path.name)}</summary>\n"
+            f'        <div class="prompt-box">\n'
+            f'          <textarea readonly rows="6" id="prompt-{index}">{_escape(text)}</textarea>\n'
+            f'          <button type="button" class="copy-btn" data-copied-label="{copied_label}">'
+            f"{copy_label}</button>\n"
+            f"        </div>\n"
+            f"      </details>"
+        )
+
+    # -- the saved page (step 3) --------------------------------------------
+
+    def _handle_saved(self, raw_slug: str) -> None:
+        slug = raw_slug.strip("/")
+        root = Path(self.output_root).resolve()
+        book_dir = (root / slug).resolve()
+        if not slug or not book_dir.is_relative_to(root) or not (book_dir / "workbook.json").is_file():
+            self._send_html(
+                self._render_form(error=web_text("en", "saved.not_found")), status=404
+            )
+            return
+        visitor, is_new = self._visitor_id()
+        self.analytics.track("saved_view", visitor)
+        self._send_html(
+            self._render_saved(slug, book_dir, visitor),
+            set_visitor=visitor if is_new else None,
+        )
+
+    def _render_saved(self, slug: str, book_dir: Path, visitor: str) -> str:
+        data = json.loads((book_dir / "workbook.json").read_text(encoding="utf-8"))
+        language = str(data.get("language") or "en")
+        title = str(data.get("title") or "")
+        page_count = int(data.get("page_count") or 0)
+        direction = strings_for(language).direction
+
+        def web(key: str, **kwargs) -> str:
+            return web_text(language, key, **kwargs)
+
+        def go(name: str) -> str:
+            return f"/go/{quote(slug)}/{quote(name)}"
+
+        def link(name: str, label_key: str, note_key: str, **note_kwargs) -> str:
+            return (
+                f'      <a href="{go(name)}" target="_blank" rel="noopener">'
+                f"{_escape(web(label_key))}<small>{_escape(web(note_key, **note_kwargs))}</small></a>"
+            )
+
+        downloads = []
+        if (book_dir / SAVED_BOOKLET_FILENAME).is_file():
+            downloads.append(
+                link(
+                    SAVED_BOOKLET_FILENAME,
+                    "saved.booklet_label",
+                    "saved.booklet_note",
+                    sheets=max(page_count // 4, 1),
+                )
+            )
+        if (book_dir / A4_ALTERNATIVE_FILENAME).is_file():
+            downloads.append(link(A4_ALTERNATIVE_FILENAME, "saved.a4_label", "saved.a4_note"))
+        has_editor = (book_dir / "workbook.html").is_file()
+        if has_editor:
+            downloads.append(link("workbook.html", "saved.browser_label", "saved.browser_note"))
+
+        # "Back" returns to the previous step — the browser editor is what
+        # that step actually is once a book has been saved (see the redesign
+        # notes: step 2's own review page is generated fresh per POST, so
+        # there's nothing static to return *to* there). Omitted rather than
+        # dead-linked when the editor was never written (no PDF backend).
+        back_href = go("workbook.html") if has_editor else ""
+
+        return _template("saved.html.tmpl").substitute(
+            css=_css(),
+            language=_escape(language),
+            direction=direction,
+            step_indicator=_step_indicator(3, language),
+            eyebrow=_escape(web("saved.eyebrow")),
+            title=_escape(title),
+            subtitle=_escape(web("saved.subtitle")),
+            downloads="\n".join(downloads),
+            back_action=(
+                f'<a class="button secondary" href="{back_href}" target="_blank" '
+                f'rel="noopener">{_escape(web("saved.back_label"))}</a>'
+                if back_href
+                else ""
             ),
+            start_over_label=_escape(web("saved.start_over_label")),
+            share_label=_escape(web("saved.share_label")),
+            share_copied=_escape(web("saved.share_copied")),
+            feedback_heading=_escape(web("saved.feedback_heading")),
+            feedback_great=_escape(web("saved.feedback_great")),
+            feedback_fine=_escape(web("saved.feedback_fine")),
+            feedback_poor=_escape(web("saved.feedback_poor")),
+            feedback_placeholder=_escape(web("saved.feedback_placeholder")),
+            feedback_send=_escape(web("saved.feedback_send")),
+            feedback_thanks=_escape(web("saved.feedback_thanks")),
             visitor=_escape(visitor),
             book_id=_escape(slug),
         )
@@ -492,6 +681,165 @@ class WorkbookFormHandler(BaseHTTPRequestHandler):
             book=one("book"),
         )
         self._send(200, "application/json", b'{"status":"ok"}')
+
+    # -- printing an edited document ----------------------------------------
+
+    def _handle_print(self) -> None:
+        """Print a (possibly hand-edited) workbook document straight to PDF.
+
+        The in-browser editor's "Save as PDF" button posts its edited
+        document here instead of calling ``window.print()`` — a browser's own
+        print dialog only ever offers loose page sizes (A4, Letter, ...), with
+        no way to ask it for this book's real format (A5, two-up on an A4
+        sheet, folded and stapled). This runs the exact same headless-Chromium
+        + imposition pipeline ``--pdf`` uses, keyed off what the document
+        itself says about how to print it (see
+        ``src/rendering/print_metadata.py``) — so the result matches the
+        book's actual format, edited or not, even for a book saved before
+        this endpoint existed.
+
+        A ``?slug=`` query parameter names which book on this server the
+        posted document belongs to — set by book.html.tmpl whenever it was
+        opened through ``/files/<slug>/...`` rather than off local disk. When
+        it resolves to a real output directory, the edited document and its
+        freshly imposed PDF are written back there (see ``_persist_saved_book``)
+        and the response carries an ``X-Saved-Slug`` header, which is what
+        tells the editor's JS to hand the browser off to the saved page
+        (``/saved/<slug>``) instead of just downloading the PDF.
+        """
+        length = int(self.headers.get("Content-Length") or 0)
+        if length <= 0 or length > MAX_BODY_BYTES:
+            self._send(400, "text/plain; charset=utf-8", b"missing or oversized document")
+            return
+        html_text = self.rfile.read(length).decode("utf-8", errors="replace")
+
+        try:
+            page_format, page_count, binding, title = read_print_metadata(html_text)
+        except PrintMetadataError as exc:
+            self._send(400, "text/plain; charset=utf-8", str(exc).encode("utf-8"))
+            return
+
+        if not _pdf_available():
+            self._send(
+                503,
+                "text/plain; charset=utf-8",
+                b"PDF rendering isn't set up on this server (Playwright/Chromium missing).",
+            )
+            return
+
+        from src.rendering.pdf_renderer import PdfRenderer
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = Path(tmp)
+            try:
+                pdf_path = PdfRenderer(keep_html=False).render_html(
+                    html_text, tmp_dir / "workbook.pdf"
+                )
+            except RuntimeError as exc:
+                self._send(500, "text/plain; charset=utf-8", str(exc).encode("utf-8"))
+                return
+
+            # Fold-and-staple sheets, the same "second file, never instead"
+            # rule output_writer._impose follows — a failure here (unfoldable
+            # length, missing pypdf) costs only the imposed copy, not the
+            # readable one already on disk. Unlike output_writer, there is no
+            # second call site quietly reading workbook_booklet_pdf here — the
+            # editor's button downloads whatever comes back, so a silent
+            # fallback would hand someone plain A5 pages with no sign anything
+            # was ever meant to fold. booklet_warning carries the reason back
+            # as a response header instead, for the button to surface.
+            booklet_warning: str | None = None
+            if page_format.booklet:
+                if page_count % 4:
+                    booklet_warning = (
+                        f"{page_count} pages is not a multiple of 4, so this book can't "
+                        "be folded into a booklet — these are plain A5 pages instead."
+                    )
+                else:
+                    try:
+                        from src.rendering.imposition import impose_booklet
+
+                        pdf_path = impose_booklet(
+                            pdf_path,
+                            tmp_dir / "workbook-booklet.pdf",
+                            page_format=page_format,
+                            page_count=page_count,
+                            binding=binding,
+                        )
+                    except (RuntimeError, ValueError) as exc:
+                        booklet_warning = str(exc)
+                        debug_path = self._save_print_debug_copy(html_text)
+                        logger.warning(
+                            "printing %d pages without booklet imposition: %s "
+                            "(posted document saved to %s for inspection)",
+                            page_count,
+                            exc,
+                            debug_path,
+                        )
+
+            data = pdf_path.read_bytes()
+
+        headers = [("Content-Disposition", _content_disposition(title))]
+        if booklet_warning:
+            headers.append(("X-Print-Warning", quote(booklet_warning)))
+        slug = self._resolve_book_slug()
+        if slug:
+            imposed = page_format.booklet and not booklet_warning
+            self._persist_saved_book(slug, html_text, data, imposed=imposed)
+            headers.append(("X-Saved-Slug", quote(slug)))
+        self._send(200, "application/pdf", data, headers)
+
+    def _resolve_book_slug(self) -> str | None:
+        """The ``?slug=`` query param, only if it names a real output directory.
+
+        A stale or tampered slug (a book deleted since the tab was opened, or
+        anything trying path traversal) degrades to "not saved anywhere" —
+        the PDF still downloads either way, it just doesn't redirect.
+        """
+        query = parse_qs(urlparse(self.path).query)
+        slug = (query.get("slug") or [""])[0].strip()
+        if not slug:
+            return None
+        root = Path(self.output_root).resolve()
+        book_dir = (root / slug).resolve()
+        if not book_dir.is_relative_to(root) or not book_dir.is_dir():
+            return None
+        return slug
+
+    def _persist_saved_book(
+        self, slug: str, html_text: str, pdf_data: bytes, *, imposed: bool
+    ) -> None:
+        """Write the just-printed edit back into the book's own output folder.
+
+        Never fatal — a disk hiccup here should not cost the download the
+        request actually came for. ``imposed`` picks the filename: a real
+        fold-and-staple booklet is kept apart from the plain-pages fallback
+        (see ``_handle_print``'s ``booklet_warning``) so the saved page never
+        calls an unfoldable PDF a booklet.
+        """
+        try:
+            book_dir = Path(self.output_root) / slug
+            (book_dir / "workbook.html").write_text(html_text, encoding="utf-8")
+            filename = SAVED_BOOKLET_FILENAME if imposed else "workbook.pdf"
+            (book_dir / filename).write_bytes(pdf_data)
+        except OSError as exc:
+            logger.warning("could not persist saved edits for %s: %s", slug, exc)
+
+    def _save_print_debug_copy(self, html_text: str) -> Path:
+        """Keep the exact posted document when imposition fails on it.
+
+        A failure here has been hard to pin down from the PDF alone — the
+        rendered page count disagreeing with the declared one could come from
+        several different DOM shapes a real browser's edit-then-serialize
+        round trip might produce, and none reproduced yet from a synthetic
+        POST. Keeping the actual bytes turns the next occurrence into
+        something inspectable instead of another guess.
+        """
+        debug_dir = Path(self.output_root) / ".print-debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        path = debug_dir / f"{int(time.time())}.html"
+        path.write_text(html_text, encoding="utf-8")
+        return path
 
     # -- redirect-and-track for outbound links ------------------------------
 
@@ -702,6 +1050,24 @@ def _pdf_available() -> bool:
     from src.rendering.pdf_renderer import find_chromium
 
     return find_chromium() is not None
+
+
+def _content_disposition(title: str) -> str:
+    """Name a /print download after the book itself, not the generic
+    "workbook.pdf" every download used to share.
+
+    A title is very often not ASCII (Hebrew, Greek, ...), so this carries it
+    twice: ``filename*`` (RFC 6266) is the real title, percent-encoded UTF-8,
+    which every current browser reads; the plain ``filename`` stays an ASCII
+    fallback for anything older that only understands that form.
+    """
+    base = re.sub(r'[\\/:*?"<>|\r\n]+', " ", title or "").strip()
+    base = re.sub(r"\s+", " ", base) or "workbook"
+    ascii_fallback = base.encode("ascii", "ignore").decode("ascii").strip() or "workbook"
+    return (
+        f'attachment; filename="{ascii_fallback}.pdf"; '
+        f"filename*=UTF-8''{quote(f'{base}.pdf')}"
+    )
 
 
 def serve(

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="$language" dir="$direction">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,10 +10,13 @@ $css
 </head>
 <body>
 <main class="lean">
+$step_indicator
+
   <header class="masthead">
-    <p class="eyebrow">All done</p>
+    <img class="logo" src="/static/logo-color.png" alt="Adventure Kit" width="275" height="220">
+    <p class="eyebrow">$eyebrow</p>
     <h1 dir="auto">$title</h1>
-    <p>$page_count pages, ready to print.</p>
+    <p>$subtitle</p>
   </header>
 
 $message
@@ -23,65 +26,44 @@ $message
 $downloads
     </div>
 
-    <h2>What's in it</h2>
-    <ol class="pages">
-$pages
-    </ol>
-
-    <h2>About the drawings</h2>
-    <p class="hint">$prompt_summary</p>
+    <h2>$checklist_heading</h2>
+    <p class="hint">$checklist_body</p>
+    <p class="hint">$recommendation</p>
 $reference_note
-    <details>
-      <summary>All $prompt_count prompts</summary>
-      <ul class="prompt-list">
-$prompt_files
-      </ul>
-    </details>
 
-    <div class="actions">
-      <a class="button" href="/" target="_blank" rel="noopener">Make another one</a>
+    <h2>$prompts_heading</h2>
+    <p class="hint">$prompts_hint</p>
+    <div class="prompt-list">
+$prompt_items
     </div>
 
-    <div class="feedback" id="feedback" data-visitor="$visitor" data-book="$book_id">
-      <h2>Quick one — how'd that go?</h2>
-      <div class="feedback-options">
-        <button type="button" data-rating="great">🙌 Loved it</button>
-        <button type="button" data-rating="fine">🙂 It's fine</button>
-        <button type="button" data-rating="poor">😕 Not really</button>
-      </div>
-      <textarea rows="2" placeholder="Anything you want to tell us? (optional)"></textarea>
-      <button type="button" class="feedback-send">Send</button>
-      <p class="feedback-thanks">Thanks — that helps.</p>
+    <div class="actions">
+      <a class="button" href="/" target="_blank" rel="noopener">$make_another</a>
     </div>
   </div>
 </main>
 <script>
 (function () {
-  var box = document.getElementById('feedback');
-  if (!box) return;
-  var rating = null;
-  var buttons = box.querySelectorAll('[data-rating]');
-  var textarea = box.querySelector('textarea');
-  var send = box.querySelector('.feedback-send');
-
-  buttons.forEach(function (button) {
-    button.addEventListener('click', function () {
-      rating = button.getAttribute('data-rating');
-      buttons.forEach(function (b) { b.style.opacity = (b === button) ? '1' : '.45'; });
-      box.classList.add('expanded');
-    });
-  });
-
-  send.addEventListener('click', function () {
-    if (!rating) return;
-    var body = new URLSearchParams({
-      visitor: box.getAttribute('data-visitor'),
-      book: box.getAttribute('data-book'),
-      rating: rating,
-      comment: textarea.value.slice(0, 2000)
-    });
-    fetch('/feedback', { method: 'POST', body: body }).catch(function () {});
-    box.classList.add('sent');
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('.copy-btn');
+    if (!button) return;
+    var box = button.closest('.prompt-box');
+    var textarea = box && box.querySelector('textarea');
+    if (!textarea) return;
+    var original = button.textContent;
+    var done = button.getAttribute('data-copied-label') || original;
+    var restore = function () { button.textContent = original; };
+    var mark = function () { button.textContent = done; setTimeout(restore, 1500); };
+    var legacyCopy = function () {
+      textarea.select();
+      try { document.execCommand('copy'); } catch (err) { /* ignore */ }
+      mark();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textarea.value).then(mark, legacyCopy);
+    } else {
+      legacyCopy();
+    }
   });
 })();
 </script>

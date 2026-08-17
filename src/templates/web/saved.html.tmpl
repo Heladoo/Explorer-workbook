@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="$language" dir="$direction">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$title</title>
+<style>
+$css
+</style>
+</head>
+<body>
+<main class="lean">
+$step_indicator
+
+  <header class="masthead">
+    <img class="logo" src="/static/logo-color.png" alt="Adventure Kit" width="275" height="220">
+    <p class="eyebrow">$eyebrow</p>
+    <h1 dir="auto">$title</h1>
+    <p>$subtitle</p>
+  </header>
+
+  <div class="card">
+    <div class="downloads">
+$downloads
+    </div>
+
+    <div class="actions">
+$back_action
+      <a class="button secondary" href="/" target="_blank" rel="noopener">$start_over_label</a>
+      <button type="button" id="share-button">$share_label</button>
+      <span class="hint" id="share-status" hidden>$share_copied</span>
+    </div>
+
+    <div class="feedback" id="feedback" data-visitor="$visitor" data-book="$book_id">
+      <h2>$feedback_heading</h2>
+      <div class="feedback-options">
+        <button type="button" data-rating="great">$feedback_great</button>
+        <button type="button" data-rating="fine">$feedback_fine</button>
+        <button type="button" data-rating="poor">$feedback_poor</button>
+      </div>
+      <textarea rows="2" placeholder="$feedback_placeholder"></textarea>
+      <button type="button" class="feedback-send">$feedback_send</button>
+      <p class="feedback-thanks">$feedback_thanks</p>
+    </div>
+  </div>
+</main>
+<script>
+(function () {
+  var shareButton = document.getElementById('share-button');
+  var shareStatus = document.getElementById('share-status');
+  if (shareButton) {
+    shareButton.addEventListener('click', function () {
+      var url = window.location.href;
+      if (navigator.share) {
+        navigator.share({ title: document.title, url: url }).catch(function () {});
+        return;
+      }
+      var flash = function () {
+        shareStatus.hidden = false;
+        setTimeout(function () { shareStatus.hidden = true; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(flash, flash);
+      } else {
+        flash();
+      }
+    });
+  }
+
+  var box = document.getElementById('feedback');
+  if (!box) return;
+  var rating = null;
+  var buttons = box.querySelectorAll('[data-rating]');
+  var textarea = box.querySelector('textarea');
+  var send = box.querySelector('.feedback-send');
+
+  buttons.forEach(function (button) {
+    button.addEventListener('click', function () {
+      rating = button.getAttribute('data-rating');
+      buttons.forEach(function (b) { b.style.opacity = (b === button) ? '1' : '.45'; });
+      box.classList.add('expanded');
+    });
+  });
+
+  send.addEventListener('click', function () {
+    if (!rating) return;
+    var body = new URLSearchParams({
+      visitor: box.getAttribute('data-visitor'),
+      book: box.getAttribute('data-book'),
+      rating: rating,
+      comment: textarea.value.slice(0, 2000)
+    });
+    fetch('/feedback', { method: 'POST', body: body }).catch(function () {});
+    box.classList.add('sent');
+  });
+})();
+</script>
+</body>
+</html>

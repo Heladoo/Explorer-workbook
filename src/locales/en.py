@@ -28,6 +28,24 @@ STRINGS: dict[str, object] = {
     "toc.column_page": "Page",
     "toc.column_activity": "Activity",
     "toc.footer_label": "Contents",
+    # -- in-browser editor (book.html.tmpl's floating save toolbar) ----
+    "editor.unsaved_changes": "Unsaved changes",
+    "editor.save_workbook": "Save workbook",
+    "editor.save_as_pdf": "Save as PDF",
+    "editor.preparing_pdf": "Preparing PDF…",
+    "editor.edit_text_title": "Edit text",
+    "editor.add_photo_title": "Click to add a photo",
+    "editor.replace_photo_title": "Click to replace this photo",
+    # {{message}}/{{warning}} stay literal (doubled braces survive Strings.text's
+    # own .format() with no kwargs) — the editor's JS fills them in at runtime,
+    # after the server error/warning text is known.
+    "editor.print_fallback_alert": (
+        "Couldn't generate the PDF ({{message}}) — using your browser's print "
+        "dialog instead."
+    ),
+    "editor.booklet_warning_alert": (
+        "Saved, but couldn't make it a fold-and-staple booklet: {{warning}}"
+    ),
     # -- workbook framing ---------------------------------------------
     "workbook.title_with_names": "{names}'s {destination} Adventure Book",
     "workbook.title_plain": "The {destination} Explorer Workbook",

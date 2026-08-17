@@ -161,11 +161,12 @@ def test_opening_a_produced_file_is_tracked(site):
 
 
 def test_go_redirects_to_the_real_file(site):
-    _, result_html = site.submit([("destination", "Prague")])
-    import re
-
-    link = re.search(r'href="(/go/[^"]+workbook\.json)"', result_html).group(1)
-    status, body = site.get(link)
+    """/go/ redirects to the matching /files/ path regardless of whether a
+    link to it happens to be rendered anywhere — the review page only links
+    to workbook.html now (see _render_result in src/web.py), so this drives
+    the endpoint directly rather than scraping the page for a json link."""
+    site.submit([("destination", "Prague")])
+    status, body = site.get("/go/prague/workbook.json")
     assert status == 200
     assert json.loads(body)["destination"] == "Prague"
 

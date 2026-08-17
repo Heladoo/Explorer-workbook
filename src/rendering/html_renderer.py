@@ -8,6 +8,7 @@ renderer prints this document; opening it in a browser gives the same pages.
 from __future__ import annotations
 
 import base64
+import json
 import mimetypes
 from pathlib import Path
 
@@ -134,6 +135,10 @@ class HtmlRenderer:
         # there. See src/fonts.py::scripts_in.
         needed_scripts = fonts.scripts_in(pages + contents + workbook.title)
 
+        # Stamped onto <html> as data-page-format/data-page-count so the
+        # in-browser editor's "Save as PDF" can hand the *edited* document
+        # back to PdfRenderer/impose_booklet with no Workbook in sight — see
+        # src/rendering/print_metadata.py.
         return self.templates.render(
             "book",
             language=workbook.language,
@@ -144,6 +149,9 @@ class HtmlRenderer:
             body_class="ink-saver" if self.ink_saver else "",
             contents=contents,
             pages=pages,
+            page_format=self.page_format.key,
+            page_count=workbook.page_count,
+            editor_strings=self._editor_strings(strings),
         )
 
     # -- internals -------------------------------------------------------
@@ -213,6 +221,40 @@ class HtmlRenderer:
             f"@page :left {{ margin-left: {inner}; margin-right: {outer}; }}\n"
             f"@page :right {{ margin-left: {outer}; margin-right: {inner}; }}\n"
         )
+
+    def _editor_strings(self, strings) -> str:
+        """The in-browser editor's toolbar/tooltip/alert copy, as a JS object literal.
+
+        Read by the inline ``<script>`` in book.html.tmpl as ``STR`` — so a
+        Hebrew book's "Save as PDF" toolbar reads in Hebrew too, not just the
+        page content around it. ``{{message}}``/``{{warning}}`` in the two
+        alert strings stay literal after ``Strings.text``'s own ``.format()``
+        (doubled braces collapse to one, see the locale files) because the
+        actual value is only known client-side, when the server responds.
+        """
+        keys = (
+            "editor.unsaved_changes",
+            "editor.save_workbook",
+            "editor.save_as_pdf",
+            "editor.preparing_pdf",
+            "editor.edit_text_title",
+            "editor.add_photo_title",
+            "editor.replace_photo_title",
+            "editor.print_fallback_alert",
+            "editor.booklet_warning_alert",
+        )
+        camel = {
+            "editor.unsaved_changes": "unsavedChanges",
+            "editor.save_workbook": "saveWorkbook",
+            "editor.save_as_pdf": "saveAsPdf",
+            "editor.preparing_pdf": "preparingPdf",
+            "editor.edit_text_title": "editText",
+            "editor.add_photo_title": "addPhoto",
+            "editor.replace_photo_title": "replacePhoto",
+            "editor.print_fallback_alert": "printFallbackAlert",
+            "editor.booklet_warning_alert": "bookletWarningAlert",
+        }
+        return json.dumps({camel[key]: strings.text(key) for key in keys}, ensure_ascii=False)
 
     def _contents(self, workbook: Workbook, strings) -> str:
         rows = "\n".join(
